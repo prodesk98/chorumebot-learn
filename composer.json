@@ -1,0 +1,12 @@
+{
+    "require": {
+        "team-reflex/discord-php": "^7.3",
+        "vlucas/phpdotenv": "^5.5",
+        "nunomaduro/termwind": "^1.15"
+    },
+    "autoload": {
+        "psr-4": {
+            "Chorume\\": "src/"
+        }
+    }
+}

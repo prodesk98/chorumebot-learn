@@ -2,6 +2,7 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 require 'config/main.php';
+require 'helpers/helpers.php';
 
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
@@ -198,6 +199,10 @@ $discord->on('ready', function (Discord $discord) {
 });
 
 $discord->listenCommand('test', function (Interaction $interaction) use ($discord)  {
+    if (!find_role('Moderator', 'name', $interaction->member->roles)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
+        return;
+    }
     // $guild = $discord->guilds->get('id', getenv('GUILD_ID'));
 
     // $guild->members->fetch($interaction->member->user->id)->done(function (Member $member) use ($interaction) {
@@ -227,6 +232,36 @@ $discord->listenCommand('test', function (Interaction $interaction) use ($discor
     /**
     * @var Embed $embed
     */
+});
+
+$discord->listenCommand('coins', function (Interaction $interaction) use ($userRepository) {
+    $discordId = $interaction->member->user->id;
+    $user = $userRepository->getByDiscordId($discordId);
+
+    if (empty($user)) {
+        if ($userRepository->giveInitialCoins(
+            $interaction->member->user->id,
+            $interaction->member->user->username
+        )) {
+            $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf(
+                'Você acabou de receber suas **%s** coins iniciais! Aposte com sabedoria :man_mage:',
+                100
+            )), true);
+        }
+    }
+
+    $coinsQuery = $userRepository->getCurrentCoins($interaction->member->user->id);
+    $currentCoins = $coinsQuery[0]['total'];
+
+    if ($currentCoins == 0) {
+        $message = 'Você não possui nenhuma coin, seu liso! :money_with_wings:';
+    } else if ($currentCoins > 1000) {
+        $message = 'Você possui **%s** coins! Tá faturando hein! :moneybag: :partying_face:';
+    } else {
+        $message = 'Você possui **%s** coins! :coin:';
+    }
+
+    $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf($message, $currentCoins)), true);
 });
 
 $discord->listenCommand(['aposta', 'criar'], function (Interaction $interaction) use ($eventRepository, $eventBetsRepository, $userRepository)  {
@@ -262,15 +297,18 @@ $discord->listenCommand(['aposta', 'criar'], function (Interaction $interaction)
 
     if ($eventBetsRepository->create($discordId, $eventId, $choiceKey, $coins)) {
         $interaction->respondWithMessage(
-            MessageBuilder::new()->setContent(
-                sprintf('Você apostou **%s** na **opção %s**. Boa sorte manolo!', $coins, $choiceKey),
-                true
-            )
+            MessageBuilder::new()->setContent(sprintf('Você apostou **%s** na **opção %s**. Boa sorte manolo!', $coins, $choiceKey)),
+            true
         );
     }
 });
 
 $discord->listenCommand(['evento', 'criar'], function (Interaction $interaction) use ($eventRepository)  {
+    if (!find_role('Moderator', 'name', $interaction->member->roles)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
+        return;
+    }
+
     $eventName = $interaction->data->options['criar']->options['nome']->value;
     $optionA = $interaction->data->options['criar']->options['a']->value;
     $optionB = $interaction->data->options['criar']->options['b']->value;
@@ -281,6 +319,11 @@ $discord->listenCommand(['evento', 'criar'], function (Interaction $interaction)
 });
 
 $discord->listenCommand(['evento', 'fechar'], function (Interaction $interaction) use ($eventRepository)  {
+    if (!find_role('Moderator', 'name', $interaction->member->roles)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
+        return;
+    }
+
     $eventId = $interaction->data->options['fechar']->options['id']->value;
 
     if ($eventRepository->closeEvent($eventId)) {
@@ -289,6 +332,18 @@ $discord->listenCommand(['evento', 'fechar'], function (Interaction $interaction
 });
 
 $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interaction) use ($discord, $eventRepository, $eventChoiceRepository)  {
+    if (!find_role('Moderator', 'name', $interaction->member->roles)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
+        return;
+    }
+
+    $events = $eventRepository->listEventsClosed();
+
+    if (empty($events)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Não existem eventos para serem encerrados!'), true);
+        return;
+    }
+
     $eventId = $interaction->data->options['encerrar']->options['id']->value;
     $eventItem = $eventRepository->getEventById($eventId);
     $choiceKey = $interaction->data->options['encerrar']->options['opcao']->value;
@@ -297,6 +352,7 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
 
     if (count($bets) === 0) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento encerrado não houveram apostas!'), true);
+        return;
     }
 
     $eventsDescription = sprintf(
@@ -333,7 +389,7 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
 });
 
 $discord->listenCommand(['evento','listar'], function (Interaction $interaction) use ($discord, $eventRepository)  {
-    $eventsOpen = $eventRepository->listEventsOpenClosed();
+    $eventsOpen = $eventRepository->listEventsOpen();
     $eventsDescription = "\n";
 
     if (empty($eventsOpen)) {
@@ -341,12 +397,14 @@ $discord->listenCommand(['evento','listar'], function (Interaction $interaction)
     }
 
     foreach ($eventsOpen as $event) {
+        $eventOdds = $eventRepository->calculateOdds($event['event_id']);
+
         $eventsDescription .= sprintf(
             "**%s** \n **Evento:** %s \n **A**: %s \n **B**: %s \n \n",
             $event['event_status'] == $eventRepository::CLOSED ? "{$event['event_name']} (Apostas Encerradas)" : $event['event_name'],
             $event['event_id'],
-            $event['choices'][0]['choice_description'],
-            $event['choices'][1]['choice_description']
+            sprintf('%s (x%s)', $event['choices'][0]['choice_description'], number_format($eventOdds['oddsA'], 2)),
+            sprintf('%s (x%s)', $event['choices'][1]['choice_description'], number_format($eventOdds['oddsB'], 2))
         );
     }
 
@@ -358,37 +416,7 @@ $discord->listenCommand(['evento','listar'], function (Interaction $interaction)
         ->setTitle("EVENTOS ABERTOS")
         ->setColor('#F5D920')
         ->setDescription($eventsDescription);
-    $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed));
-});
-
-$discord->listenCommand('coins', function (Interaction $interaction) use ($userRepository) {
-    $discordId = $interaction->member->user->id;
-    $user = $userRepository->getByDiscordId($discordId);
-
-    if (empty($user)) {
-        if ($userRepository->giveInitialCoins(
-            $interaction->member->user->id,
-            $interaction->member->user->username
-        )) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf(
-                'Você acabou de receber suas **%s** coins iniciais! Aposte com sabedoria :man_mage:',
-                100
-            )), true);
-        }
-    }
-
-    $coinsQuery = $userRepository->getCurrentCoins($interaction->member->user->id);
-    $currentCoins = $coinsQuery[0]['total'];
-
-    if ($currentCoins == 0) {
-        $message = 'Você não possui nenhuma coin, seu liso! :money_with_wings:';
-    } else if ($currentCoins > 1000) {
-        $message = 'Você possui **%s** coins! Tá faturando hein! :moneybag: :partying_face:';
-    } else {
-        $message = 'Você possui **%s** coins! :coin:';
-    }
-
-    $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf($message, $currentCoins)), true);
+    $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), true);
 });
 
 $discord->run();

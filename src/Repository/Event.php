@@ -95,8 +95,10 @@ class Event extends Repository
         return !empty($result);
     }
 
-    public function listEventsOpenClosed()
+    public function listEventsChoicesByStatus(int|array $status)
     {
+        $status = is_array($status) ? implode(',', $status) : $status;
+
         $results = $this->db->select("
             SELECT
                 e.id AS event_id,
@@ -106,11 +108,51 @@ class Event extends Repository
                 ec.description AS choice_description
             FROM events_choices ec
             JOIN events e ON e.id = ec.event_id
-            WHERE e.status = ? OR e.status = ?
+            WHERE e.status IN (?)
         ", [
-            [ 'type' => 'i', 'value' => self::OPEN ],
-            [ 'type' => 'i', 'value' => self::CLOSED ]
+            [ 'type' => 's', 'value' => $status ],
         ]);
+
+        return empty($results) ? [] : $results;
+    }
+
+    public function listEventsOpen()
+    {
+        $results = $this->listEventsChoicesByStatus([self::OPEN]);
+
+        if (empty($results)) {
+            return [];
+        }
+
+        return array_reduce($results, function ($acc, $item) {
+            if (($subItem = array_search($item['event_name'], array_column($acc, 'event_name'))) === false) {
+                $acc[] = [
+                    'event_id' => $item['event_id'],
+                    'event_name' => $item['event_name'],
+                    'event_status' => $item['event_status'],
+                    'choices' => [
+                        [
+                            'choice_option' => $item['choice_option'],
+                            'choice_description' => $item['choice_description'],
+                        ]
+                    ]
+                ];
+
+                return $acc;
+            }
+
+            $acc[$subItem]['choices'][] = [
+                'choice_option' => $item['choice_option'],
+                'choice_description' => $item['choice_description'],
+            ];
+
+            return $acc;
+        }, []);
+    }
+
+    public function listEventsClosed()
+    {
+        $results = $this->listEventsChoicesByStatus([self::CLOSED]);
 
         if (empty($results)) {
             return [];
@@ -151,6 +193,24 @@ class Event extends Repository
         ]);
 
         return $createEvent;
+    }
+
+    public function calculateOdds(int $eventId)
+    {
+        $bets = $this->eventBetRepository->getBetsByEventId($eventId);
+        $totalBetsA = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'A' ? $acc += $item['amount'] : $acc, 0);
+        $totalBetsB = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'B' ? $acc += $item['amount'] : $acc, 0);
+
+        $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1: 1;
+        $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1: 1;
+
+        var_dump($totalBetsA, $totalBetsB);
+        var_dump($oddsA, $oddsB);
+
+        return [
+            'oddsA' => $oddsA,
+            'oddsB' => $oddsB,
+        ];
     }
 
     public function payoutEvent(int $eventId, string $winnerChoiceKey)

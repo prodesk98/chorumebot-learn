@@ -13,6 +13,13 @@ class Event extends Repository
     public const CANCELED = 3;
     public const PAID = 4;
 
+    public const LABEL = [
+        self::OPEN => 'Aberto',
+        self::CLOSED => 'Fechado',
+        self::CANCELED => 'Cancelado',
+        self::PAID => 'Pago',
+    ];
+
     public function __construct(
         $db,
         protected EventBet|Null $eventBetRepository = null,
@@ -116,6 +123,25 @@ class Event extends Repository
         return empty($results) ? [] : $results;
     }
 
+    public function getEventDataById(int $eventId)
+    {
+        $results = $this->db->select("
+            SELECT
+                e.id AS event_id,
+                e.name AS event_name,
+                e.status AS event_status,
+                ec.choice_key AS choice_option,
+                ec.description AS choice_description
+            FROM events_choices ec
+            JOIN events e ON e.id = ec.event_id
+            WHERE e.id = ?
+        ", [
+            [ 'type' => 'i', 'value' => $eventId ],
+        ]);
+
+        return empty($results) ? [] : $results;
+    }
+
     public function listEventsOpen()
     {
         $results = $this->listEventsChoicesByStatus([self::OPEN]);
@@ -124,30 +150,7 @@ class Event extends Repository
             return [];
         }
 
-        return array_reduce($results, function ($acc, $item) {
-            if (($subItem = array_search($item['event_name'], array_column($acc, 'event_name'))) === false) {
-                $acc[] = [
-                    'event_id' => $item['event_id'],
-                    'event_name' => $item['event_name'],
-                    'event_status' => $item['event_status'],
-                    'choices' => [
-                        [
-                            'choice_option' => $item['choice_option'],
-                            'choice_description' => $item['choice_description'],
-                        ]
-                    ]
-                ];
-
-                return $acc;
-            }
-
-            $acc[$subItem]['choices'][] = [
-                'choice_option' => $item['choice_option'],
-                'choice_description' => $item['choice_description'],
-            ];
-
-            return $acc;
-        }, []);
+        return $this->normalizeEventChoices($results);
     }
 
     public function listEventsClosed()
@@ -158,7 +161,23 @@ class Event extends Repository
             return [];
         }
 
-        return array_reduce($results, function ($acc, $item) {
+        return $this->normalizeEventChoices($results);
+    }
+
+    public function listEventById(int $eventId)
+    {
+        $results = $this->getEventDataById($eventId);
+
+        if (empty($results)) {
+            return [];
+        }
+
+        return $this->normalizeEventChoices($results);
+    }
+
+    public function normalizeEventChoices(array $eventChoices)
+    {
+        return array_reduce($eventChoices, function ($acc, $item) {
             if (($subItem = array_search($item['event_name'], array_column($acc, 'event_name'))) === false) {
                 $acc[] = [
                     'event_id' => $item['event_id'],
@@ -200,6 +219,9 @@ class Event extends Repository
         $bets = $this->eventBetRepository->getBetsByEventId($eventId);
         $totalBetsA = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'A' ? $acc += $item['amount'] : $acc, 0);
         $totalBetsB = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'B' ? $acc += $item['amount'] : $acc, 0);
+
+        var_dump($bets);
+
 
         $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1: 1;
         $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1: 1;

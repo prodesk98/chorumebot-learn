@@ -26,6 +26,24 @@ $db = new Db(
     getenv('DB_PASSWORD')
 );
 
+$images = [
+    'winners' => [
+        'https://i.ibb.co/5LCJqzw/money2.gif',
+        'https://i.ibb.co/3sst809/money3.gif',
+        'https://i.ibb.co/wBKjF8G/money4.gif',
+    ],
+    'many_coins' => 'https://i.ibb.co/vDPHrmL/coins.gif',
+    'one_coin' => 'https://i.ibb.co/yhYC00z/coin.gif',
+    'event' => 'https://i.ibb.co/19tbY3M/evento.gif',
+    'nomoney' => 'https://i.ibb.co/87xz70n/nomoney.gif',
+    'events' => [
+        'UFC' => 'https://i.ibb.co/ZKVGrBL/ufc.gif',
+        'GENERIC' => 'https://i.ibb.co/phnN1RH/upcomingevents.gif',
+    ],
+    'place_bet' => 'https://i.ibb.co/zhY0SNb/placebet.gif',
+];
+
+
 $userRepository = new User($db);
 $eventRepository = new Event($db);
 $eventChoiceRepository = new EventChoice($db);
@@ -45,98 +63,127 @@ $discord->on('ready', function (Discord $discord) {
     // ]);
     // $discord->application->commands->save($command);
 
-    // $command = new Command($discord, [
-    //     'name' => 'evento',
-    //     'description' => 'Gerencia eventos para apostas',
-    //     'options' => [
-    //         [
-    //             'type' => Option::SUB_COMMAND,
-    //             'name' => 'criar',
-    //             'description' => 'Cria evento',
-    //             'options' => [
-    //                 [
-    //                     'type' => Option::STRING,
-    //                     'name' => 'nome',
-    //                     'description' => 'Nome do evento',
-    //                     'required' => true,
-    //                 ],
-    //                 [
-    //                     'type' => Option::STRING,
-    //                     'name' => 'a',
-    //                     'description' => 'Opção A',
-    //                     'required' => true,
-    //                 ],
-    //                 [
-    //                     'type' => Option::STRING,
-    //                     'name' => 'b',
-    //                     'description' => 'Opção B',
-    //                     'required' => true,
-    //                 ],
-    //             ]
-    //         ],
-    //         [
-    //             'type' => Option::SUB_COMMAND,
-    //             'name' => 'iniciar',
-    //             'description' => 'Inicia evento',
-    //             'options' => [
-    //                 [
-    //                     'type' => Option::INTEGER,
-    //                     'name' => 'id',
-    //                     'description' => 'ID do evento',
-    //                     'required' => true,
-    //                 ],
-    //             ]
-    //         ],
-    //         [
-    //             'type' => Option::SUB_COMMAND,
-    //             'name' => 'fechar',
-    //             'description' => 'Fecha evento e não recebe mais apostas',
-    //             'options' => [
-    //                 [
-    //                     'type' => Option::INTEGER,
-    //                     'name' => 'id',
-    //                     'description' => 'ID do evento',
-    //                     'required' => true,
-    //                 ],
-    //             ]
-    //         ],
-    //         [
-    //             'type' => Option::SUB_COMMAND,
-    //             'name' => 'encerrar',
-    //             'description' => 'Encerra evento e paga as apostas',
-    //             'options' => [
-    //                 [
-    //                     'type' => Option::INTEGER,
-    //                     'name' => 'id',
-    //                     'description' => 'ID do evento',
-    //                     'required' => true,
-    //                 ],
-    //                 [
-    //                     'type' => Option::STRING,
-    //                     'name' => 'opcao',
-    //                     'description' => 'Opção A ou B.',
-    //                     'required' => true,
-    //                     'choices' => [
-    //                         [
-    //                             'name' => 'A',
-    //                             'value' => 'A'
-    //                         ],
-    //                         [
-    //                             'name' => 'B',
-    //                             'value' => 'B'
-    //                         ]
-    //                     ]
-    //                 ],
-    //             ]
-    //         ],
-    //         [
-    //             'type' => Option::SUB_COMMAND,
-    //             'name' => 'listar',
-    //             'description' => 'Lista eventos criados e pendentes para iniciar',
-    //         ]
-    //     ]
-    // ]);
-    // $discord->application->commands->save($command);
+    $command = new Command($discord, [
+        'name' => 'evento',
+        'description' => 'Gerencia eventos para apostas',
+        'options' => [
+            [
+                'type' => Option::SUB_COMMAND,
+                'name' => 'criar',
+                'description' => 'Cria evento',
+                'options' => [
+                    [
+                        'type' => Option::STRING,
+                        'name' => 'nome',
+                        'description' => 'Nome do evento',
+                        'required' => true,
+                    ],
+                    [
+                        'type' => Option::STRING,
+                        'name' => 'a',
+                        'description' => 'Opção A',
+                        'required' => true,
+                    ],
+                    [
+                        'type' => Option::STRING,
+                        'name' => 'b',
+                        'description' => 'Opção B',
+                        'required' => true,
+                    ],
+                ]
+            ],
+            [
+                'type' => Option::SUB_COMMAND,
+                'name' => 'iniciar',
+                'description' => 'Inicia evento',
+                'options' => [
+                    [
+                        'type' => Option::INTEGER,
+                        'name' => 'id',
+                        'description' => 'ID do evento',
+                        'required' => true,
+                    ],
+                ]
+            ],
+            [
+                'type' => Option::SUB_COMMAND,
+                'name' => 'fechar',
+                'description' => 'Fecha evento e não recebe mais apostas',
+                'options' => [
+                    [
+                        'type' => Option::INTEGER,
+                        'name' => 'id',
+                        'description' => 'ID do evento',
+                        'required' => true,
+                    ],
+                ]
+            ],
+            [
+                'type' => Option::SUB_COMMAND,
+                'name' => 'encerrar',
+                'description' => 'Encerra evento e paga as apostas',
+                'options' => [
+                    [
+                        'type' => Option::INTEGER,
+                        'name' => 'id',
+                        'description' => 'ID do evento',
+                        'required' => true,
+                    ],
+                    [
+                        'type' => Option::STRING,
+                        'name' => 'opcao',
+                        'description' => 'Opção A ou B.',
+                        'required' => true,
+                        'choices' => [
+                            [
+                                'name' => 'A',
+                                'value' => 'A'
+                            ],
+                            [
+                                'name' => 'B',
+                                'value' => 'B'
+                            ]
+                        ]
+                    ],
+                ]
+            ],
+            [
+                'type' => Option::SUB_COMMAND,
+                'name' => 'anunciar',
+                'description' => 'Anuncia o evento de forma personalizada',
+                'options' => [
+                    [
+                        'type' => Option::INTEGER,
+                        'name' => 'id',
+                        'description' => 'ID do evento',
+                        'required' => true,
+                    ],
+                    [
+                        'type' => Option::STRING,
+                        'name' => 'banner',
+                        'description' => 'Imagem do banner para utilizar ',
+                        'required' => true,
+                        'choices' => [
+                            [
+                                'name' => 'UFC',
+                                'value' => 'UFC'
+                            ],
+                            [
+                                'name' => 'Genérica',
+                                'value' => 'GENERIC'
+                            ]
+                        ]
+                    ],
+                ]
+            ],
+            [
+                'type' => Option::SUB_COMMAND,
+                'name' => 'listar',
+                'description' => 'Lista eventos criados e pendentes para iniciar',
+            ]
+        ]
+    ]);
+    $discord->application->commands->save($command);
 
     // $command = new Command($discord, [
     //     'name' => 'aposta',
@@ -193,8 +240,12 @@ $discord->on('ready', function (Discord $discord) {
     // $discord->application->commands->save($command);
 
     // Listen for messages.
-    $discord->on(DiscordEvent::MESSAGE_CREATE, function (Message $message, Discord $discord) {
-        echo "{$message->author->username}: {$message->content}", PHP_EOL;
+    // $discord->on(DiscordEvent::USER_UPDATE, function (Message $message, Discord $discord) {
+    //     echo "{$message->author->username}: {$message->content}", PHP_EOL;
+    // });
+
+    $discord->on(DiscordEvent::VOICE_STATE_UPDATE, function (VoiceStateUpdate $state, Discord $discord, $oldstate) {
+        
     });
 });
 
@@ -234,7 +285,7 @@ $discord->listenCommand('test', function (Interaction $interaction) use ($discor
     */
 });
 
-$discord->listenCommand('coins', function (Interaction $interaction) use ($discord, $userRepository) {
+$discord->listenCommand('coins', function (Interaction $interaction) use ($discord, $images, $userRepository) {
     $discordId = $interaction->member->user->id;
     $user = $userRepository->getByDiscordId($discordId);
 
@@ -259,28 +310,28 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
     $embed = $discord->factory(Embed::class);
     $embed
         ->setTitle('EXTRATO DE COINS')
-        ->setColor('#F5D920')
-        ->setImage('https://apito.me/imgs/coin.gif');
+        ->setColor('#F5D920');
 
-    if ($currentCoins == 0) {
-        $embed->setDescription(sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins));
-            // ->setImage('https://apito.me/imgs/money.gif');
+    if ($currentCoins <= 0) {
+        $embed->setDescription(sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins))
+            ->setImage($images['nomoney']);
     } else if ($currentCoins > 1000) {
-        $embed->setDescription(sprintf('Você possui **%s** coins! Tá faturando hein! :moneybag: :partying_face:', $currentCoins));
-            // ->setImage('https://apito.me/imgs/coins.gif');
+        $embed->setDescription(sprintf('Você possui **%s** coins! Tá faturando hein! :moneybag: :partying_face:', $currentCoins))
+            ->setImage($images['many_coins']);
     } else {
-        $embed->setDescription(sprintf('Você possui **%s** coins! :coin:', $currentCoins));
-            // ->setImage('https://apito.me/imgs/coin.gif');
+        $embed->setDescription(sprintf('Você possui **%s** coins! :coin:', $currentCoins))
+            ->setImage($images['one_coin']);
     }
 
     $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), true);
 });
 
-$discord->listenCommand(['aposta', 'entrar'], function (Interaction $interaction) use ($eventRepository, $eventBetsRepository, $userRepository)  {
+$discord->listenCommand(['aposta', 'entrar'], function (Interaction $interaction) use ($discord, $images, $eventRepository, $eventBetsRepository, $userRepository)  {
     $discordId = $interaction->member->user->id;
-    $eventId = $interaction->data->options['criar']->options['evento_id']->value;
-    $choiceKey = $interaction->data->options['criar']->options['opcao']->value;
-    $coins = $interaction->data->options['criar']->options['coins']->value;
+    $eventId = $interaction->data->options['entrar']->options['evento']->value;
+    $choiceKey = $interaction->data->options['entrar']->options['opcao']->value;
+    $coins = $interaction->data->options['entrar']->options['coins']->value;
+    $event = $eventRepository->listEventById($eventId);
 
     if (!$userRepository->userExistByDiscordId($discordId)) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você ainda não coleteu suas coins iniciais! Digita **/coins** e pegue suas coins! :coin::coin::coin: '), true);
@@ -303,15 +354,25 @@ $discord->listenCommand(['aposta', 'entrar'], function (Interaction $interaction
     }
 
     if (!$userRepository->hasAvailableCoins($discordId, $coins)) {
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não possui coins suficientes! :crying_cat_face: '), true);
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não possui coins suficientes! :crying_cat_face:'), true);
         return;
     }
 
     if ($eventBetsRepository->create($discordId, $eventId, $choiceKey, $coins)) {
-        $interaction->respondWithMessage(
-            MessageBuilder::new()->setContent(sprintf('Você apostou **%s** na **opção %s**. Boa sorte manolo!', $coins, $choiceKey)),
-            true
-        );
+        /**
+         * @var Embed $embed
+         */
+        $embed = $discord->factory(Embed::class);
+        $embed
+            ->setTitle(sprintf('%s #%s', $event[0]['event_name'], $event[0]['event_id']))
+            ->setColor('#F5D920')
+            ->setDescription(sprintf(
+                "Você apostou **%s** chorume coins na **opção %s**.\n\nBoa sorte manolo!",
+                $coins,
+                $choiceKey
+            ))
+            ->setImage($images['place_bet']);
+        $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), true);
     }
 });
 
@@ -343,7 +404,7 @@ $discord->listenCommand(['evento', 'fechar'], function (Interaction $interaction
     }
 });
 
-$discord->listenCommand(['evento', 'encerrar'], function (Interaction $interaction) use ($discord, $eventRepository, $eventChoiceRepository)  {
+$discord->listenCommand(['evento', 'encerrar'], function (Interaction $interaction) use ($discord, $images, $eventRepository, $eventChoiceRepository)  {
     if (!find_role('Moderator', 'name', $interaction->member->roles)) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
         return;
@@ -357,8 +418,8 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
     }
 
     $eventId = $interaction->data->options['encerrar']->options['id']->value;
-    $eventItem = $eventRepository->getEventById($eventId);
     $choiceKey = $interaction->data->options['encerrar']->options['opcao']->value;
+    $eventItem = $eventRepository->getEventById($eventId);
     $choiceItem = $eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $choiceKey);
     $bets = $eventRepository->payoutEvent($eventId, $choiceKey);
 
@@ -373,6 +434,8 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
         $choiceItem[0]['description'],
     );
 
+    $winnersImage = $images['winners'][array_rand($images['winners'])];
+
     /**
      * @var Embed $embed
      */
@@ -381,7 +444,7 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
         ->setTitle(sprintf('EVENTO #%s ENCERRADO', $eventId))
         ->setColor('#F5D920')
         ->setDescription($eventsDescription)
-        ->setImage('https://apito.me/imgs/money.gif');
+        ->setImage($winnersImage);
 
     $winners = '';
     $earnings = '';
@@ -401,7 +464,7 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
 
 });
 
-$discord->listenCommand(['evento','listar'], function (Interaction $interaction) use ($discord, $eventRepository)  {
+$discord->listenCommand(['evento','listar'], function (Interaction $interaction) use ($discord, $images, $eventRepository)  {
     $eventsOpen = $eventRepository->listEventsOpen();
     $eventsDescription = "\n";
 
@@ -429,8 +492,39 @@ $discord->listenCommand(['evento','listar'], function (Interaction $interaction)
         ->setTitle("EVENTOS ABERTOS")
         ->setColor('#F5D920')
         ->setDescription($eventsDescription)
-        ->setImage('https://apito.me/imgs/money.gif');
+        ->setImage($images['event']);
     $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), true);
+});
+
+$discord->listenCommand(['evento','anunciar'], function (Interaction $interaction) use ($discord, $images, $eventRepository)  {
+    $eventId = $interaction->data->options['anunciar']->options['id']->value;
+    $bannerKey = $interaction->data->options['anunciar']->options['banner']->value;
+
+    $event = $eventRepository->listEventById($eventId);
+
+    if (empty($event)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Esse evento não existe!'), true);
+        return;
+    }
+
+    $eventOdds = $eventRepository->calculateOdds($eventId);
+    $eventsDescription = sprintf(
+        "**Status do Evento:** %s \n **A**: %s \n **B**: %s \n \n",
+        $eventRepository::LABEL[$event[0]['event_status']],
+        sprintf('%s (x%s)', $event[0]['choices'][0]['choice_description'], number_format($eventOdds['oddsA'], 2)),
+        sprintf('%s (x%s)', $event[0]['choices'][1]['choice_description'], number_format($eventOdds['oddsB'], 2))
+    );
+
+    /**
+     * @var Embed $embed
+     */
+    $embed = $discord->factory(Embed::class);
+    $embed
+        ->setTitle($event[0]['event_name'])
+        ->setColor('#F5D920')
+        ->setDescription($eventsDescription)
+        ->setImage($images['events'][$bannerKey]);
+    $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), false);
 });
 
 $discord->run();

@@ -44,6 +44,7 @@ $config = [
             'GENERIC' => 'https://apito.me/imgs/upcomingevents.gif',
         ],
         'place_bet' => 'https://apito.me/imgs/placebet.gif',
+        'top_betters' => 'https://apito.me/imgs/tom.gif',
     ]
 ];
 

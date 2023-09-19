@@ -30,7 +30,7 @@ class EventBet extends Repository
         return $result;
     }
 
-    public function create(int $discordId, int $eventId, string $choiceKey, int $amount)
+    public function create(int $discordId, int $eventId, string $choiceKey, float $amount)
     {
         $user = $this->userRepository->getByDiscordId($discordId);
         $choiceId = $this->eventChoiceRepository->getByEventIdAndChoice($eventId, $choiceKey);

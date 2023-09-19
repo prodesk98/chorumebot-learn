@@ -29,4 +29,20 @@ class UserCoinHistory extends Repository
 
         return $result;
     }
+
+    public function listTop10()
+    {
+        $result = $this->db->select("
+            SELECT
+                SUM(uch.amount) AS total_coins,
+                u.discord_user_id
+            FROM users_coins_history uch
+            JOIN users u ON uch.user_id = u.id
+            GROUP BY uch.user_id
+            ORDER BY total_coins DESC
+            LIMIT 10
+        ");
+
+        return $result;
+    }
 }

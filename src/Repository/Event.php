@@ -20,6 +20,13 @@ class Event extends Repository
         self::PAID => 'Pago',
     ];
 
+    public const LABEL_LONG = [
+        self::OPEN => 'Aberto para apostas',
+        self::CLOSED => 'Fechado para apostas',
+        self::CANCELED => 'Cancelado',
+        self::PAID => 'Apostas pagas',
+    ];
+
     public function __construct(
         $db,
         protected EventBet|Null $eventBetRepository = null,
@@ -220,14 +227,8 @@ class Event extends Repository
         $totalBetsA = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'A' ? $acc += $item['amount'] : $acc, 0);
         $totalBetsB = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'B' ? $acc += $item['amount'] : $acc, 0);
 
-        var_dump($bets);
-
-
         $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1: 1;
         $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1: 1;
-
-        var_dump($totalBetsA, $totalBetsB);
-        var_dump($oddsA, $oddsB);
 
         return [
             'oddsA' => $oddsA,

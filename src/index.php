@@ -28,7 +28,7 @@ $db = new Db(
 );
 
 $config = [
-    'admin_role' => 'Moderador',
+    'admin_role' => ['Moderador', 'Sub Moderador'],
     'images' => [
         'winners' => [
             'https://apito.me/imgs/money2.gif',
@@ -273,7 +273,7 @@ $discord->on('ready', function (Discord $discord) {
 });
 
 $discord->listenCommand('test', function (Interaction $interaction) use ($discord, $config)  {
-    if (!find_role($config['admin_role'], 'name', $interaction->member->roles)) {
+    if (!find_role_array($config['admin_role'], 'name', $interaction->member->roles)) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
         return;
     }
@@ -443,7 +443,7 @@ $discord->listenCommand(['aposta', 'entrar'], function (Interaction $interaction
 });
 
 $discord->listenCommand(['evento', 'criar'], function (Interaction $interaction) use ($config, $eventRepository)  {
-    if (!find_role($config['admin_role'], 'name', $interaction->member->roles)) {
+    if (!find_role_array($config['admin_role'], 'name', $interaction->member->roles)) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
         return;
     }
@@ -458,7 +458,7 @@ $discord->listenCommand(['evento', 'criar'], function (Interaction $interaction)
 });
 
 $discord->listenCommand(['evento', 'fechar'], function (Interaction $interaction) use ($config, $eventRepository)  {
-    if (!find_role($config['admin_role'], 'name', $interaction->member->roles)) {
+    if (!find_role_array($config['admin_role'], 'name', $interaction->member->roles)) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
         return;
     }
@@ -471,7 +471,7 @@ $discord->listenCommand(['evento', 'fechar'], function (Interaction $interaction
 });
 
 $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interaction) use ($discord, $config, $eventRepository, $eventChoiceRepository)  {
-    if (!find_role($config['admin_role'], 'name', $interaction->member->roles)) {
+    if (!find_role_array($config['admin_role'], 'name', $interaction->member->roles)) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
         return;
     }
@@ -536,7 +536,7 @@ $discord->listenCommand(['evento','listar'], function (Interaction $interaction)
     $events = array_merge($eventsOpen, $eventsClosed);
     $ephemeralMsg = true;
 
-    if (find_role($config['admin_role'], 'name', $interaction->member->roles)) {
+    if (find_role_array($config['admin_role'], 'name', $interaction->member->roles)) {
         $ephemeralMsg = false;
     }
 

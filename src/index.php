@@ -330,6 +330,10 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         }
     }
 
+    if(!$userRepository->receivedDailyCoins($interaction->member->user->id) && !empty($user)) {
+        $userRepository->giveDailyCoins($interaction->member->user->id, 100);
+    }
+
     $coinsQuery = $userRepository->getCurrentCoins($interaction->member->user->id);
     $currentCoins = $coinsQuery[0]['total'];
 
@@ -348,7 +352,7 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         $embed->setDescription(sprintf('Você possui **%s** coins! Tá faturando hein! :moneybag: :partying_face:', $currentCoins))
             ->setImage($config['images']['many_coins']);
     } else {
-        $embed->setDescription(sprintf('Você possui **%s** coins! :coin:', $currentCoins))
+        $embed->setDescription(sprintf('Você po2ssui **%s** coins! :coin:', $currentCoins))
             ->setImage($config['images']['one_coin']);
     }
 

@@ -45,6 +45,40 @@ class User extends Repository
         return $giveCoins;
     }
 
+    public function giveDailyCoins(int $discordId, float $amount)
+    {
+        $user = $this->getByDiscordId($discordId);
+
+        $giveCoins = $this->db->query('INSERT INTO users_coins_history (user_id, amount, type) VALUES (?, ?, ?)', [
+            [ 'type' => 'i', 'value' => $user[0]['id'] ],
+            [ 'type' => 'i', 'value' => $amount ],
+            [ 'type' => 's', 'value' => 'Daily' ]
+        ]);
+
+        return $giveCoins;
+    }
+
+    public function receivedDailyCoins(int $discordId)
+    {
+        $result = $this->db->select(
+            "
+                SELECT
+                    *
+                FROM users_coins_history uch
+                JOIN users u ON u.id = uch.user_id
+                WHERE
+                    u.discord_user_id = ?
+                    AND uch.type = 'Daily'
+                    AND DATE(uch.created_at) = CURDATE()
+            ",
+            [
+                [ 'type' => 'i', 'value' => $discordId ]
+            ]
+        );
+
+        return !empty($result);
+    }
+
     public function getCurrentCoins(int $discordId)
     {
         $result = $this->db->select(

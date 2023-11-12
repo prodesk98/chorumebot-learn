@@ -330,12 +330,15 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         }
     }
 
-    if(!$userRepository->receivedDailyCoins($interaction->member->user->id) && !empty($user)) {
-        $userRepository->giveDailyCoins($interaction->member->user->id, 100);
-    }
-
     $coinsQuery = $userRepository->getCurrentCoins($interaction->member->user->id);
     $currentCoins = $coinsQuery[0]['total'];
+
+    $receivedDaily = false;
+    $dailyCoins = 100;
+    if(!$userRepository->receivedDailyCoins($interaction->member->user->id) && !empty($user)) {
+        $receivedDaily = true;
+        $userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
+    }
 
     /**
      * @var Embed $embed
@@ -346,15 +349,24 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         ->setColor('#F5D920');
 
     if ($currentCoins <= 0) {
-        $embed->setDescription(sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins))
-            ->setImage($config['images']['nomoney']);
+        $message = sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins);
+        $image = $config['images']['nomoney'];
     } else if ($currentCoins > 1000) {
-        $embed->setDescription(sprintf('Você possui **%s** coins! Tá faturando hein! :moneybag: :partying_face:', $currentCoins))
-            ->setImage($config['images']['many_coins']);
+        $message = sprintf('Você possui muitas coins! Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
+        $image = $config['images']['many_coins'];
     } else {
-        $embed->setDescription(sprintf('Você po2ssui **%s** coins! :coin:', $currentCoins))
-            ->setImage($config['images']['one_coin']);
+        $message = sprintf('Você possui **%s** coins! :coin:', $currentCoins);
+        $image = $config['images']['one_coin'];
     }
+
+    if ($receivedDaily) {
+        $message .= "\n\nVocê recebeu suas **%s** coins diárias! :money_mouth:";
+        $message = sprintf($message, $dailyCoins);
+    }
+
+    $embed
+        ->setDescription($message)
+        ->setImage($image);
 
     $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), true);
 });

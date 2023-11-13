@@ -30,6 +30,7 @@ services:
       - MYSQL_PASSWORD=application
     volumes:
       - app_mysql:/var/lib/mysql
+      - ./docker/confs/mysql/my.cnf:/etc/mysql/my.cnf
 
   pma:
     container_name: dbot-pma

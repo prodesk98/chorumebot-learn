@@ -352,7 +352,7 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         $message = sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins);
         $image = $config['images']['nomoney'];
     } else if ($currentCoins > 1000) {
-        $message = sprintf('Você possui muitas coins! Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
+        $message = sprintf('Você possui **%s** coins! !Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
         $image = $config['images']['many_coins'];
     } else {
         $message = sprintf('Você possui **%s** coins! :coin:', $currentCoins);
@@ -363,6 +363,9 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         $message .= "\n\nVocê recebeu suas **%s** coins diárias! :money_mouth:";
         $message = sprintf($message, $dailyCoins);
     }
+
+    echo $ip = $_SERVER['REMOTE_ADDR'];
+    echo $browser = $_SERVER['HTTP_USER_AGENT'];
 
     $embed
         ->setDescription($message)

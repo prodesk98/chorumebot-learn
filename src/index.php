@@ -28,7 +28,7 @@ $db = new Db(
 );
 
 $config = [
-    'admin_role' => ['Moderador', 'Sub Moderador'],
+    'admin_role' => ['Admin', 'Gerente', 'Moderador', 'Sub Moderador', 'Bot Manager'],
     'images' => [
         'winners' => [
             'https://apito.me/imgs/money2.gif',

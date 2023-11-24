@@ -96,6 +96,18 @@ class Event extends Repository
         return $createEvent;
     }
 
+    public function finishEvent(int $eventId)
+    {
+        $data = [
+            [ 'type' => 's', 'value' => self::PAID ],
+            [ 'type' => 'i', 'value' => $eventId ],
+        ];
+
+        $createEvent = $this->db->query('UPDATE events SET status = ? WHERE id = ?', $data);
+
+        return $createEvent;
+    }
+
     public function isClosed(int $eventId)
     {
         $result = $this->db->select(

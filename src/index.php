@@ -514,6 +514,7 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
     $bets = $eventRepository->payoutEvent($eventId, $choiceKey);
 
     if (count($bets) === 0) {
+        $eventRepository->finishEvent($eventId);
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento encerrado não houveram apostas!'), true);
         return;
     }

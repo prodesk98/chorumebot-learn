@@ -466,6 +466,46 @@ $discord->listenCommand(['aposta', 'entrar'], function (Interaction $interaction
     }
 });
 
+$discord->listenCommand(['transferir'], function (Interaction $interaction) use ($discord, $config, $userRepository, $userCoinHistoryRepository)  {
+    $fromDiscordId = $interaction->member->user->id;
+    $coins = $interaction->data->options['coins']->value;
+    $toDiscordId = $interaction->data->options['usuario']->value;
+
+    if (!$fromDiscordId) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Aconteceu um erro com seu usuário, encha o saco do admin do bot!'), true);
+        return;
+    }
+
+    if ($coins <= 0 || $coins > 1000) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Quantidade inválida. Valor deve ser entre 1 e 1000 coins'), true);
+        return;
+    }
+
+    if (!$userRepository->userExistByDiscordId($fromDiscordId)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Remetente não encontrado'), true);
+        return;
+    }
+
+    if (!$userRepository->userExistByDiscordId($toDiscordId)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Beneficiário não encontrado'), true);
+        return;
+    }
+
+    if (!$userRepository->hasAvailableCoins($fromDiscordId, $coins)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Remetente não possui saldo suficiente'), true);
+        return;
+    }
+
+    if (!$userCoinHistoryRepository->transfer($fromDiscordId, $coins, $toDiscordId)){
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Erro inesperado ao transferir '), true);
+        return;
+    }
+
+    $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf('Você transferiu **%s** coins para <@%s>! \n :money_mouth: :money_mouth: :money_mouth:', $coins, $toDiscordId)), true);
+});
+
+
+
 $discord->listenCommand(['evento', 'criar'], function (Interaction $interaction) use ($config, $eventRepository)  {
     if (!find_role_array($config['admin_role'], 'name', $interaction->member->roles)) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);

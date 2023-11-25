@@ -45,4 +45,25 @@ class UserCoinHistory extends Repository
 
         return $result;
     }
+
+    /**
+     * do not performs any validation here, so be careful as this method can be used to "steal" coins
+     */
+    public function transfer(int $fromId, int $amount, int $toId)
+    {
+        $type = 'Transfer';
+        $result = $this->db->query(
+            "INSERT INTO users_coins_history (user_id, amount, type) VALUES (?, ?, ?), (?, ?, ?)",
+            [
+                [ 'type' => 'i', 'value' => $fromId ],
+                [ 'type' => 'd', 'value' => -$amount ],
+                [ 'type' => 's', 'value' => $type ],
+                [ 'type' => 'i', 'value' => $toId ],
+                [ 'type' => 'd', 'value' => $amount ],
+                [ 'type' => 's', 'value' => $type ]
+            ]
+        );
+
+        return $result;
+    }
 }

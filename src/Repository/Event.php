@@ -119,7 +119,7 @@ class Event extends Repository
             ]
         );
 
-        return !empty($result);
+        return empty($result);
     }
 
     public function listEventsChoicesByStatus(int|array $status)

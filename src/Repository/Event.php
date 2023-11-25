@@ -108,13 +108,14 @@ class Event extends Repository
         return $createEvent;
     }
 
-    public function isClosed(int $eventId)
+    public function canBet(int $eventId)
     {
         $result = $this->db->select(
-            "SELECT * FROM events WHERE id = ? AND status = ?",
+            "SELECT * FROM events WHERE id = ? AND status NOT IN (?, ?)",
             [
                 [ 'type' => 'i', 'value' => $eventId ],
                 [ 'type' => 'i', 'value' => self::CLOSED ],
+                [ 'type' => 'i', 'value' => self::PAID ],
             ]
         );
 

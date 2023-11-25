@@ -428,7 +428,7 @@ $discord->listenCommand(['aposta', 'entrar'], function (Interaction $interaction
         return;
     }
 
-    if ($eventRepository->isClosed($eventId)) {
+    if ($eventRepository->canBet($eventId)) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento fechado para apostas! :crying_cat_face: '), true);
         return;
     }

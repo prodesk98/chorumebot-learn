@@ -70,130 +70,150 @@ $discord->on('ready', function (Discord $discord) {
     // $discord->application->commands->save($command);
 
     $command = new Command($discord, [
-        'name' => 'evento',
-        'description' => 'Gerencia eventos para apostas',
+        'name' => 'transferir',
+        'description' => 'Transfere coins para outro usuário',
         'options' => [
-            [
-                'type' => Option::SUB_COMMAND,
-                'name' => 'criar',
-                'description' => 'Cria evento',
-                'options' => [
-                    [
-                        'type' => Option::STRING,
-                        'name' => 'nome',
-                        'description' => 'Nome do evento',
-                        'required' => true,
-                    ],
-                    [
-                        'type' => Option::STRING,
-                        'name' => 'a',
-                        'description' => 'Opção A',
-                        'required' => true,
-                    ],
-                    [
-                        'type' => Option::STRING,
-                        'name' => 'b',
-                        'description' => 'Opção B',
-                        'required' => true,
-                    ],
-                ]
-            ],
-            [
-                'type' => Option::SUB_COMMAND,
-                'name' => 'iniciar',
-                'description' => 'Inicia evento',
-                'options' => [
-                    [
-                        'type' => Option::INTEGER,
-                        'name' => 'id',
-                        'description' => 'ID do evento',
-                        'required' => true,
-                    ],
-                ]
-            ],
-            [
-                'type' => Option::SUB_COMMAND,
-                'name' => 'fechar',
-                'description' => 'Fecha evento e não recebe mais apostas',
-                'options' => [
-                    [
-                        'type' => Option::INTEGER,
-                        'name' => 'id',
-                        'description' => 'ID do evento',
-                        'required' => true,
-                    ],
-                ]
-            ],
-            [
-                'type' => Option::SUB_COMMAND,
-                'name' => 'encerrar',
-                'description' => 'Encerra evento e paga as apostas',
-                'options' => [
-                    [
-                        'type' => Option::INTEGER,
-                        'name' => 'id',
-                        'description' => 'ID do evento',
-                        'required' => true,
-                    ],
-                    [
-                        'type' => Option::STRING,
-                        'name' => 'opcao',
-                        'description' => 'Opção A ou B.',
-                        'required' => true,
-                        'choices' => [
-                            [
-                                'name' => 'A',
-                                'value' => 'A'
-                            ],
-                            [
-                                'name' => 'B',
-                                'value' => 'B'
-                            ]
-                        ]
-                    ],
-                ]
-            ],
-            [
-                'type' => Option::SUB_COMMAND,
-                'name' => 'anunciar',
-                'description' => 'Anuncia o evento de forma personalizada',
-                'options' => [
-                    [
-                        'type' => Option::INTEGER,
-                        'name' => 'id',
-                        'description' => 'ID do evento',
-                        'required' => true,
-                    ],
-                    [
-                        'type' => Option::STRING,
-                        'name' => 'banner',
-                        'description' => 'Imagem do banner para utilizar ',
-                        'required' => true,
-                        'choices' => [
-                            [
-                                'name' => 'UFC',
-                                'value' => 'UFC'
-                            ],
-                            [
-                                'name' => 'Genérica',
-                                'value' => 'GENERIC'
-                            ],
-                            [
-                                'name' => 'Libertadores',
-                                'value' => 'LIBERTADORES'
-                            ]
-                        ]
-                    ],
-                ]
-            ],
-            [
-                'type' => Option::SUB_COMMAND,
-                'name' => 'listar',
-                'description' => 'Lista eventos criados e pendentes para iniciar',
+                [
+                    'type' => Option::USER,
+                    'name' => 'usuario',
+                    'description' => 'Nome do usuário',
+                    'required' => true,
+                ],
+                [
+                    'type' => Option::NUMBER,
+                    'name' => 'coins',
+                    'description' => 'Quantidade de coins para transferir',
+                    'required' => true,
+                ],
             ]
-        ]
     ]);
     $discord->application->commands->save($command);
+
+    // $command = new Command($discord, [
+    //     'name' => 'evento',
+    //     'description' => 'Gerencia eventos para apostas',
+    //     'options' => [
+    //         [
+    //             'type' => Option::SUB_COMMAND,
+    //             'name' => 'criar',
+    //             'description' => 'Cria evento',
+    //             'options' => [
+    //                 [
+    //                     'type' => Option::STRING,
+    //                     'name' => 'nome',
+    //                     'description' => 'Nome do evento',
+    //                     'required' => true,
+    //                 ],
+    //                 [
+    //                     'type' => Option::STRING,
+    //                     'name' => 'a',
+    //                     'description' => 'Opção A',
+    //                     'required' => true,
+    //                 ],
+    //                 [
+    //                     'type' => Option::STRING,
+    //                     'name' => 'b',
+    //                     'description' => 'Opção B',
+    //                     'required' => true,
+    //                 ],
+    //             ]
+    //         ],
+    //         [
+    //             'type' => Option::SUB_COMMAND,
+    //             'name' => 'iniciar',
+    //             'description' => 'Inicia evento',
+    //             'options' => [
+    //                 [
+    //                     'type' => Option::INTEGER,
+    //                     'name' => 'id',
+    //                     'description' => 'ID do evento',
+    //                     'required' => true,
+    //                 ],
+    //             ]
+    //         ],
+    //         [
+    //             'type' => Option::SUB_COMMAND,
+    //             'name' => 'fechar',
+    //             'description' => 'Fecha evento e não recebe mais apostas',
+    //             'options' => [
+    //                 [
+    //                     'type' => Option::INTEGER,
+    //                     'name' => 'id',
+    //                     'description' => 'ID do evento',
+    //                     'required' => true,
+    //                 ],
+    //             ]
+    //         ],
+    //         [
+    //             'type' => Option::SUB_COMMAND,
+    //             'name' => 'encerrar',
+    //             'description' => 'Encerra evento e paga as apostas',
+    //             'options' => [
+    //                 [
+    //                     'type' => Option::INTEGER,
+    //                     'name' => 'id',
+    //                     'description' => 'ID do evento',
+    //                     'required' => true,
+    //                 ],
+    //                 [
+    //                     'type' => Option::STRING,
+    //                     'name' => 'opcao',
+    //                     'description' => 'Opção A ou B.',
+    //                     'required' => true,
+    //                     'choices' => [
+    //                         [
+    //                             'name' => 'A',
+    //                             'value' => 'A'
+    //                         ],
+    //                         [
+    //                             'name' => 'B',
+    //                             'value' => 'B'
+    //                         ]
+    //                     ]
+    //                 ],
+    //             ]
+    //         ],
+    //         [
+    //             'type' => Option::SUB_COMMAND,
+    //             'name' => 'anunciar',
+    //             'description' => 'Anuncia o evento de forma personalizada',
+    //             'options' => [
+    //                 [
+    //                     'type' => Option::INTEGER,
+    //                     'name' => 'id',
+    //                     'description' => 'ID do evento',
+    //                     'required' => true,
+    //                 ],
+    //                 [
+    //                     'type' => Option::STRING,
+    //                     'name' => 'banner',
+    //                     'description' => 'Imagem do banner para utilizar ',
+    //                     'required' => true,
+    //                     'choices' => [
+    //                         [
+    //                             'name' => 'UFC',
+    //                             'value' => 'UFC'
+    //                         ],
+    //                         [
+    //                             'name' => 'Genérica',
+    //                             'value' => 'GENERIC'
+    //                         ],
+    //                         [
+    //                             'name' => 'Libertadores',
+    //                             'value' => 'LIBERTADORES'
+    //                         ]
+    //                     ]
+    //                 ],
+    //             ]
+    //         ],
+    //         [
+    //             'type' => Option::SUB_COMMAND,
+    //             'name' => 'listar',
+    //             'description' => 'Lista eventos criados e pendentes para iniciar',
+    //         ]
+    //     ]
+    // ]);
+    // $discord->application->commands->save($command);
 
     // $command = new Command($discord, [
     //     'name' => 'aposta',
@@ -470,6 +490,8 @@ $discord->listenCommand(['transferir'], function (Interaction $interaction) use 
     $fromDiscordId = $interaction->member->user->id;
     $coins = $interaction->data->options['coins']->value;
     $toDiscordId = $interaction->data->options['usuario']->value;
+    $fromUser = $userRepository->getByDiscordId($fromDiscordId);
+    $toUser = $userRepository->getByDiscordId($toDiscordId);
 
     if (!$fromDiscordId) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Aconteceu um erro com seu usuário, encha o saco do admin do bot!'), true);
@@ -496,12 +518,12 @@ $discord->listenCommand(['transferir'], function (Interaction $interaction) use 
         return;
     }
 
-    if (!$userCoinHistoryRepository->transfer($fromDiscordId, $coins, $toDiscordId)){
+    if (!$userCoinHistoryRepository->transfer($fromUser[0]['id'], $coins, $toUser[0]['id'])){
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Erro inesperado ao transferir '), true);
         return;
     }
 
-    $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf('Você transferiu **%s** coins para <@%s>! \n :money_mouth: :money_mouth: :money_mouth:', $coins, $toDiscordId)), true);
+    $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf("Você transferiu **%s** coins para <@%s>! :money_mouth: :money_mouth: :money_mouth:", $coins, $toDiscordId)), true);
 });
 
 

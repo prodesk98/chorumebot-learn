@@ -31,21 +31,22 @@ $config = [
     'admin_role' => ['Admin', 'Gerente', 'Moderador', 'Sub Moderador', 'Bot Manager'],
     'images' => [
         'winners' => [
-            'https://apito.me/imgs/money2.gif',
-            'https://apito.me/imgs/money3.gif',
-            'https://apito.me/imgs/money4.gif',
+            'https://chorume.tech/imgs/money2.gif',
+            'https://chorume.tech/imgs/money3.gif',
+            'https://chorume.tech/imgs/money4.gif',
         ],
-        'many_coins' => 'https://apito.me/imgs/coins.gif',
-        'one_coin' => 'https://apito.me/imgs/coin.gif',
-        'event' => 'https://apito.me/imgs/evento.gif',
-        'nomoney' => 'https://apito.me/imgs/nomoney.gif',
+        'many_coins' => 'https://chorume.tech/imgs/coins.gif',
+        'one_coin' => 'https://chorume.tech/imgs/coin.gif',
+        'event' => 'https://chorume.tech/imgs/evento.gif',
+        'nomoney' => 'https://chorume.tech/imgs/nomoney.gif',
+        'sefodeu' => 'https://chorume.tech/imgs/sefodeu.gif',
         'events' => [
-            'UFC' => 'https://apito.me/imgs/ufc.gif',
-            'GENERIC' => 'https://apito.me/imgs/upcomingevents.gif',
-            'LIBERTADORES' => 'https://apito.me/imgs/libertadores.gif',
+            'UFC' => 'https://chorume.tech/imgs/ufc.gif',
+            'GENERIC' => 'https://chorume.tech/imgs/upcomingevents.gif',
+            'LIBERTADORES' => 'https://chorume.tech/imgs/libertadores.gif',
         ],
-        'place_bet' => 'https://apito.me/imgs/placebet.gif',
-        'top_betters' => 'https://apito.me/imgs/tom.gif',
+        'place_bet' => 'https://chorume.tech/imgs/placebet.gif',
+        'top_betters' => 'https://chorume.tech/imgs/tom.gif',
     ]
 ];
 
@@ -492,14 +493,40 @@ $discord->listenCommand(['transferir'], function (Interaction $interaction) use 
     $toDiscordId = $interaction->data->options['usuario']->value;
     $fromUser = $userRepository->getByDiscordId($fromDiscordId);
     $toUser = $userRepository->getByDiscordId($toDiscordId);
+    $embed = $discord->factory(Embed::class);
 
-    if (!$fromDiscordId) {
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Aconteceu um erro com seu usuário, encha o saco do admin do bot!'), true);
-        return;
-    }
+    $daysActiveAccount = (new DateTime())->diff(new DateTime($fromUser[0]['created_at']))->days;
 
     if ($coins <= 0 || $coins > 1000) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Quantidade inválida. Valor deve ser entre 1 e 1000 coins'), true);
+        return;
+    }
+
+    if ($daysActiveAccount <= 15) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Sua conta no Chorume Coins precisa ter mais de 15 dias para transferir coins'), true);
+        return;
+    }
+
+    if (!$userRepository->hasAvailableCoins($fromDiscordId, $coins)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não possui saldo suficiente'), true);
+        return;
+    }
+
+    if ($fromDiscordId === $toDiscordId) {
+        $userCoinHistoryRepository->create($fromUser[0]['id'], -$coins, 'Troll');
+
+        $embed
+            ->setTitle('TROLL')
+            ->setColor('#44f520');
+
+            $message = sprintf("Nossa mas você é engraçado mesmo né. Por ter sido troll por transferir para você mesmo, acabou de perder **%s** coins pela zoeira!\n\nInclusive tá todo mundo vendo essa merda aí que tu ta fazendo!\n\nHA! HA! HA! ENGRAÇADÃO! 👹👹👹", -$coins);
+            $image = $config['images']['sefodeu'];
+
+        $embed
+            ->setDescription($message)
+            ->setImage($image);
+
+        $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), false);
         return;
     }
 
@@ -513,13 +540,8 @@ $discord->listenCommand(['transferir'], function (Interaction $interaction) use 
         return;
     }
 
-    if (!$userRepository->hasAvailableCoins($fromDiscordId, $coins)) {
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Remetente não possui saldo suficiente'), true);
-        return;
-    }
-
     if (!$userCoinHistoryRepository->transfer($fromUser[0]['id'], $coins, $toUser[0]['id'])){
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Erro inesperado ao transferir '), true);
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Erro inesperado ao transferir'), true);
         return;
     }
 

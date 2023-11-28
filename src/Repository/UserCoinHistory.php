@@ -49,7 +49,7 @@ class UserCoinHistory extends Repository
     /**
      * do not performs any validation here, so be careful as this method can be used to "steal" coins
      */
-    public function transfer(int $fromId, int $amount, int $toId)
+    public function transfer(int $fromId, float $amount, int $toId)
     {
         $type = 'Transfer';
         $result = $this->db->query(

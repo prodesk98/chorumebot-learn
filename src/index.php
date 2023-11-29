@@ -373,13 +373,13 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         ->setColor('#F5D920');
 
     if ($currentCoins <= 0) {
-        $message = sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins);
+        $message .= sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins);
         $image = $config['images']['nomoney'];
     } else if ($currentCoins > 1000) {
-        $message = sprintf('Você possui **%s** coins!! Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
+        $message .= sprintf('Você possui **%s** coins!! Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
         $image = $config['images']['many_coins'];
     } else {
-        $message = sprintf('Você possui **%s** coins! :coin:', $currentCoins);
+        $message .= sprintf('Você possui **%s** coins! :coin:', $currentCoins);
         $image = $config['images']['one_coin'];
     }
 

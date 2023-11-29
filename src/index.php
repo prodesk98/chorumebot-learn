@@ -567,10 +567,35 @@ $discord->listenCommand(['evento', 'fechar'], function (Interaction $interaction
     }
 
     $eventId = $interaction->data->options['fechar']->options['id']->value;
+    $event = $eventRepository->getEventById($eventId);
 
-    if ($eventRepository->closeEvent($eventId)) {
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento fechado! Esse evento não recebe mais apostas!'), false);
+    if (empty($event)) {
+        $interaction->respondWithMessage(
+            MessageBuilder::new()->setContent(
+                sprintf('Evento **#%s** não existe!', $eventId)
+            ),
+            false
+        );
+        return;
     }
+
+    if (!$eventRepository->closeEvent($eventId)) {
+        $interaction->respondWithMessage(
+            MessageBuilder::new()->setContent(
+                sprintf('Ocorreu um erro ao finalizar evento **#%s**', $eventId)
+            ),
+            false
+        );
+        return;
+    }
+
+    $interaction->respondWithMessage(
+        MessageBuilder::new()->setContent(
+            sprintf('Evento **#%s** fechado! Esse evento não recebe mais apostas!', $eventId)
+        ),
+        false
+    );
+    return;
 });
 
 $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interaction) use ($discord, $config, $eventRepository, $eventChoiceRepository)  {
@@ -579,18 +604,22 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
         return;
     }
 
+    $eventId = $interaction->data->options['encerrar']->options['id']->value;
+    $choiceKey = $interaction->data->options['encerrar']->options['opcao']->value;
+    $event = $eventRepository->getEventById($eventId);
+    $choice = $eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $choiceKey);
+    $bets = $eventRepository->payoutEvent($eventId, $choiceKey);
     $events = $eventRepository->listEventsClosed();
 
-    if (empty($events)) {
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Não existem eventos para serem encerrados!'), true);
+    if (empty($event)) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento não existe!'), true);
         return;
     }
 
-    $eventId = $interaction->data->options['encerrar']->options['id']->value;
-    $choiceKey = $interaction->data->options['encerrar']->options['opcao']->value;
-    $eventItem = $eventRepository->getEventById($eventId);
-    $choiceItem = $eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $choiceKey);
-    $bets = $eventRepository->payoutEvent($eventId, $choiceKey);
+    if ($event[0]['status'] !== $eventRepository::CLOSED) {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento precisa estar fechado para ser finalizado!'), true);
+        return;
+    }
 
     if (count($bets) === 0) {
         $eventRepository->finishEvent($eventId);
@@ -600,8 +629,8 @@ $discord->listenCommand(['evento', 'encerrar'], function (Interaction $interacti
 
     $eventsDescription = sprintf(
         "**Evento:** %s \n **Vencedor**: %s \n \n \n",
-        $eventItem[0]['name'],
-        $choiceItem[0]['description'],
+        $event[0]['name'],
+        $choice[0]['description'],
     );
 
     $winnersImage = $config['images']['winners'][array_rand($config['images']['winners'])];

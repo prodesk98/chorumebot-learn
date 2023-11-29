@@ -67,13 +67,13 @@ class Event extends Repository
             [ 'type' => 's', 'value' => self::OPEN ],
         ]);
 
-        $eventChoice1 = $this->db->query('INSERT INTO events_choices (`event_id`, `choice_key`, `description`) VALUES (?, ?, ?)', [
+        $this->db->query('INSERT INTO events_choices (`event_id`, `choice_key`, `description`) VALUES (?, ?, ?)', [
             [ 'type' => 'i', 'value' => $createEvent->insert_id ],
             [ 'type' => 's', 'value' => 'A' ],
             [ 'type' => 's', 'value' => $optionA ],
         ]);
 
-        $eventChoice2 = $this->db->query('INSERT INTO events_choices (`event_id`, `choice_key`, `description`) VALUES (?, ?, ?)', [
+        $this->db->query('INSERT INTO events_choices (`event_id`, `choice_key`, `description`) VALUES (?, ?, ?)', [
             [ 'type' => 'i', 'value' => $createEvent->insert_id ],
             [ 'type' => 's', 'value' => 'B' ],
             [ 'type' => 's', 'value' => $optionB ],
@@ -90,8 +90,6 @@ class Event extends Repository
         ];
 
         $createEvent = $this->db->query('UPDATE events SET status = ? WHERE id = ?', $data);
-
-        var_dump($data, $eventId, $createEvent);
 
         return $createEvent;
     }
@@ -270,7 +268,7 @@ class Event extends Repository
             if ($bet['choice_key'] !== $winnerChoiceKey) continue;
 
             $betPayout = $winnerChoiceKey === 'A' ? round(($bet['amount'] * $oddsA), 2) : round($bet['amount'] * $oddsB, 2);
-            $this->userCoinHistoryRepository->create($bet['user_id'], $betPayout, 'Earnings');
+            $this->userCoinHistoryRepository->create($bet['user_id'], $betPayout, 'Event', $eventId);
 
             $winners[] = [
                 'discord_user_id' => $bet['discord_user_id'],

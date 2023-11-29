@@ -58,7 +58,7 @@ class User extends Repository
         return $giveCoins;
     }
 
-    public function receivedDailyCoins(int $discordId)
+    public function canReceivedDailyCoins(int $discordId)
     {
         $result = $this->db->select(
             "
@@ -70,6 +70,7 @@ class User extends Repository
                     u.discord_user_id = ?
                     AND uch.type = 'Daily'
                     AND DATE(uch.created_at) = CURDATE()
+                    AND u.created_at < DATE_SUB(NOW(), INTERVAL 1 DAY);
             ",
             [
                 [ 'type' => 'i', 'value' => $discordId ]

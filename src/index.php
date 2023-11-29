@@ -70,25 +70,25 @@ $discord->on('ready', function (Discord $discord) {
     // ]);
     // $discord->application->commands->save($command);
 
-    $command = new Command($discord, [
-        'name' => 'transferir',
-        'description' => 'Transfere coins para outro usuário',
-        'options' => [
-                [
-                    'type' => Option::USER,
-                    'name' => 'usuario',
-                    'description' => 'Nome do usuário',
-                    'required' => true,
-                ],
-                [
-                    'type' => Option::NUMBER,
-                    'name' => 'coins',
-                    'description' => 'Quantidade de coins para transferir',
-                    'required' => true,
-                ],
-            ]
-    ]);
-    $discord->application->commands->save($command);
+    // $command = new Command($discord, [
+    //     'name' => 'transferir',
+    //     'description' => 'Transfere coins para outro usuário',
+    //     'options' => [
+    //             [
+    //                 'type' => Option::USER,
+    //                 'name' => 'usuario',
+    //                 'description' => 'Nome do usuário',
+    //                 'required' => true,
+    //             ],
+    //             [
+    //                 'type' => Option::NUMBER,
+    //                 'name' => 'coins',
+    //                 'description' => 'Quantidade de coins para transferir',
+    //                 'required' => true,
+    //             ],
+    //         ]
+    // ]);
+    // $discord->application->commands->save($command);
 
     // $command = new Command($discord, [
     //     'name' => 'evento',
@@ -356,8 +356,10 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
 
     $receivedDaily = false;
     $dailyCoins = 100;
-    if(!$userRepository->receivedDailyCoins($interaction->member->user->id) && !empty($user)) {
+
+    if (!$userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
         $receivedDaily = true;
+        $currentCoins += $dailyCoins;
         $userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
     }
 
@@ -373,7 +375,7 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         $message = sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins);
         $image = $config['images']['nomoney'];
     } else if ($currentCoins > 1000) {
-        $message = sprintf('Você possui **%s** coins! !Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
+        $message = sprintf('Você possui **%s** coins!! Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
         $image = $config['images']['many_coins'];
     } else {
         $message = sprintf('Você possui **%s** coins! :coin:', $currentCoins);
@@ -384,9 +386,6 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
         $message .= "\n\nVocê recebeu suas **%s** coins diárias! :money_mouth:";
         $message = sprintf($message, $dailyCoins);
     }
-
-    echo $ip = $_SERVER['REMOTE_ADDR'];
-    echo $browser = $_SERVER['HTTP_USER_AGENT'];
 
     $embed
         ->setDescription($message)

@@ -333,6 +333,7 @@ $discord->listenCommand('test', function (Interaction $interaction) use ($discor
 $discord->listenCommand('coins', function (Interaction $interaction) use ($discord, $config, $userRepository) {
     $discordId = $interaction->member->user->id;
     $user = $userRepository->getByDiscordId($discordId);
+    $message = '';
 
     if (!$discordId) {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Aconteceu um erro com seu usuário, encha o saco do admin do bot!'), true);
@@ -353,14 +354,14 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
 
     $coinsQuery = $userRepository->getCurrentCoins($interaction->member->user->id);
     $currentCoins = $coinsQuery[0]['total'];
-
-    $receivedDaily = false;
     $dailyCoins = 100;
 
     if (!$userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
-        $receivedDaily = true;
         $currentCoins += $dailyCoins;
         $userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
+
+        $message .= "Você recebeu suas **%s** coins diárias! :money_mouth:\n\n";
+        $message = sprintf($message, $dailyCoins);
     }
 
     /**
@@ -380,11 +381,6 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
     } else {
         $message = sprintf('Você possui **%s** coins! :coin:', $currentCoins);
         $image = $config['images']['one_coin'];
-    }
-
-    if ($receivedDaily) {
-        $message .= "\n\nVocê recebeu suas **%s** coins diárias! :money_mouth:";
-        $message = sprintf($message, $dailyCoins);
     }
 
     $embed

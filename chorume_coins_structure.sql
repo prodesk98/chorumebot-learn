@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql
--- Generation Time: Nov 13, 2023 at 03:04 PM
+-- Generation Time: Nov 30, 2023 at 05:06 PM
 -- Server version: 8.0.30
 -- PHP Version: 8.2.10
 
@@ -66,6 +66,22 @@ CREATE TABLE `events_choices` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `talks`
+--
+
+CREATE TABLE `talks` (
+  `id` int UNSIGNED NOT NULL,
+  `triggertext` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `answer` json NOT NULL,
+  `status` tinyint NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -73,7 +89,9 @@ CREATE TABLE `users` (
   `id` int UNSIGNED NOT NULL,
   `discord_user_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `discord_username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `received_initial_coins` tinyint(1) NOT NULL DEFAULT '1'
+  `received_initial_coins` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -85,8 +103,10 @@ CREATE TABLE `users` (
 CREATE TABLE `users_coins_history` (
   `id` int NOT NULL,
   `user_id` int UNSIGNED NOT NULL,
+  `entity_id` int DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Bet / Gather / Initial',
+  `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Initial | Bet | Event | Fix | Old Bot | Gift | Daily | Transfer | Troll',
+  `description` text COLLATE utf8mb4_general_ci,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -116,6 +136,12 @@ ALTER TABLE `events_bets`
 ALTER TABLE `events_choices`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_events_choices_event_id_idx` (`event_id`);
+
+--
+-- Indexes for table `talks`
+--
+ALTER TABLE `talks`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `users`
@@ -152,6 +178,12 @@ ALTER TABLE `events_bets`
 -- AUTO_INCREMENT for table `events_choices`
 --
 ALTER TABLE `events_choices`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `talks`
+--
+ALTER TABLE `talks`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --

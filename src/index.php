@@ -399,7 +399,7 @@ $discord->listenCommand('coins', function (Interaction $interaction) use ($disco
     $currentCoins = $coinsQuery[0]['total'];
     $dailyCoins = 100;
 
-    if (!$userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
+    if ($userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
         $currentCoins += $dailyCoins;
         $userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
 

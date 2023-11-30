@@ -69,8 +69,7 @@ class User extends Repository
                 WHERE
                     u.discord_user_id = ?
                     AND uch.type = 'Daily'
-                    AND DATE(uch.created_at) = CURDATE()
-                    AND u.created_at < DATE_SUB(NOW(), INTERVAL 1 DAY);
+                    AND DATE(uch.created_at) = CURDATE();
             ",
             [
                 [ 'type' => 'i', 'value' => $discordId ]

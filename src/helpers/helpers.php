@@ -26,3 +26,16 @@ if (!function_exists('find_role_array')) {
         return false;
     }
 }
+
+if (!function_exists('find_in_array')) {
+    function find_in_array($needle, $property, $haystack)
+    {
+        foreach ($haystack as $hay) {
+            if ($hay[$property] === $needle) {
+                return $hay;
+            }
+        }
+
+        return false;
+    }
+}

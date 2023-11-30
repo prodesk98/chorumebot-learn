@@ -4,6 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 require 'config/main.php';
 require 'helpers/helpers.php';
 
+use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
 use Discord\Parts\Channel\Message;
@@ -18,6 +19,7 @@ use Chorume\Repository\User;
 use Chorume\Repository\Event;
 use Chorume\Repository\EventChoice;
 use Chorume\Repository\EventBet;
+use Chorume\Repository\Talk;
 use Chorume\Repository\UserCoinHistory;
 
 $db = new Db(
@@ -26,6 +28,13 @@ $db = new Db(
     getenv('DB_USER'),
     getenv('DB_PASSWORD')
 );
+
+$redis = new RedisClient([
+    'scheme' => 'tcp',
+    'host' => getenv('REDIS_HOST'),
+    'password' => getenv('REDIS_PASSWORD'),
+    'port' => 6379,
+]);
 
 $config = [
     'admin_role' => ['Admin', 'Gerente', 'Moderador', 'Sub Moderador', 'Bot Manager'],
@@ -55,14 +64,48 @@ $eventRepository = new Event($db);
 $eventChoiceRepository = new EventChoice($db);
 $eventBetsRepository = new EventBet($db);
 $userCoinHistoryRepository = new UserCoinHistory($db);
+$talkRepository = new Talk($db);
 
 $discord = new Discord([
     'token' => getenv('TOKEN'),
     'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS
 ]);
 
-$discord->on('ready', function (Discord $discord) {
+$discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) {
     echo "Bot is ready!", PHP_EOL;
+
+    // Listen for messages.
+    $discord->on(DiscordEvent::MESSAGE_CREATE, function (Message $message, Discord $discord) use ($talkRepository, $redis) {
+        if ($redis->get('talks')) {
+            $textTriggers = json_decode($redis->get('talks'), true);
+        } else {
+            $textTriggers = $talkRepository->listAllTriggers();
+            $redis->set('talks', json_encode($textTriggers), 'EX', 60);
+        }
+
+        if ($found = find_in_array($message->content, 'triggertext', $textTriggers)) {
+            $talk = $talkRepository->findById($found['id']);
+
+            if (empty($talk)) {
+                return;
+            }
+
+            $talkMessage = json_decode($talk[0]['answer']);
+
+            switch ($talk[0]['type']) {
+                case 'media':
+                    $embed = $discord->factory(Embed::class);
+                    $embed
+                        ->setTitle($talkMessage->text)
+                        ->setImage($talkMessage->image);
+                    $message->channel->sendMessage(MessageBuilder::new()->addEmbed($embed));
+                    break;
+                default:
+                    $message->channel->sendMessage(MessageBuilder::new()->setContent($talkMessage->text));
+                    break;
+            }
+        }
+    });
 
     // $command = new Command($discord, [
     //     'name' => 'coins',

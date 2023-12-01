@@ -5,6 +5,10 @@ require 'Helpers/FindHelper.php';
 
 use Dotenv\Dotenv;
 use Predis\Client as RedisClient;
+use Monolog\Logger as Monolog;
+use Monolog\Level;
+use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\JsonFormatter;
 use Discord\Discord;
 use Discord\Parts\Interactions\Command\Command;
 use Discord\WebSockets\Intents;
@@ -54,8 +58,21 @@ $redis = new RedisClient([
     'port' => 6379,
 ]);
 
+$logger = new Monolog('ChorumeCoins');
+
+if (getenv('ENVIRONMENT') === 'production') {
+    $formatter = new JsonFormatter();
+    $stream = new StreamHandler(__DIR__ . '/application-json.log', Level::fromName(getenv('LOG_LEVEL')));
+    $stream->setFormatter($formatter);
+    $logger->pushHandler($stream);
+}
+
+$logger->pushHandler(new StreamHandler('php://stdout', Level::fromName(getenv('LOG_LEVEL'))));
+
+
 $discord = new Discord([
     'token' => getenv('TOKEN'),
+    'logger' => $logger,
     'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES,
 ]);
 

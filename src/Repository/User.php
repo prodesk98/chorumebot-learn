@@ -76,7 +76,7 @@ class User extends Repository
             ]
         );
 
-        return !empty($result);
+        return empty($result);
     }
 
     public function getCurrentCoins(int $discordId)

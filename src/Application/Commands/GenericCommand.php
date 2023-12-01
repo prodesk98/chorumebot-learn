@@ -129,7 +129,7 @@ class GenericCommand
         $toUser = $this->userRepository->getByDiscordId($toDiscordId);
         $embed = $this->discord->factory(Embed::class);
 
-        $daysActiveAccount = (new DateTime())->diff(new DateTime($fromUser[0]['created_at']))->days;
+        $daysActiveAccount = (new \DateTime())->diff(new \DateTime($fromUser[0]['created_at']))->days;
 
         if ($coins <= 0 || $coins > 1000) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent('Quantidade inválida. Valor deve ser entre 1 e 1000 coins'), true);

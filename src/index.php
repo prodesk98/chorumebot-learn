@@ -54,6 +54,11 @@ $redis = new RedisClient([
     'port' => 6379,
 ]);
 
+$discord = new Discord([
+    'token' => getenv('TOKEN'),
+    'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES,
+]);
+
 $userRepository = new User($db);
 $eventRepository = new Event($db);
 $eventChoiceRepository = new EventChoice($db);
@@ -63,11 +68,6 @@ $rouletteRepository = new Roulette($db);
 $rouletteBetRepository = new RouletteBet($db);
 $talkRepository = new Talk($db);
 
-$discord = new Discord([
-    'token' => getenv('TOKEN'),
-    'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES,
-]);
-
 $messageCreateEvent = new MessageCreate($discord, $config, $redis, $talkRepository);
 $myGenericCommand = new GenericCommand($discord, $config, $userRepository, $userCoinHistoryRepository);
 $myBetsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
@@ -75,8 +75,6 @@ $myEventsCommand = new EventsCommand($discord, $config, $eventChoiceRepository, 
 $myRouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository, $rouletteBetRepository);
 
 $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) {
-    echo "Bot is ready!", PHP_EOL;
-
     // Initialize application commands
     $initializeCommandsFiles = glob(__DIR__ . '/Application/Initialize/*Commands.php');
 
@@ -86,6 +84,13 @@ $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) 
         $command = new Command($discord, $initializeCommand);
         $discord->application->commands->save($command);
     }
+
+    echo "  _______                           ___      __   " . PHP_EOL;
+    echo " / ___/ / ___  ______ ____ _ ___   / _ )___ / /_  " . PHP_EOL;
+    echo "/ /__/ _ / _ \/ __/ // /  ' / -_) / _  / _ / __/  " . PHP_EOL;
+    echo "\___/_//_\___/_/  \_,_/_/_/_\__/ /____/\___\__/   " . PHP_EOL;
+    echo "                                                  " . PHP_EOL;
+    echo "                 Bot is ready!                    " . PHP_EOL;
 });
 
 $discord->on(DiscordEvent::MESSAGE_CREATE, [$messageCreateEvent, 'messageCreate']);

@@ -93,7 +93,7 @@ $myRouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository,
 
 $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) {
     // Initialize application commands
-    $initializeCommandsFiles = glob(__DIR__ . '/Application/Initialize/*Commands.php');
+    $initializeCommandsFiles = glob(__DIR__ . '/Application/Initialize/*Command.php');
 
     foreach ($initializeCommandsFiles as $initializeCommandsFile) {
         $initializeCommand = include $initializeCommandsFile;

@@ -76,7 +76,7 @@ $talkRepository = new Talk($db);
 
 $discord = new Discord([
     'token' => getenv('TOKEN'),
-    'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS
+    'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES,
 ]);
 
 $myGenericCommandService = new GenericCommandService($discord, $config, $userRepository, $userCoinHistoryRepository);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Chorume\Application\Services;
+namespace Chorume\Application\Commands;
 
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
@@ -10,7 +10,7 @@ use Chorume\Repository\User;
 use Chorume\Repository\Event;
 use Chorume\Repository\EventBet;
 
-class BetsService
+class BetsCommand
 {
     public $discord;
     public $config;

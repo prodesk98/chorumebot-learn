@@ -1,6 +1,6 @@
 <?php
 
-namespace Chorume\Application\Services;
+namespace Chorume\Application\Commands;
 
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
@@ -9,7 +9,7 @@ use Discord\Parts\Embed\Embed;
 use Chorume\Repository\Event;
 use Chorume\Repository\EventChoice;
 
-class EventsService
+class EventsCommand
 {
     public $discord;
     public $config;

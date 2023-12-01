@@ -1,6 +1,6 @@
 <?php
 
-namespace Chorume\Application\Services;
+namespace Chorume\Application\Commands;
 
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
@@ -8,7 +8,7 @@ use Discord\Parts\Interactions\Interaction;
 use Chorume\Repository\Roulette;
 use Chorume\Repository\RouletteBet;
 
-class RouletteBetService
+class RouletteCommand
 {
     public $discord;
     public $config;
@@ -18,17 +18,15 @@ class RouletteBetService
     public function __construct(
         Discord $discord,
         $config,
-        Roulette $rouletteRepository,
-        RouletteBet $rouletteBetRepository
+        Roulette $rouletteRepository
     )
     {
         $this->discord = $discord;
         $this->config = $config;
         $this->rouletteRepository = $rouletteRepository;
-        $this->rouletteBetRepository = $rouletteBetRepository;
     }
 
-    public function criar(Interaction $interaction)
+    public function create(Interaction $interaction)
     {
         if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);

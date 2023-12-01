@@ -11,11 +11,10 @@ class EventBet extends Repository
 {
     public function __construct(
         $db,
-        protected User|Null $userRepository = null,
-        protected EventChoice|Null $eventChoiceRepository = null,
-        protected UserCoinHistory|Null $userCoinHistoryRepository = null
-    )
-    {
+        protected User|null $userRepository = null,
+        protected EventChoice|null $eventChoiceRepository = null,
+        protected UserCoinHistory|null $userCoinHistoryRepository = null
+    ) {
         $this->userRepository = $userRepository ?? new User($db);
         $this->eventChoiceRepository = $eventChoiceRepository ?? new EventChoice($db);
         $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);

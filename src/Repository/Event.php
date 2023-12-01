@@ -29,11 +29,10 @@ class Event extends Repository
 
     public function __construct(
         $db,
-        protected EventBet|Null $eventBetRepository = null,
-        protected EventChoice|Null $eventChoiceRepository = null,
-        protected UserCoinHistory|Null $userCoinHistoryRepository = null
-    )
-    {
+        protected EventBet|null $eventBetRepository = null,
+        protected EventChoice|null $eventChoiceRepository = null,
+        protected UserCoinHistory|null $userCoinHistoryRepository = null
+    ) {
         $this->eventBetRepository = $eventBetRepository ?? new EventBet($db);
         $this->eventChoiceRepository = $eventChoiceRepository ?? new EventChoice($db);
         $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);
@@ -238,8 +237,8 @@ class Event extends Repository
         $totalBetsA = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'A' ? $acc += $item['amount'] : $acc, 0);
         $totalBetsB = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'B' ? $acc += $item['amount'] : $acc, 0);
 
-        $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1: 1;
-        $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1: 1;
+        $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1 : 1;
+        $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1 : 1;
 
         return [
             'oddsA' => $oddsA,
@@ -261,11 +260,13 @@ class Event extends Repository
 
         $this->updateEventWithWinner($choiceId[0]['id'], $eventId);
 
-        $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1: 1;
-        $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1: 1;
+        $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1 : 1;
+        $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1 : 1;
 
         foreach ($bets as $bet) {
-            if ($bet['choice_key'] !== $winnerChoiceKey) continue;
+            if ($bet['choice_key'] !== $winnerChoiceKey) {
+                continue;
+            }
 
             $betPayout = $winnerChoiceKey === 'A' ? round(($bet['amount'] * $oddsA), 2) : round($bet['amount'] * $oddsB, 2);
             $this->userCoinHistoryRepository->create($bet['user_id'], $betPayout, 'Event', $eventId);

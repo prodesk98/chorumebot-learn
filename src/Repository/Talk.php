@@ -19,8 +19,8 @@ use Chorume\Repository\UserCoinHistory;
 
 class Talk extends Repository
 {
-    const STATUS_ACTIVE = 1;
-    const STATUS_INACTIVE = 0;
+    public const STATUS_ACTIVE = 1;
+    public const STATUS_INACTIVE = 0;
 
     public function create(string $triggertext, string $type, string $answer)
     {

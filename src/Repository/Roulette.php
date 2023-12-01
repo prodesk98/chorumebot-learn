@@ -13,9 +13,7 @@ class Roulette extends Repository
     public const CLOSED = 2;
     public const CANCELED = 3;
     public const PAID = 4;
-    private $userRepository;
-    private $eventChoiceRepository;
-    private $userCoinHistoryRepository;
+
     public const LABEL = [
         self::OPEN => 'Aberto',
         self::CLOSED => 'Fechado',
@@ -29,24 +27,24 @@ class Roulette extends Repository
         self::CANCELED => 'Cancelado',
         self::PAID => 'Apostas pagas',
     ];
+
     public function __construct(
         $db,
     ) {
-        $this->userRepository =  new User($db);
-        $this->eventChoiceRepository =  new EventChoice($db);
-        $this->userCoinHistoryRepository = new UserCoinHistory($db);
         parent::__construct($db);
     }
-    public function createRouletteEvent(string $eventName)
+
+    public function createEvent(string $eventName)
     {
-     
+
         $createEvent = $this->db->query('INSERT INTO roulette (status, description) VALUES (?, ?)', [
             ['type' => 'i', 'value' => self::OPEN],
-            ['type' => 's', 'value' => $eventName],  
+            ['type' => 's', 'value' => $eventName],
         ]);
         return $createEvent;
     }
-    public function closeRoulette(int $eventId)
+
+    public function close(int $eventId)
     {
         $data = [
             ['type' => 's', 'value' => self::CLOSED],
@@ -57,7 +55,7 @@ class Roulette extends Repository
 
         return $createEvent;
     }
-    public function finishRoulette(int $eventId)
+    public function finish(int $eventId)
     {
         $data = [
             ['type' => 's', 'value' => self::PAID],

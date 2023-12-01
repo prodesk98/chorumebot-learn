@@ -11,17 +11,20 @@ use Discord\Parts\Embed\Embed;
 use Discord\WebSockets\Intents;
 use Discord\WebSockets\Event as DiscordEvent;
 
-class DbSingleton {
+class DbSingleton
+{
     private static $instance;
 
     private $db;
 
-    private function __construct($server, $database, $user, $password) {
+    private function __construct($server, $database, $user, $password)
+    {
         // Lógica de inicialização do objeto Db
         $this->db = new Db($server, $database, $user, $password);
     }
 
-    public static function getInstance($server, $database, $user, $password) {
+    public static function getInstance($server, $database, $user, $password)
+    {
         if (!self::$instance) {
             self::$instance = new self($server, $database, $user, $password);
         }

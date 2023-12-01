@@ -10,7 +10,6 @@ use Discord\Builders\MessageBuilder;
 use Discord\Parts\Channel\Message;
 use Discord\Parts\Interactions\Command\Command;
 use Discord\Parts\Interactions\Command\Option;
-use Discord\Parts\Interactions\Interaction;
 use Discord\Parts\Embed\Embed;
 use Discord\WebSockets\Intents;
 use Discord\WebSockets\Event as DiscordEvent;
@@ -24,10 +23,11 @@ use Chorume\Repository\UserCoinHistory;
 use Chorume\Repository\Roulette;
 use Chorume\Repository\RouletteBet;
 use Chorume\Application\Services\GenericCommandService;
-use Chorume\Application\Services\ApostaService;
-use Chorume\Application\Services\EventoService;
+use Chorume\Application\Services\BetsService;
+use Chorume\Application\Services\EventsService;
 use Chorume\Application\Services\RouletteService;
 use Chorume\Application\Services\RouletteBetService;
+
 $db = new Db(
     getenv('DB_SERVER'),
     getenv('DB_DATABASE'),
@@ -80,10 +80,9 @@ $discord = new Discord([
 ]);
 
 $myGenericCommandService = new GenericCommandService($discord, $config, $userRepository, $userCoinHistoryRepository);
-$myApostaService = new ApostaService($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
-$myEventoService = new EventoService($discord, $config, $eventChoiceRepository, $eventRepository);
+$myBetsService = new BetsService($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
+$myEventsService = new EventsService($discord, $config, $eventChoiceRepository, $eventRepository);
 $myRouletteService = new RouletteService($discord, $config, $rouletteRepository, $rouletteBetRepository);
-
 
 $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) {
     echo "Bot is ready!", PHP_EOL;
@@ -389,7 +388,7 @@ $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) 
                     ],
                 ]
             ],
-       
+
             [
                 'type' => Option::SUB_COMMAND,
                 'name' => 'listar',
@@ -398,38 +397,17 @@ $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) 
         ]
     ]);
     $discord->application->commands->save($command);
-
-    
-    //Listen for messages.
-    $discord->on(DiscordEvent::USER_UPDATE, function (Message $message, Discord $discord) {
-        echo "{$message->author->username}: {$message->content}", PHP_EOL;
-    });
-
-    $discord->on(DiscordEvent::VOICE_STATE_UPDATE, function (VoiceStateUpdate $state, Discord $discord, $oldstate) {
-        
-    });
 });
 
-
-
 $discord->listenCommand('coins', [$myGenericCommandService, 'coins']);
-
-$discord->listenCommand(['top', 'apostadores'], [$myGenericCommandService, 'topApostadores']);
-
-$discord->listenCommand(['transferir'], [$myGenericCommandService, 'transferir']);
-
-$discord->listenCommand(['aposta', 'entrar'], [$myApostaService, 'apostaEntrar']);
-
-$discord->listenCommand(['evento', 'criar'], [$myEventoService, 'eventoCriar']);
-
-$discord->listenCommand(['evento', 'fechar'], [$myEventoService, 'eventoFechar']);
-
-$discord->listenCommand(['evento', 'encerrar'], [$myEventoService, 'eventoEncerrar']);
-
-$discord->listenCommand(['evento', 'listar'], [$myEventoService, 'eventoListar']);
-
-$discord->listenCommand(['evento', 'anunciar'], [$myEventoService, 'eventoAnunciar']);
-
-$discord->listenCommand(['roleta', 'criar' ], [$myRouletteService, 'criar']);
+$discord->listenCommand(['top', 'apostadores'], [$myGenericCommandService, 'topBetters']);
+$discord->listenCommand(['transferir'], [$myGenericCommandService, 'transfer']);
+$discord->listenCommand(['aposta', 'entrar'], [$myBetsService, 'makeBet']);
+$discord->listenCommand(['evento', 'criar'], [$myEventsService, 'create']);
+$discord->listenCommand(['evento', 'fechar'], [$myEventsService, 'close']);
+$discord->listenCommand(['evento', 'encerrar'], [$myEventsService, 'finish']);
+$discord->listenCommand(['evento', 'listar'], [$myEventsService, 'list']);
+$discord->listenCommand(['evento', 'anunciar'], [$myEventsService, 'advertise']);
+$discord->listenCommand(['roleta', 'criar' ], [$myRouletteService, 'create']);
 
 $discord->run();

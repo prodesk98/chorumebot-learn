@@ -11,11 +11,12 @@ use Discord\Parts\Embed\Embed;
 use Discord\WebSockets\Intents;
 use Discord\WebSockets\Event as DiscordEvent;
 
-class DiscordSingleton {
-
+class DiscordSingleton
+{
     private static $instance;
 
-    private function __construct() {
+    private function __construct()
+    {
         // Configuração da instância do Discord
         $token = getenv('TOKEN');
         $intents = Intents::getDefaultIntents() | Intents::GUILD_MEMBERS;
@@ -26,7 +27,8 @@ class DiscordSingleton {
         ]);
     }
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (!self::$instance) {
             new self();
         }

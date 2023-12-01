@@ -27,26 +27,19 @@ class RouletteBet extends Repository
         self::CANCELED => 'Cancelado',
         self::PAID => 'Apostas pagas',
     ];
+
     public function __construct(
         $db,
-    )
-    {
-        $this->userRepository = $userRepository ?? new User($db);
-        $this->eventChoiceRepository = $eventChoiceRepository ?? new EventChoice($db);
-        $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);
+    ) {
         parent::__construct($db);
     }
     public function createRouletteBetEvent(int $userId, int $rouletteId, int $betAmount, int $choice)
     {
-        $createBetEvent = $this->db->query('INSERT INTO roulette_bet (user_id, roulette_id, bet_amount, choice, created_at) VALUES (?, ?, ?, ?, ?)', [
+        $createBetEvent = $this->db->query('INSERT INTO roulette_bet (user_id, roulette_id, bet_amount, choice) VALUES (?, ?, ?, ?)', [
             [ 'type' => 'i', 'value' => $userId ],
             [ 'type' => 'i', 'value' => $rouletteId ],
             [ 'type' => 'i', 'value' => $betAmount ],
             [ 'type' => 'i', 'value' => $choice ],
-            [ 'type' => 's', 'value' => date('Y-m-d H:i:s') ], 
         ]);
     }
-    
-  
- 
 }

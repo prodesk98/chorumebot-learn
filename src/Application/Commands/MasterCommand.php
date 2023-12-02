@@ -103,7 +103,7 @@ class MasterCommand
                 "top_p" => 1,
                 "n" => 1,
                 "stream" => false,
-                "max_tokens" => 150,
+                "max_tokens" => 200,
                 "presence_penalty" => 0,
                 "frequency_penalty" => 0
             ];

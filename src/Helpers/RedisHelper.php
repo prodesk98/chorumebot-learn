@@ -2,11 +2,13 @@
 
 namespace Chorume\Helpers;
 
+use Predis\Client as RedisClient;
+
 class RedisHelper
 {
-    private $redis;
+    private RedisClient $redis;
 
-    public function __construct($redis)
+    public function __construct(RedisClient $redis)
     {
         $this->redis = $redis;
     }
@@ -22,6 +24,7 @@ class RedisHelper
             return false;
         }
 
+        $this->redis->set($key, 1, 'EX', $seconds);
         return true;
     }
 }

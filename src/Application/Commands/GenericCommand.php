@@ -8,6 +8,8 @@ use Discord\Parts\Interactions\Interaction;
 use Discord\Parts\Embed\Embed;
 use Chorume\Repository\User;
 use Chorume\Repository\UserCoinHistory;
+use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Psr7\Request;
 
 class GenericCommand
 {

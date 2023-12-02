@@ -26,6 +26,7 @@ use Chorume\Application\Commands\GenericCommand;
 use Chorume\Application\Commands\BetsCommand;
 use Chorume\Application\Commands\EventsCommand;
 use Chorume\Application\Commands\RouletteCommand;
+use Chorume\Application\Commands\MasterCommand;
 use Chorume\Application\Events\MessageCreate;
 
 $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
@@ -86,6 +87,7 @@ $rouletteBetRepository = new RouletteBet($db);
 $talkRepository = new Talk($db);
 
 $messageCreateEvent = new MessageCreate($discord, $config, $redis, $talkRepository);
+$masterCommand = new MasterCommand($discord, $config, $userRepository, $userCoinHistoryRepository);
 $myGenericCommand = new GenericCommand($discord, $config, $userRepository, $userCoinHistoryRepository);
 $myBetsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
 $myEventsCommand = new EventsCommand($discord, $config, $eventChoiceRepository, $eventRepository);
@@ -112,6 +114,7 @@ $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) 
 
 $discord->on(DiscordEvent::MESSAGE_CREATE, [$messageCreateEvent, 'messageCreate']);
 $discord->listenCommand('coins', [$myGenericCommand, 'coins']);
+$discord->listenCommand('mestre', [$masterCommand, 'ask']);
 $discord->listenCommand(['top', 'apostadores'], [$myGenericCommand, 'topBetters']);
 $discord->listenCommand(['transferir'], [$myGenericCommand, 'transfer']);
 $discord->listenCommand(['aposta', 'entrar'], [$myBetsCommand, 'makeBet']);

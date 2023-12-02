@@ -87,7 +87,7 @@ $rouletteBetRepository = new RouletteBet($db);
 $talkRepository = new Talk($db);
 
 $messageCreateEvent = new MessageCreate($discord, $config, $redis, $talkRepository);
-$masterCommand = new MasterCommand($discord, $config, $userRepository, $userCoinHistoryRepository);
+$masterCommand = new MasterCommand($discord, $config, $redis);
 $myGenericCommand = new GenericCommand($discord, $config, $userRepository, $userCoinHistoryRepository);
 $myBetsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
 $myEventsCommand = new EventsCommand($discord, $config, $eventChoiceRepository, $eventRepository);

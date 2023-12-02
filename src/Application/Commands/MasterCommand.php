@@ -2,30 +2,47 @@
 
 namespace Chorume\Application\Commands;
 
+use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Parts\Interactions\Interaction;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\Request;
 use Chorume\Application\Discord\MessageComposer;
+use Chorume\Helpers\RedisHelper;
 
 class MasterCommand
 {
     private $discord;
     private $config;
+    private $redisHelper;
     private $messageComposer;
 
     public function __construct(
         Discord $discord,
-        $config
+        $config,
+        RedisClient $redis
     ) {
         $this->discord = $discord;
         $this->config = $config;
+        $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
     }
 
     public function ask(Interaction $interaction)
     {
         $question = $interaction->data->options['pergunta']->value;
+
+        if (!$this->redisHelper->cooldown('master:ask:' . $interaction->member->user->id, 60)) {
+            $interaction->respondWithMessage(
+                $this->messageComposer->embed(
+                    'MESTRE ODEIA REPETIÇÕES',
+                    'Muito mais devagar aí cnpjoto, calabreso! Aguarde 1 minuto para fazer outra pergunta!',
+                    $this->config['images']['gonna_press']
+                ),
+                true
+            );
+            return;
+        }
 
         if (strlen($question) > 100) {
             $interaction->respondWithMessage(

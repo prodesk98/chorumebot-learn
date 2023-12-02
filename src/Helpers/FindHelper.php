@@ -1,6 +1,5 @@
 <?php
 
-
 if (!function_exists('find_role')) {
     function find_role($needle, $property, $objects)
     {

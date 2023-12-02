@@ -21,5 +21,6 @@ return [
         'top_betters' => 'https://chorume.tech/imgs/tom.gif',
         'master' => 'https://chorume.tech/imgs/master.gif',
         'typer' => 'https://chorume.tech/imgs/typer.gif',
+        'gonna_press' => 'https://chorume.tech/imgs/gonna-press.gif',
     ],
 ];

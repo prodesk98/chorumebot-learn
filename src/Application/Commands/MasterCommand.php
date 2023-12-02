@@ -50,19 +50,29 @@ class MasterCommand
             'Authorization' => 'Bearer ' . getenv('OPENAI_API_KEY'),
         ];
         $body = [
-            "model" => "gpt-3.5-turbo-instruct",
-            "prompt" => $question,
-            "max_tokens" => 100,
-            "temperature" => 0.7
+            "model" => getenv('OPENAI_COMPLETION_MODEL'),
+            "messages" => [
+                [
+                    "role" => "user",
+                    "content" => $question
+                ]
+            ],
+            "temperature" => 1,
+            "top_p" => 1,
+            "n" => 1,
+            "stream" => false,
+            "max_tokens" => 150,
+            "presence_penalty" => 0,
+            "frequency_penalty" => 0
         ];
-        $request = new Request('POST', 'https://api.openai.com/v1/completions', $headers, json_encode($body));
+        $request = new Request('POST', 'https://api.openai.com/v1/chat/completions', $headers, json_encode($body));
         $res = $client->send($request);
-        $answer = json_decode($res->getBody());
+        $response = json_decode($res->getBody());
 
-        $message = "**Pergunta:** $question\n\n**Resposta:**";
-        $message .= $answer->choices[0]->text;
+        $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
+        $message .= $response->choices[0]->message->content;
 
-        if ($answer->choices[0]->finish_reason === 'length') {
+        if ($response->choices[0]->finish_reason === 'length') {
             $message .= '... etc e tals já tá bom né?!';
         }
 

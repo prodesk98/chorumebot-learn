@@ -118,6 +118,8 @@ class MasterCommand
                 $message .= '... etc e tals já tá bom né?!';
             }
 
+            $message .= sprintf("\n\n**Custo:** %s coins", $askCost);
+
             $interaction->updateOriginalResponse($this->messageComposer->embed(
                 'SABEDORIA DO MESTRE',
                 $message,

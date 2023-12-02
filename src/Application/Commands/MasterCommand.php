@@ -59,7 +59,8 @@ class MasterCommand
         $res = $client->send($request);
         $answer = json_decode($res->getBody());
 
-        $message = $answer->choices[0]->text;
+        $message = "**Pergunta:** $question\n\n**Resposta:**";
+        $message .= $answer->choices[0]->text;
 
         if ($answer->choices[0]->finish_reason === 'length') {
             $message .= '... etc e tals já tá bom né?!';

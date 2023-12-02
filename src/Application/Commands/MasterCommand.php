@@ -12,10 +12,12 @@ use Chorume\Helpers\RedisHelper;
 
 class MasterCommand
 {
-    private $discord;
+    private Discord $discord;
     private $config;
-    private $redisHelper;
-    private $messageComposer;
+    private RedisHelper $redisHelper;
+    private MessageComposer $messageComposer;
+    private int $cooldownSeconds;
+    private int $cooldownTimes;
 
     public function __construct(
         Discord $discord,
@@ -26,13 +28,21 @@ class MasterCommand
         $this->config = $config;
         $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
+        $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_SECONDS');
+        $this->cooldownTimes = getenv('COMMAND_COOLDOWN_TIMES');
     }
 
     public function ask(Interaction $interaction)
     {
         $question = $interaction->data->options['pergunta']->value;
 
-        if (!$this->redisHelper->cooldown('master:ask:' . $interaction->member->user->id, 60)) {
+        if (
+            !$this->redisHelper->cooldown(
+                'cooldown:master:ask:' . $interaction->member->user->id,
+                $this->cooldownSeconds,
+                $this->cooldownTimes
+            )
+        ) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
                     'MESTRE ODEIA REPETIÇÕES',

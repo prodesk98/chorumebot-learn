@@ -2,94 +2,118 @@
 
 namespace Chorume\Application\Commands;
 
+use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Parts\Embed\Embed;
+use Chorume\Application\Discord\MessageComposer;
+use Chorume\Helpers\RedisHelper;
 use Chorume\Repository\User;
 use Chorume\Repository\UserCoinHistory;
-use GuzzleHttp\Client as HttpClient;
-use GuzzleHttp\Psr7\Request;
 
 class GenericCommand
 {
-    public $discord;
-    public $config;
-    public User $userRepository;
-    public UserCoinHistory $userCoinHistoryRepository;
+    private $discord;
+    private $config;
+    private RedisHelper $redisHelper;
+    private MessageComposer $messageComposer;
+    private User $userRepository;
+    private UserCoinHistory $userCoinHistoryRepository;
+    private int $cooldownSeconds;
+    private int $cooldownTimes = 6;
 
     public function __construct(
         Discord $discord,
         $config,
+        RedisClient $redis,
         User $userRepository,
         UserCoinHistory $userCoinHistoryRepository
-    )
-    {
+    ) {
         $this->discord = $discord;
         $this->config = $config;
+        $this->redisHelper = new RedisHelper($redis);
+        $this->messageComposer = new MessageComposer($this->discord);
         $this->userRepository = $userRepository;
         $this->userCoinHistoryRepository = $userCoinHistoryRepository;
+        $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_SECONDS');
+        $this->cooldownTimes = getenv('COMMAND_COOLDOWN_TIMES');
     }
 
     public function coins(Interaction $interaction)
     {
-        $discordId = $interaction->member->user->id;
-        $user = $this->userRepository->getByDiscordId($discordId);
-        $message = '';
-
-        if (!$discordId) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Aconteceu um erro com seu usuário, encha o saco do admin do bot!'), true);
-            return;
-        }
-
-        if (empty($user)) {
-            if ($this->userRepository->giveInitialCoins(
-                $interaction->member->user->id,
-                $interaction->member->user->username
-            )) {
-                $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf(
-                    'Você acabou de receber suas **%s** coins iniciais! Aposte com sabedoria :man_mage:',
-                    100
-                )), true);
+        $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction) {
+            if (
+                !$this->redisHelper->cooldown(
+                    'cooldown:generic:coins:' . $interaction->member->user->id,
+                    $this->cooldownSeconds,
+                    $this->cooldownTimes
+                )
+            ) {
+                $interaction->updateOriginalResponse(
+                    $this->messageComposer->embed(
+                        'EXTRATO DE COINS',
+                        'Não vai nascer dinheiro magicamente na sua conta, seu liso! Aguarde 1 minuto para ver seu extrato!',
+                        null,
+                        '#FF0000'
+                    )
+                );
+                return;
             }
-        }
 
-        $coinsQuery = $this->userRepository->getCurrentCoins($interaction->member->user->id);
-        $currentCoins = $coinsQuery[0]['total'];
-        $dailyCoins = 100;
+            $discordId = $interaction->member->user->id;
+            $user = $this->userRepository->getByDiscordId($discordId);
+            $message = '';
 
-        if ($this->userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
-            $currentCoins += $dailyCoins;
-            $this->userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
+            if (!$discordId) {
+                $interaction->updateOriginalResponse(MessageBuilder::new()->setContent('Aconteceu um erro com seu usuário, encha o saco do admin do bot!'));
+                return;
+            }
 
-            $message .= "Você recebeu suas **%s** coins diárias! :money_mouth:\n\n";
-            $message = sprintf($message, $dailyCoins);
-        }
+            if (empty($user)) {
+                if ($this->userRepository->giveInitialCoins(
+                    $interaction->member->user->id,
+                    $interaction->member->user->username
+                )) {
+                    $interaction->updateOriginalResponse(MessageBuilder::new()->setContent(sprintf(
+                        'Você acabou de receber suas **%s** coins iniciais! Aposte com sabedoria :man_mage:',
+                        100
+                    )));
+                }
+            }
 
-        /**
-         * @var Embed $embed
-         */
-        $embed = $this->discord->factory(Embed::class);
-        $embed
-            ->setTitle('EXTRATO DE COINS')
-            ->setColor('#F5D920');
+            $coinsQuery = $this->userRepository->getCurrentCoins($interaction->member->user->id);
+            $currentCoins = $coinsQuery[0]['total'];
+            $dailyCoins = 100;
 
-        if ($currentCoins <= 0) {
-            $message .= sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins);
-            $image = $this->config['images']['nomoney'];
-        } elseif ($currentCoins > 1000) {
-            $message .= sprintf('Você possui **%s** coins!! Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
-            $image = $this->config['images']['many_coins'];
-        } else {
-            $message .= sprintf('Você possui **%s** coins! :coin:', $currentCoins);
-            $image = $this->config['images']['one_coin'];
-        }
+            if ($this->userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
+                $currentCoins += $dailyCoins;
+                $this->userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
 
-        $embed
-            ->setDescription($message)
-            ->setImage($image);
+                $message .= "Você recebeu suas **%s** coins diárias! :money_mouth:\n\n";
+                $message = sprintf($message, $dailyCoins);
+            }
 
-        $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), true);
+            if ($currentCoins <= 0) {
+                $message .= sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins);
+                $image = $this->config['images']['nomoney'];
+            } elseif ($currentCoins > 1000) {
+                $message .= sprintf('Você possui **%s** coins!! Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
+                $image = $this->config['images']['many_coins'];
+            } else {
+                $message .= sprintf('Você possui **%s** coins! :coin:', $currentCoins);
+                $image = $this->config['images']['one_coin'];
+            }
+
+            $interaction->updateOriginalResponse(
+                $this->messageComposer->embed(
+                    'EXTRATO DE COINS',
+                    $message,
+                    $image,
+                    '#F5D920'
+                )
+            );
+        });
     }
 
     public function topBetters(Interaction $interaction)
@@ -116,8 +140,8 @@ class GenericCommand
         }
 
         $embed
-            ->addField([ 'name' => 'Usuário', 'value' => $users, 'inline' => 'true' ])
-            ->addField([ 'name' => 'Acumulado', 'value' => $acc, 'inline' => 'true' ]);
+            ->addField(['name' => 'Usuário', 'value' => $users, 'inline' => 'true'])
+            ->addField(['name' => 'Acumulado', 'value' => $acc, 'inline' => 'true']);
 
         $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed));
     }

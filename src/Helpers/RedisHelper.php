@@ -13,14 +13,13 @@ class RedisHelper
         $this->redis = $redis;
     }
 
-    public function cooldown(string $key, int $seconds = 60): bool
+    public function cooldown(string $key, int $seconds = 60, int $times = 2): bool
     {
         if ($curThreshold = $this->redis->get($key)) {
-            if ($curThreshold < 2) {
+            if ($curThreshold < $times) {
                 $this->redis->set($key, ++$curThreshold, 'EX', $seconds);
                 return true;
             }
-
             return false;
         }
 

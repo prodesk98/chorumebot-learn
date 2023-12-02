@@ -88,7 +88,7 @@ $talkRepository = new Talk($db);
 
 $messageCreateEvent = new MessageCreate($discord, $config, $redis, $talkRepository);
 $masterCommand = new MasterCommand($discord, $config, $redis);
-$myGenericCommand = new GenericCommand($discord, $config, $userRepository, $userCoinHistoryRepository);
+$myGenericCommand = new GenericCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
 $myBetsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
 $myEventsCommand = new EventsCommand($discord, $config, $eventChoiceRepository, $eventRepository);
 $myRouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository, $rouletteBetRepository);

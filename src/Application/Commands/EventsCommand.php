@@ -96,7 +96,6 @@ class EventsCommand
         $event = $this->eventRepository->getEventById($eventId);
         $choice = $this->eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $choiceKey);
         $bets = $this->eventRepository->payoutEvent($eventId, $choiceKey);
-        $events = $this->eventRepository->listEventsClosed();
 
         if (empty($event)) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento não existe!'), true);

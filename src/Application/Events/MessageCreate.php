@@ -36,7 +36,7 @@ class MessageCreate
             $this->redis->set('talks', json_encode($textTriggers), 'EX', 60);
         }
 
-        if ($found = find_in_array($message->content, 'triggertext', $textTriggers)) {
+        if ($found = find_in_array(strtolower($message->content), 'triggertext', $textTriggers)) {
             $talk = $this->talkRepository->findById($found['id']);
 
             if (empty($talk)) {

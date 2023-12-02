@@ -69,4 +69,18 @@ class UserCoinHistory extends Repository
 
         return $result;
     }
+
+    public function hasAvailableCoins(int $discordUserId, float $amount)
+    {
+        $result = $this->db->select(
+            "SELECT SUM(uch.amount) AS total_coins FROM users_coins_history uch JOIN users u ON u.id = uch.user_id WHERE u.discord_user_id = ?",
+            [
+                [ 'type' => 'i', 'value' => $discordUserId ]
+            ]
+        );
+
+        $totalCoins = $result[0]['total_coins'] ?? 0;
+
+        return $totalCoins >= $amount;
+    }
 }

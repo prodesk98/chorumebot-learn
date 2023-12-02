@@ -16,18 +16,24 @@ class MasterCommand
     private $config;
     private RedisHelper $redisHelper;
     private MessageComposer $messageComposer;
+    private $userRepository;
+    private $userCoinHistoryRepository;
     private int $cooldownSeconds;
     private int $cooldownTimes;
 
     public function __construct(
         Discord $discord,
         $config,
-        RedisClient $redis
+        RedisClient $redis,
+        $userRepository,
+        $userCoinHistoryRepository
     ) {
         $this->discord = $discord;
         $this->config = $config;
         $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
+        $this->userRepository = $userRepository;
+        $this->userCoinHistoryRepository = $userCoinHistoryRepository;
         $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_SECONDS');
         $this->cooldownTimes = getenv('COMMAND_COOLDOWN_TIMES');
     }
@@ -35,6 +41,19 @@ class MasterCommand
     public function ask(Interaction $interaction)
     {
         $question = $interaction->data->options['pergunta']->value;
+        $askCost = getenv('MASTER_COINS_COST');
+
+        if (!$this->userCoinHistoryRepository->hasAvailableCoins($interaction->member->user->id, $askCost)) {
+            $interaction->respondWithMessage(
+                $this->messageComposer->embed(
+                    'MESTRE NÃO É OTÁRIO',
+                    sprintf("Tu não tem dinheiro pra pagar o mestre, vai trabalhar!\n\nO mestre cobra singelos %s coins por pergunta!", $askCost),
+                    $this->config['images']['nomoney']
+                ),
+                true
+            );
+            return;
+        }
 
         if (
             !$this->redisHelper->cooldown(
@@ -66,7 +85,7 @@ class MasterCommand
             return;
         }
 
-        $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $question) {
+        $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $question, $askCost) {
             $client = new HttpClient();
             $headers = [
                 'Content-Type' => 'application/json',
@@ -105,6 +124,9 @@ class MasterCommand
                 null,
                 '#1D80C3'
             ));
+
+            $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
+            $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master');
         });
     }
 }

@@ -78,20 +78,20 @@ $discord = new Discord([
 ]);
 
 $userRepository = new User($db);
+$userCoinHistoryRepository = new UserCoinHistory($db);
 $eventRepository = new Event($db);
 $eventChoiceRepository = new EventChoice($db);
 $eventBetsRepository = new EventBet($db);
-$userCoinHistoryRepository = new UserCoinHistory($db);
 $rouletteRepository = new Roulette($db);
 $rouletteBetRepository = new RouletteBet($db);
 $talkRepository = new Talk($db);
 
 $messageCreateEvent = new MessageCreate($discord, $config, $redis, $talkRepository);
-$masterCommand = new MasterCommand($discord, $config, $redis);
-$myGenericCommand = new GenericCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$myBetsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
-$myEventsCommand = new EventsCommand($discord, $config, $eventChoiceRepository, $eventRepository);
-$myRouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository, $rouletteBetRepository);
+$masterCommand = new MasterCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
+$genericCommand = new GenericCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
+$betsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
+$eventsCommand = new EventsCommand($discord, $config, $eventChoiceRepository, $eventRepository);
+$rouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository, $rouletteBetRepository);
 
 $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) {
     // Initialize application commands
@@ -113,16 +113,16 @@ $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) 
 });
 
 $discord->on(DiscordEvent::MESSAGE_CREATE, [$messageCreateEvent, 'messageCreate']);
-$discord->listenCommand('coins', [$myGenericCommand, 'coins']);
+$discord->listenCommand('coins', [$genericCommand, 'coins']);
 $discord->listenCommand('mestre', [$masterCommand, 'ask']);
-$discord->listenCommand(['top', 'apostadores'], [$myGenericCommand, 'topBetters']);
-$discord->listenCommand(['transferir'], [$myGenericCommand, 'transfer']);
-$discord->listenCommand(['aposta', 'entrar'], [$myBetsCommand, 'makeBet']);
-$discord->listenCommand(['evento', 'criar'], [$myEventsCommand, 'create']);
-$discord->listenCommand(['evento', 'fechar'], [$myEventsCommand, 'close']);
-$discord->listenCommand(['evento', 'encerrar'], [$myEventsCommand, 'finish']);
-$discord->listenCommand(['evento', 'listar'], [$myEventsCommand, 'list']);
-$discord->listenCommand(['evento', 'anunciar'], [$myEventsCommand, 'advertise']);
-$discord->listenCommand(['roleta', 'criar'], [$myRouletteCommand, 'create']);
+$discord->listenCommand(['top', 'apostadores'], [$genericCommand, 'topBetters']);
+$discord->listenCommand(['transferir'], [$genericCommand, 'transfer']);
+$discord->listenCommand(['aposta', 'entrar'], [$betsCommand, 'makeBet']);
+$discord->listenCommand(['evento', 'criar'], [$eventsCommand, 'create']);
+$discord->listenCommand(['evento', 'fechar'], [$eventsCommand, 'close']);
+$discord->listenCommand(['evento', 'encerrar'], [$eventsCommand, 'finish']);
+$discord->listenCommand(['evento', 'listar'], [$eventsCommand, 'list']);
+$discord->listenCommand(['evento', 'anunciar'], [$eventsCommand, 'advertise']);
+$discord->listenCommand(['roleta', 'criar'], [$rouletteCommand, 'create']);
 
 $discord->run();

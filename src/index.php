@@ -29,6 +29,10 @@ use Chorume\Application\Commands\RouletteCommand;
 use Chorume\Application\Commands\MasterCommand;
 use Chorume\Application\Events\MessageCreate;
 
+use Discord\Parts\Embed\Embed;
+use Discord\Parts\Interactions\MessageComponents\ActionRow;
+use Discord\Parts\Interactions\MessageComponents\Button;
+
 $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
 $dotenv->load();
 $dotenv->required(['TOKEN']);
@@ -91,7 +95,7 @@ $masterCommand = new MasterCommand($discord, $config, $redis, $userRepository, $
 $genericCommand = new GenericCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
 $betsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
 $eventsCommand = new EventsCommand($discord, $config, $eventChoiceRepository, $eventRepository);
-$rouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository, $rouletteBetRepository);
+$rouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository, $rouletteBetRepository,$userRepository, $redis);
 
 $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) {
     // Initialize application commands
@@ -124,5 +128,8 @@ $discord->listenCommand(['evento', 'encerrar'], [$eventsCommand, 'finish']);
 $discord->listenCommand(['evento', 'listar'], [$eventsCommand, 'list']);
 $discord->listenCommand(['evento', 'anunciar'], [$eventsCommand, 'advertise']);
 $discord->listenCommand(['roleta', 'criar'], [$rouletteCommand, 'create']);
-
+$discord->listenCommand(['roleta', 'listar'], [$rouletteCommand, 'list']);
+$discord->listenCommand(['roleta', 'fechar'], [$rouletteCommand, 'close']);
+$discord->listenCommand(['roleta', 'girar'], [$rouletteCommand, 'finish']);
+$discord->listenCommand(['roleta', 'apostar' ], [$rouletteCommand, 'expose']);
 $discord->run();

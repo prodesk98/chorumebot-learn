@@ -22,12 +22,12 @@ return [
         [
             'type' => Option::SUB_COMMAND,
             'name' => 'iniciar',
-            'description' => 'Inicia evento',
+            'description' => 'Inicia roleta',
             'options' => [
                 [
                     'type' => Option::INTEGER,
                     'name' => 'id',
-                    'description' => 'ID do evento',
+                    'description' => 'ID da Roleta',
                     'required' => true,
                 ],
             ]
@@ -50,6 +50,35 @@ return [
             'type' => Option::SUB_COMMAND,
             'name' => 'listar',
             'description' => 'Lista Roletas criados e pendentes para iniciar',
+        ],
+      
+        [
+            'type' => Option::SUB_COMMAND,
+            'name' => 'girar',
+            'description' => 'Gira a roleta e paga as apostas',
+            'options' => [
+                [
+                    'type' => Option::INTEGER,
+                    'name' => 'id',
+                    'description' => 'ID do Roleta',
+                    'required' => true,
+                ],
+                
+            ]
+        ],
+        [
+            'type' => Option::SUB_COMMAND,
+            'name' => 'apostar',
+            'description' => 'Abre para apostas',
+            'options' => [
+                [
+                    'type' => Option::INTEGER,
+                    'name' => 'id',
+                    'description' => 'ID do Roleta',
+                    'required' => true,
+                ],
+                
+            ]
         ]
     ]
 ];

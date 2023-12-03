@@ -103,7 +103,7 @@ class MasterCommand
         try {
             if ($boost) {
                 $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction, $question, $askCost, $questionLimit, $boostValue) {
-                    $data = $this->requestQuestion($question, $questionLimit);
+                    $data = $this->requestQuestion($question, $questionLimit, true);
 
                     $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
                     $message .= $data->choices[0]->message->content;
@@ -170,7 +170,7 @@ class MasterCommand
         }
     }
 
-    private function requestQuestion(string $question, int $tokens)
+    private function requestQuestion(string $question, int $tokens, bool $boost = false)
     {
         $client = new HttpClient([
             'exceptions' => true,
@@ -179,18 +179,24 @@ class MasterCommand
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . getenv('OPENAI_API_KEY'),
         ];
+
+        $messages = [
+            [
+                "role" => "user",
+                "content" => $question
+            ]
+        ];
+
+        if (!$boost) {
+            $messages[] = [
+                "role" => "system",
+                "content" => getenv('MASTER_HUMOR')
+            ];
+        }
+
         $body = [
             "model" => getenv('OPENAI_COMPLETION_MODEL'),
-            "messages" => [
-                [
-                    "role" => "system",
-                    "content" => getenv('MASTER_HUMOR')
-                ],
-                [
-                    "role" => "user",
-                    "content" => $question
-                ]
-            ],
+            "messages" => $messages,
             "temperature" => 1.2,
             "top_p" => 1,
             "n" => 1,

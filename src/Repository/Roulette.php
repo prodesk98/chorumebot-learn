@@ -4,7 +4,7 @@ namespace Chorume\Repository;
 
 use Chorume\Repository\User;
 use Chorume\Repository\Event;
-use Chorume\Repository\EventChoice;
+use Chorume\Repository\RouletteBet;
 use Chorume\Repository\UserCoinHistory;
 use Discord\Parts\Guild\Role;
 
@@ -29,9 +29,24 @@ class Roulette extends Repository
         self::PAID => 'Apostas pagas',
     ];
 
+    public const GREEN = 1;
+    public const BLACK = 2;
+    public const RED = 3;
+
+
+    public const LABEL_CHOICE = [
+        self::GREEN => 'Escolha Verde!',
+        self::BLACK => 'Escolha Preto!',
+        self::RED => 'Escolha Vermelho!',
+    ];
+
     public function __construct(
         $db,
+        protected RouletteBet|null $rouletteBetRepository = null,
+        protected UserCoinHistory|null $userCoinHistoryRepository = null
     ) {
+        $this->rouletteBetRepository = $rouletteBetRepository ?? new RouletteBet($db);
+        $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);
         parent::__construct($db);
     }
 

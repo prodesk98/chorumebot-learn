@@ -56,16 +56,22 @@ class RouletteCommand
     public $config;
     public Roulette $rouletteRepository;
     public RouletteBet $rouletteBetRepository;
-
+    public User $userRepository;
+    private RedisClient $redis;
     public function __construct(
         Discord $discord,
         $config,
-        Roulette $rouletteRepository
-    )
-    {
+        Roulette $rouletteRepository,
+        RouletteBet $rouletteBetRepository,
+        User $userRepository,
+        RedisClient $redis,
+    ) {
         $this->discord = $discord;
         $this->config = $config;
         $this->rouletteRepository = $rouletteRepository;
+        $this->rouletteBetRepository = $rouletteBetRepository;
+        $this->userRepository = $userRepository;
+        $this->redis = $redis;
     }
 
     public function create(Interaction $interaction)
@@ -312,8 +318,8 @@ class RouletteCommand
 
     function expose(Interaction $interaction)
     {
-
-        $rouletteId = $interaction->data->options['id']->value;
+        $rouletteId = $interaction->data->options['apostar']->options['id']->value;
+      
         $builder = MessageBuilder::new();
         $action = ActionRow::new();
         $AmountBet = 100;
@@ -377,9 +383,7 @@ class RouletteCommand
         $builder->addComponent($action);
 
 
-        $interaction->respondWithMessage($builder, false)->then(function (Message $message) {
-           
-        });
+        $interaction->respondWithMessage($builder, false);
     }
 
     function apostarRoleta($userDiscordId, $choice, $rouletteId, Interaction $interaction, $roulette, $AmountBet, &$gameData, $userDiscord, Interaction $interactionUser)

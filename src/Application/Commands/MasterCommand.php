@@ -140,7 +140,7 @@ class MasterCommand
             }
 
             $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $question, $askCost, $boost) {
-                $questionData = $this->requestQuestion($question, 200 + ($boost ? $boost->value * 10 : 0));
+                $questionData = $this->requestQuestion($question, getenv('MASTER_DEFAULT_TOKENS_AMOUNT_RESPONSE'));
 
                 $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
                 $message .= $questionData->choices[0]->message->content;
@@ -178,9 +178,11 @@ class MasterCommand
         }
     }
 
-    private function requestQuestion($question, $tokens)
+    private function requestQuestion(string $question, int $tokens)
     {
-        $client = new HttpClient();
+        $client = new HttpClient([
+            'exceptions' => true,
+        ]);
         $headers = [
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . getenv('OPENAI_API_KEY'),
@@ -205,10 +207,14 @@ class MasterCommand
             "presence_penalty" => 0,
             "frequency_penalty" => 0
         ];
-        $request = new Request('POST', 'https://api.openai.com/v1/chat/completions', $headers, json_encode($body));
-        $response = $client->send($request);
-        $data = json_decode($response->getBody());
 
-        return $data;
+        try {
+            $request = new Request('POST', 'https://api.openai.com/v1/chat/completions', $headers, json_encode($body));
+            $response = $client->send($request);
+            $data = json_decode($response->getBody()->getContents());
+            return $data;
+        } catch (\Exception $e) {
+            echo $e->getMessage();
+        }
     }
 }

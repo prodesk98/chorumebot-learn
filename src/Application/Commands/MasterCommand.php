@@ -100,20 +100,58 @@ class MasterCommand
             return;
         }
 
-        if ($boost) {
-            $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction, $question, $askCost, $questionLimit, $boostValue) {
-                $data = $this->requestQuestion($question, $questionLimit);
+        try {
+            if ($boost) {
+                $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction, $question, $askCost, $questionLimit, $boostValue) {
+                    $data = $this->requestQuestion($question, $questionLimit);
+
+                    $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
+                    $message .= $data->choices[0]->message->content;
+
+                    if ($data->choices[0]->finish_reason === 'length') {
+                        $message .= '... e bla bla bla.';
+                    }
+
+                    $message .= sprintf("\n\n**Custo:** %s coins", $askCost);
+
+                    $interaction->user->sendMessage(
+                        $this->messageComposer->embed(
+                            'SABEDORIA DO MESTRE',
+                            $message,
+                            null,
+                            '#1D80C3'
+                        )
+                    );
+
+                    $interaction->updateOriginalResponse(
+                        $this->messageComposer->embed(
+                            'SABEDORIA DO MESTRE',
+                            "Respostas com **boost** vão para DM. Cheque sua DM, e a resposta está lá!",
+                            null,
+                            '#1D80C3'
+                        )
+                    );
+
+                    $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
+                    $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master', null, "Boost: $boostValue");
+                });
+
+                return;
+            }
+
+            $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $question, $askCost, $boost) {
+                $questionData = $this->requestQuestion($question, 200 + ($boost ? $boost->value * 10 : 0));
 
                 $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
-                $message .= $data->choices[0]->message->content;
+                $message .= $questionData->choices[0]->message->content;
 
-                if ($data->choices[0]->finish_reason === 'length') {
-                    $message .= '... e bla bla bla.';
+                if ($questionData->choices[0]->finish_reason === 'length') {
+                    $message .= '... etc e tals já tá bom né?!';
                 }
 
                 $message .= sprintf("\n\n**Custo:** %s coins", $askCost);
 
-                $interaction->user->sendMessage(
+                $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
                         'SABEDORIA DO MESTRE',
                         $message,
@@ -122,48 +160,22 @@ class MasterCommand
                     )
                 );
 
-                $interaction->updateOriginalResponse(
-                    $this->messageComposer->embed(
-                        'SABEDORIA DO MESTRE',
-                        "Respostas com **boost** vão para DM. Cheque sua DM, e a resposta está lá!",
-                        null,
-                        '#1D80C3'
-                    )
-                );
-
                 $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
-                $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master', null, "Boost: $boostValue");
+                $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master');
             });
 
             return;
-        }
-
-        $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $question, $askCost, $boost) {
-            $questionData = $this->requestQuestion($question, 200 + ($boost ? $boost->value * 10 : 0));
-
-            $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
-            $message .= $questionData->choices[0]->message->content;
-
-            if ($questionData->choices[0]->finish_reason === 'length') {
-                $message .= '... etc e tals já tá bom né?!';
-            }
-
-            $message .= sprintf("\n\n**Custo:** %s coins", $askCost);
-
-            $interaction->updateOriginalResponse(
+        } catch (\Exception $e) {
+            $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'SABEDORIA DO MESTRE',
-                    $message,
-                    null,
-                    '#1D80C3'
-                )
+                    'MESTRE NÃO SABE DE TUDO',
+                    'O mestre não sabe de tudo, mas sabe de muita coisa! Tenta outra pergunta!',
+                    $this->config['images']['dontknow']
+                ),
+                true
             );
-
-            $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
-            $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master');
-        });
-
-        return;
+            return;
+        }
     }
 
     private function requestQuestion($question, $tokens)
@@ -177,11 +189,15 @@ class MasterCommand
             "model" => getenv('OPENAI_COMPLETION_MODEL'),
             "messages" => [
                 [
+                    "role" => "system",
+                    "content" => getenv('MASTER_HUMOR')
+                ],
+                [
                     "role" => "user",
                     "content" => $question
                 ]
             ],
-            "temperature" => 1,
+            "temperature" => 1.2,
             "top_p" => 1,
             "n" => 1,
             "stream" => false,

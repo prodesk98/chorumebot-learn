@@ -16,15 +16,16 @@ class UserCoinHistory extends Repository
         return $result;
     }
 
-    public function create(int $userId, float $amount, string $type, int $entityId = null)
+    public function create(int $userId, float $amount, string $type, int $entityId = null, string $description = null)
     {
         $result = $this->db->query(
-            "INSERT INTO users_coins_history (user_id, entity_id, amount, type) VALUES (?, ?, ?, ?)",
+            "INSERT INTO users_coins_history (user_id, entity_id, amount, type, description) VALUES (?, ?, ?, ?, ?)",
             [
                 [ 'type' => 'i', 'value' => $userId ],
                 [ 'type' => 'i', 'value' => $entityId ],
                 [ 'type' => 'd', 'value' => $amount ],
-                [ 'type' => 's', 'value' => $type ]
+                [ 'type' => 's', 'value' => $type ],
+                [ 'type' => 's', 'value' => $description ],
             ]
         );
 

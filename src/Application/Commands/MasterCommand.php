@@ -41,19 +41,11 @@ class MasterCommand
     public function ask(Interaction $interaction)
     {
         $question = $interaction->data->options['pergunta']->value;
-        $askCost = getenv('MASTER_COINS_COST');
-
-        if (!$this->userCoinHistoryRepository->hasAvailableCoins($interaction->member->user->id, $askCost)) {
-            $interaction->respondWithMessage(
-                $this->messageComposer->embed(
-                    'MESTRE NÃO É OTÁRIO',
-                    sprintf("Tu não tem dinheiro pra pagar o mestre, vai trabalhar!\n\nO mestre cobra singelos %s coins por pergunta!", $askCost),
-                    $this->config['images']['nomoney']
-                ),
-                true
-            );
-            return;
-        }
+        $askCost = $originalAskCost = getenv('MASTER_COINS_COST');
+        $boost = $interaction->data->options['boost'];
+        $boostValue = 0;
+        $boostMessage = '';
+        $questionLimit = $boost ? getenv('MASTER_QUESTION_SIZE_LIMIT') * 20 : getenv('MASTER_QUESTION_SIZE_LIMIT');
 
         if (
             !$this->redisHelper->cooldown(
@@ -73,7 +65,30 @@ class MasterCommand
             return;
         }
 
-        if (strlen($question) > 100) {
+        if ($boost) {
+            $askCost += $boostValue = $boost->value;
+            $boostMessage = sprintf("\n\nAlém do **Boost** de  **%s** coins", $boost->value);
+        }
+
+        if (!$this->userCoinHistoryRepository->hasAvailableCoins($interaction->member->user->id, $askCost)) {
+            $message = sprintf(
+                "Tu não tem dinheiro pra pagar o mestre, vai trabalhar!\n\nO mestre cobra singelos **%s coins** por pergunta!%s",
+                $originalAskCost,
+                $boostMessage
+            );
+
+            $interaction->respondWithMessage(
+                $this->messageComposer->embed(
+                    'MESTRE NÃO É OTÁRIO',
+                    $message,
+                    $this->config['images']['nomoney']
+                ),
+                true
+            );
+            return;
+        }
+
+        if (strlen($question) > $questionLimit) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
                     'MESTRE FICOU PUTO',
@@ -85,50 +100,99 @@ class MasterCommand
             return;
         }
 
-        $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $question, $askCost) {
-            $client = new HttpClient();
-            $headers = [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . getenv('OPENAI_API_KEY'),
-            ];
-            $body = [
-                "model" => getenv('OPENAI_COMPLETION_MODEL'),
-                "messages" => [
-                    [
-                        "role" => "user",
-                        "content" => $question
-                    ]
-                ],
-                "temperature" => 1,
-                "top_p" => 1,
-                "n" => 1,
-                "stream" => false,
-                "max_tokens" => 200,
-                "presence_penalty" => 0,
-                "frequency_penalty" => 0
-            ];
-            $request = new Request('POST', 'https://api.openai.com/v1/chat/completions', $headers, json_encode($body));
-            $response = $client->send($request);
-            $data = json_decode($response->getBody());
+        if ($boost) {
+            $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction, $question, $askCost, $questionLimit, $boostValue) {
+                $data = $this->requestQuestion($question, $questionLimit);
+
+                $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
+                $message .= $data->choices[0]->message->content;
+
+                if ($data->choices[0]->finish_reason === 'length') {
+                    $message .= '... e bla bla bla.';
+                }
+
+                $message .= sprintf("\n\n**Custo:** %s coins", $askCost);
+
+                $interaction->user->sendMessage(
+                    $this->messageComposer->embed(
+                        'SABEDORIA DO MESTRE',
+                        $message,
+                        null,
+                        '#1D80C3'
+                    )
+                );
+
+                $interaction->updateOriginalResponse(
+                    $this->messageComposer->embed(
+                        'SABEDORIA DO MESTRE',
+                        "Respostas com **boost** vão para DM. Cheque sua DM, e a resposta está lá!",
+                        null,
+                        '#1D80C3'
+                    )
+                );
+
+                $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
+                $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master', null, "Boost: $boostValue");
+            });
+
+            return;
+        }
+
+        $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $question, $askCost, $boost) {
+            $questionData = $this->requestQuestion($question, 200 + ($boost ? $boost->value * 10 : 0));
 
             $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
-            $message .= $data->choices[0]->message->content;
+            $message .= $questionData->choices[0]->message->content;
 
-            if ($data->choices[0]->finish_reason === 'length') {
+            if ($questionData->choices[0]->finish_reason === 'length') {
                 $message .= '... etc e tals já tá bom né?!';
             }
 
             $message .= sprintf("\n\n**Custo:** %s coins", $askCost);
 
-            $interaction->updateOriginalResponse($this->messageComposer->embed(
-                'SABEDORIA DO MESTRE',
-                $message,
-                null,
-                '#1D80C3'
-            ));
+            $interaction->updateOriginalResponse(
+                $this->messageComposer->embed(
+                    'SABEDORIA DO MESTRE',
+                    $message,
+                    null,
+                    '#1D80C3'
+                )
+            );
 
             $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
             $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master');
         });
+
+        return;
+    }
+
+    private function requestQuestion($question, $tokens)
+    {
+        $client = new HttpClient();
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . getenv('OPENAI_API_KEY'),
+        ];
+        $body = [
+            "model" => getenv('OPENAI_COMPLETION_MODEL'),
+            "messages" => [
+                [
+                    "role" => "user",
+                    "content" => $question
+                ]
+            ],
+            "temperature" => 1,
+            "top_p" => 1,
+            "n" => 1,
+            "stream" => false,
+            "max_tokens" => $tokens,
+            "presence_penalty" => 0,
+            "frequency_penalty" => 0
+        ];
+        $request = new Request('POST', 'https://api.openai.com/v1/chat/completions', $headers, json_encode($body));
+        $response = $client->send($request);
+        $data = json_decode($response->getBody());
+
+        return $data;
     }
 }

@@ -42,7 +42,7 @@ class EventBet extends Repository
             [ 'type' => 'd', 'value' => $amount ]
         ]);
 
-        $createUserBetHistory = $this->userCoinHistoryRepository->create($userId, -$amount, 'Bet');
+        $createUserBetHistory = $this->userCoinHistoryRepository->create($userId, -$amount, 'Bet', $eventId);
 
         return $createEvent && $createUserBetHistory;
     }

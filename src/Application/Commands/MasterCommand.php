@@ -166,15 +166,7 @@ class MasterCommand
 
             return;
         } catch (\Exception $e) {
-            $interaction->respondWithMessage(
-                $this->messageComposer->embed(
-                    'MESTRE NÃO SABE DE TUDO',
-                    'O mestre não sabe de tudo, mas sabe de muita coisa! Tenta outra pergunta!',
-                    $this->config['images']['dontknow']
-                ),
-                true
-            );
-            return;
+            $this->discord->getLogger()->error($e->getMessage());
         }
     }
 
@@ -214,7 +206,7 @@ class MasterCommand
             $data = json_decode($response->getBody()->getContents());
             return $data;
         } catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->discord->getLogger()->error($e->getMessage());
         }
     }
 }

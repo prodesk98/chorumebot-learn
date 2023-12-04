@@ -84,9 +84,11 @@ class RouletteCommand
         }
 
         $eventName = $interaction->data->options['criar']->options['nome']->value;
+        $value = $interaction->data->options['criar']->options['valor']->value;
 
-        if ($this->rouletteRepository->createEvent(strtoupper($eventName))) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Roleta criado com sucesso!'), true);
+
+        if ($this->rouletteRepository->createEvent(strtoupper($eventName), $value)) {
+            $interaction->respondWithMessage(MessageBuilder::new()->setContent("Roleta criado com sucesso! {$value} C$"), true);
         }
     }
 
@@ -119,10 +121,11 @@ class RouletteCommand
         foreach ($roulettes as $event) {
 
             $roulettesDescription .= sprintf(
-                "**[#%s] %s** \n **Status: %s** \n \n \n",
+                "**[#%s] %s** \n **Status: %s C$ %s** \n \n \n",
                 $event['roulette_id'],
                 strtoupper($event['description']),
                 $this->rouletteRepository::LABEL_LONG[(int) $event['status']],
+                strtoupper($event['amount']),
                 sprintf(''),
                 sprintf('')
             );
@@ -310,8 +313,8 @@ class RouletteCommand
         $rouletteId = $interaction->data->options['apostar']->options['id']->value;
         $builder = MessageBuilder::new();
         $action = ActionRow::new();
-        $amountBet = 100;
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
+        $amountBet = (int)$roulette[0]['amount'];
         $embed = new Embed($this->discord);
 
         if (empty($roulette)) {
@@ -488,9 +491,9 @@ class RouletteCommand
             ->setDescription("Total: {$gameData->AmountTotal}")
             ->setFooter('💰💰 CHORULETTA 💰💰');
 
-        $embed->addFieldValues('🟥  RED  🟥 ', '', true)
-            ->addFieldValues('🟩 GREEN 🟩', '', true)
-            ->addFieldValues('⬛ BLACK ⬛', '', true);
+        $embed->addFieldValues('🟥  RED  🟥 2x', '', true)
+            ->addFieldValues('🟩 GREEN 🟩 14x', '', true)
+            ->addFieldValues('⬛ BLACK ⬛ 2x', '', true);
 
         $embed->addFieldValues(
             '',

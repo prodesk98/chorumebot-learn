@@ -17,6 +17,12 @@ return [
                     'description' => 'Nome da Roleta',
                     'required' => true,
                 ],
+                [
+                    'type' => Option::NUMBER,
+                    'name' => 'valor',
+                    'description' => 'Quantidade de coins para apostar na roleta',
+                    'required' => true,
+                ],
             ]
         ],
         [

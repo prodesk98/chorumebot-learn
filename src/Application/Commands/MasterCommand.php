@@ -161,18 +161,19 @@ class MasterCommand
                     )
                 );
 
-                $audioFilename = $this->generateVoice($questionData->choices[0]->message->content);
+                if (getenv('MASTER_VOICE_ENABLED')) {
+                    $audioFilename = $this->generateVoice($questionData->choices[0]->message->content);
 
-                $interaction->updateOriginalResponse(
-                    $this->messageComposer->embed(
-                        'SABEDORIA DO MESTRE',
-                        $message,
-                        null,
-                        '#1D80C3',
-                        $audioFilename
-                    )
-                );
-
+                    $interaction->updateOriginalResponse(
+                        $this->messageComposer->embed(
+                            'SABEDORIA DO MESTRE',
+                            $message,
+                            null,
+                            '#1D80C3',
+                            $audioFilename
+                        )
+                    );
+                }
 
                 $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
                 $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master');

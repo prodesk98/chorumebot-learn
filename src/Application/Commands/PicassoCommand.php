@@ -83,7 +83,17 @@ class PicassoCommand
             $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $prompt, $askCost) {
                 $art = $this->requestArt($prompt);
 
-                $message = sprintf("A arte é minha mas se deu ruim é por que você não sabe descrever o que quer, tenho culpa de nada não.\n\nMe pediram isso: %s\n\n**Custo:** %s coins", $prompt, $askCost);
+                if (!$art) {
+                    $interaction->updateOriginalResponse(
+                        $this->messageComposer->embed(
+                            'ERRO, UM ERRO TERRÍVEL!',
+                            'Deu ruim na arte, tenta de novo aí, mas descreve melhor o que você quer! Ah, o texto tem que ser em inglês e não me venha pedir para desenhar putaria que eu não sou o Picasso do pornô!'
+                        )
+                    );
+                    return;
+                }
+
+                $message = sprintf("A arte é minha mas se deu ruim é por que você não sabe descrever o que quer, tenho culpa de nada não.\n\n**Me pediram isso:** %s\n\n**Custo:** %s coins", $prompt, $askCost);
 
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
@@ -127,6 +137,7 @@ class PicassoCommand
 
             return $data;
         } catch (\Exception $e) {
+
             $this->discord->getLogger()->error($e->getMessage());
         }
     }

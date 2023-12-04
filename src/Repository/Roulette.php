@@ -50,12 +50,13 @@ class Roulette extends Repository
         parent::__construct($db);
     }
 
-    public function createEvent(string $eventName)
+    public function createEvent(string $eventName, $value)
     {
 
-        $createEvent = $this->db->query('INSERT INTO roulette (status, description) VALUES (?, ?)', [
+        $createEvent = $this->db->query('INSERT INTO roulette (status, description, amount) VALUES (?, ?,?)', [
             ['type' => 'i', 'value' => self::OPEN],
             ['type' => 's', 'value' => $eventName],
+            ['type' => 's', 'value' => $value],
         ]);
         return $createEvent;
     }
@@ -112,7 +113,8 @@ class Roulette extends Repository
         SELECT
             id AS roulette_id,
             description AS description,
-            status AS status
+            status AS status,
+            amount AS amount
         FROM roulette
         WHERE status IN (?)
     ", [
@@ -135,6 +137,7 @@ class Roulette extends Repository
                 $acc[] = [
                     'roulette_id' => $item['roulette_id'],
                     'description' => $item['description'],
+                    'amount' => $item['amount'],
                     'status' => $item['status'],
                 ];
 

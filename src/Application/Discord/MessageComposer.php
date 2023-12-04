@@ -14,7 +14,7 @@ class MessageComposer
         $this->discord = $discord;
     }
 
-    public function embed(string $title, string $message, string $image = null, string $color = null): MessageBuilder
+    public function embed(string $title, string $message, string $image = null, string $color = null, string $file = null): MessageBuilder
     {
         /**
          * @var Embed $embed
@@ -31,6 +31,10 @@ class MessageComposer
             $embed->setColor($color);
         }
 
-        return MessageBuilder::new()->addEmbed($embed);
+        $messageBuilded = MessageBuilder::new()->addEmbed($embed);
+
+        if ($file) $messageBuilded->addFile($file);
+
+        return $messageBuilded;
     }
 }

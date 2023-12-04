@@ -9,6 +9,7 @@ use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\Request;
 use Chorume\Application\Discord\MessageComposer;
 use Chorume\Helpers\RedisHelper;
+use Exception;
 
 class MasterCommand
 {
@@ -160,11 +161,60 @@ class MasterCommand
                     )
                 );
 
+                $audioFilename = $this->generateVoice($questionData->choices[0]->message->content);
+
+                $interaction->updateOriginalResponse(
+                    $this->messageComposer->embed(
+                        'SABEDORIA DO MESTRE',
+                        $message,
+                        null,
+                        '#1D80C3',
+                        $audioFilename
+                    )
+                );
+
+
                 $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
                 $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master');
             });
 
             return;
+        } catch (\Exception $e) {
+            $this->discord->getLogger()->error($e->getMessage());
+        }
+    }
+
+    public function generateVoice(string $text)
+    {
+        $client = new HttpClient([
+            'exceptions' => true,
+        ]);
+
+        $headers = [
+            'Content-Type' => 'application/json',
+            "xi-api-key" => getenv('ELEVENLABS_API_KEY'),
+        ];
+
+        $body = [
+            'model_id' => 'eleven_multilingual_v2',
+            'text' => $text,
+            'voice_settings' => [
+                'similarity_boost' => 1,
+                'stability' => 1,
+                'style' => 1,
+                'use_speaker_boost' => true,
+            ],
+        ];
+
+        try {
+            $request = new Request('POST', 'https://api.elevenlabs.io/v1/text-to-speech/SXhqBBsJYJNySHJXyoDs', $headers, json_encode($body));
+            $response = $client->send($request);
+            $data = $response->getBody()->getContents();
+            $filename = sprintf("%s/../../../temp_audio/%s.mp3", __DIR__, date('d-m-Y_H-i-s-m-u'));
+
+            file_put_contents($filename, $data);
+
+            return $filename;
         } catch (\Exception $e) {
             $this->discord->getLogger()->error($e->getMessage());
         }

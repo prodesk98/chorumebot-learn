@@ -28,6 +28,7 @@ use Chorume\Application\Commands\EventsCommand;
 use Chorume\Application\Commands\RouletteCommand;
 use Chorume\Application\Commands\MasterCommand;
 use Chorume\Application\Commands\TestCommand;
+use Chorume\Application\Commands\CodeCommand;
 use Chorume\Application\Events\MessageCreate;
 
 $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
@@ -88,6 +89,7 @@ $talkRepository = new Talk($db);
 
 $messageCreateEvent = new MessageCreate($discord, $config, $redis, $talkRepository);
 $testCommand = new TestCommand($discord, $config, $redis);
+$codeCommand = new CodeCommand($discord, $config, $redis);
 $masterCommand = new MasterCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
 $genericCommand = new GenericCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
 $betsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
@@ -115,6 +117,7 @@ $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) 
 
 $discord->on(DiscordEvent::MESSAGE_CREATE, [$messageCreateEvent, 'messageCreate']);
 $discord->listenCommand('test', [$testCommand, 'test']);
+$discord->listenCommand('codigo', [$codeCommand, 'code']);
 $discord->listenCommand('coins', [$genericCommand, 'coins']);
 $discord->listenCommand('mestre', [$masterCommand, 'ask']);
 $discord->listenCommand(['top', 'apostadores'], [$genericCommand, 'topBetters']);

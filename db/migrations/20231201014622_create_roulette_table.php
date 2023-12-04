@@ -11,7 +11,6 @@ final class CreateRouletteTable extends AbstractMigration
         $table = $this->table('roulette');
         $table->addColumn('choice', 'integer', ['null' => true])
               ->addColumn('status', 'integer', ['default' => 0])
-              ->addColumn('amount', 'decimal', ['precision' => 10, 'scale' => 2])
               ->addColumn('description', 'string', ['limit' => 255])
               ->addColumn('created_at', 'datetime', ['default' => 'CURRENT_TIMESTAMP'])
               ->addIndex(['id'], ['unique' => true])

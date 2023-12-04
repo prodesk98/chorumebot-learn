@@ -278,7 +278,7 @@ class RouletteCommand
         ]);
 
         $descriptions = $this->config['images']['roulette']['numbers'];
-        $imageRouletteSpin = $this->config['images']['roulette']['spin];
+        $imageRouletteSpin = $this->config['images']['roulette']['spin'];
 
         if (count($bets) === 0) {
             $embednovo = new Embed($this->discord);

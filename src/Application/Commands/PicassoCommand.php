@@ -1,0 +1,133 @@
+<?php
+
+namespace Chorume\Application\Commands;
+
+use Predis\Client as RedisClient;
+use Discord\Discord;
+use Discord\Parts\Interactions\Interaction;
+use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Psr7\Request;
+use Chorume\Application\Discord\MessageComposer;
+use Chorume\Helpers\RedisHelper;
+use Exception;
+
+class PicassoCommand
+{
+    private Discord $discord;
+    private $config;
+    private RedisHelper $redisHelper;
+    private MessageComposer $messageComposer;
+    private $userRepository;
+    private $userCoinHistoryRepository;
+    private int $cooldownSeconds;
+    private int $cooldownTimes;
+
+    public function __construct(
+        Discord $discord,
+        $config,
+        RedisClient $redis,
+        $userRepository,
+        $userCoinHistoryRepository
+    ) {
+        $this->discord = $discord;
+        $this->config = $config;
+        $this->redisHelper = new RedisHelper($redis);
+        $this->messageComposer = new MessageComposer($this->discord);
+        $this->userRepository = $userRepository;
+        $this->userCoinHistoryRepository = $userCoinHistoryRepository;
+        $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_SECONDS');
+        $this->cooldownTimes = getenv('COMMAND_COOLDOWN_TIMES');
+    }
+
+    public function paint(Interaction $interaction)
+    {
+        $prompt = $interaction->data->options['pinte']->value;
+        $askCost = $originalAskCost = getenv('PICASSO_COINS_COST');
+
+        if (
+            !$this->redisHelper->cooldown(
+                'cooldown:picasso:paint:' . $interaction->member->user->id,
+                $this->cooldownSeconds,
+                $this->cooldownTimes
+            )
+        ) {
+            $interaction->respondWithMessage(
+                $this->messageComposer->embed(
+                    'HMMMM....',
+                    'Vai mais devagar aí senão vou te mostrar o Picasso! Aguarde 1 minuto para fazer outra pergunta!',
+                    $this->config['images']['gonna_press']
+                ),
+                true
+            );
+            return;
+        }
+
+        if (!$this->userCoinHistoryRepository->hasAvailableCoins($interaction->member->user->id, $askCost)) {
+            $message = sprintf(
+                "Pelo que vejo aqui sua carteira anda meio vazia. O mestre das artes plásticas não vale meros **%s coins**?",
+                $originalAskCost
+            );
+
+            $interaction->respondWithMessage(
+                $this->messageComposer->embed(
+                    'ARTE NÃO É DE GRAÇA',
+                    $message,
+                    $this->config['images']['nomoney']
+                ),
+                true
+            );
+            return;
+        }
+
+        try {
+            $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $prompt, $askCost) {
+                $art = $this->requestArt($prompt);
+
+                $message = sprintf("A arte é minha mas se deu ruim é por que você não sabe descrever o que quer, tenho culpa de nada não.\n\n**Custo:** %s coins", $askCost);
+
+                $interaction->updateOriginalResponse(
+                    $this->messageComposer->embed(
+                        'CONTEMPLE MINHA ARTE',
+                        $message,
+                        $art->data[0]->url,
+                        '#1D80C3'
+                    )
+                );
+
+                $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
+                $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Picasso');
+            });
+
+            return;
+        } catch (\Exception $e) {
+            $this->discord->getLogger()->error($e->getMessage());
+        }
+    }
+
+    private function requestArt(string $prompt)
+    {
+        $client = new HttpClient([
+            'exceptions' => true,
+        ]);
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . getenv('OPENAI_API_KEY'),
+        ];
+
+        $body = [
+            "model" => getenv('PICASSO_IMAGE_GENERATION_MODEL'),
+            "prompt" => $prompt,
+            "n" => (int) getenv('PICASSO_IMAGE_NUMBERS'),
+        ];
+
+        try {
+            $request = new Request('POST', 'https://api.openai.com/v1/images/generations', $headers, json_encode($body));
+            $response = $client->send($request);
+            $data = json_decode($response->getBody()->getContents());
+
+            return $data;
+        } catch (\Exception $e) {
+            $this->discord->getLogger()->error($e->getMessage());
+        }
+    }
+}

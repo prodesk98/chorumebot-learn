@@ -54,7 +54,7 @@ class PicassoCommand
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
                     'HMMMM....',
-                    'Vai mais devagar aí senão vou te mostrar o Picasso! Aguarde 1 minuto para fazer outra pergunta!',
+                    'Não confunda a pica de aço do mestre de obras com a obra de arte do mestre Picasso! Aguarde 1 minuto para fazer outra pergunta!',
                     $this->config['images']['gonna_press']
                 ),
                 true
@@ -83,7 +83,7 @@ class PicassoCommand
             $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $prompt, $askCost) {
                 $art = $this->requestArt($prompt);
 
-                $message = sprintf("A arte é minha mas se deu ruim é por que você não sabe descrever o que quer, tenho culpa de nada não.\n\n**Custo:** %s coins", $askCost);
+                $message = sprintf("A arte é minha mas se deu ruim é por que você não sabe descrever o que quer, tenho culpa de nada não.\n\nMe pediram isso: %s\n\n**Custo:** %s coins", $prompt, $askCost);
 
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(

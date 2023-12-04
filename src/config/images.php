@@ -24,7 +24,7 @@ return [
         'gonna_press' => 'https://chorume.tech/imgs/gonna-press.gif?v0.0.1',
         'thinking' => 'https://chorume.tech/imgs/thinking.gif?v0.0.1',
         'roulette' =>  [
-            'spin' =>  'https://chorume.tech/imgs/roulette/roulette_spin.gif?v0.0.2',
+            'spin' =>  'https://chorume.tech/imgs/roulette/roulette_spin.gif?v0.0.3',
             'list' => 'https://chorume.tech/imgs/roulette/roulette_list.gif?v0.0.1',
             'numbers' => [
                 'https://chorume.tech/imgs/roulette/0.png?v0.0.1',

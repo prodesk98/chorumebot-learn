@@ -342,8 +342,6 @@ class RouletteCommand
             $this->redis->set("{$rouletteId}", $serializado);
         }
 
-        var_dump($gameData);
-
         $buttonRed = Button::new(Button::STYLE_DANGER)->setLabel("RED +{$amountBet}")->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
             $fromDiscordId = $interactionUser->member->user->id;
             $userDiscord = $interactionUser->member->user;
@@ -421,6 +419,11 @@ class RouletteCommand
     )
     {
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
+
+        if (!$this->userRepository->userExistByDiscordId($userDiscordId)) {
+            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você ainda não coleteu suas coins iniciais! Digita **/coins** e pegue suas coins! :coin::coin::coin: '), true);
+            return;
+        }
 
         if ($roulette[0]['status'] !== $this->rouletteRepository::OPEN) {
             $interactionUser->respondWithMessage(MessageBuilder::new()->setContent('Roleta precisa estar aberta para apostar!'), true);

@@ -322,7 +322,8 @@ class RouletteCommand
       
         $builder = MessageBuilder::new();
         $action = ActionRow::new();
-        $AmountBet = 100;
+        $AmountBet1 = 100;
+        $AmountBet2 = 50;
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
         $embed = new Embed($this->discord);
 
@@ -348,30 +349,52 @@ class RouletteCommand
         }
 
 
-        $button1 = Button::new(Button::STYLE_DANGER)->setLabel('RED +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet, &$gameData) {
+        $button1 = Button::new(Button::STYLE_DANGER)->setLabel('RED +50')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet2, &$gameData) {
             $fromDiscordId = $interactionUser->member->user->id;
             $userDiscord = $interactionUser->member->user;
-            $this->apostarRoleta($fromDiscordId, Roulette::RED, $rouletteId, $interaction, $roulette, $AmountBet,  $gameData, $userDiscord, $interactionUser);
+            $this->apostarRoleta($fromDiscordId, Roulette::RED, $rouletteId, $interaction, $roulette, $AmountBet2,  $gameData, $userDiscord, $interactionUser);
+        }, $this->discord);
+      
+
+        $button11 = Button::new(Button::STYLE_DANGER)->setLabel('RED +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet1, &$gameData) {
+            $fromDiscordId = $interactionUser->member->user->id;
+            $userDiscord = $interactionUser->member->user;
+            $this->apostarRoleta($fromDiscordId, Roulette::RED, $rouletteId, $interaction, $roulette, $AmountBet1,  $gameData, $userDiscord, $interactionUser);
+        }, $this->discord);
+      
+        $button2 = Button::new(Button::STYLE_SUCCESS)->setLabel('GREEN +50')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet2, &$gameData) {
+            $fromDiscordId = $interactionUser->member->user->id;
+            $userDiscord = $interactionUser->member->user;
+
+
+            $this->apostarRoleta($fromDiscordId, Roulette::GREEN, $rouletteId, $interaction, $roulette, $AmountBet2, $gameData, $userDiscord, $interactionUser);
         }, $this->discord);
 
-        $button2 = Button::new(Button::STYLE_SUCCESS)->setLabel('GREEN +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet, &$gameData) {
+        $button22 = Button::new(Button::STYLE_SUCCESS)->setLabel('GREEN +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet1, &$gameData) {
             $fromDiscordId = $interactionUser->member->user->id;
             $userDiscord = $interactionUser->member->user;
 
 
-            $this->apostarRoleta($fromDiscordId, Roulette::GREEN, $rouletteId, $interaction, $roulette, $AmountBet, $gameData, $userDiscord, $interactionUser);
+            $this->apostarRoleta($fromDiscordId, Roulette::GREEN, $rouletteId, $interaction, $roulette, $AmountBet1, $gameData, $userDiscord, $interactionUser);
         }, $this->discord);
 
-        $button3 = Button::new(Button::STYLE_SECONDARY)->setLabel('BLACK +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet, &$gameData) {
+        $button3 = Button::new(Button::STYLE_SECONDARY)->setLabel('BLACK +50')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet2, &$gameData) {
             $fromDiscordId = $interactionUser->member->user->id;
             $userDiscord = $interactionUser->member->user;
-            $this->apostarRoleta($fromDiscordId, Roulette::BLACK, $rouletteId, $interaction, $roulette, $AmountBet, $gameData, $userDiscord, $interactionUser);
+            $this->apostarRoleta($fromDiscordId, Roulette::BLACK, $rouletteId, $interaction, $roulette, $AmountBet2, $gameData, $userDiscord, $interactionUser);
+        }, $this->discord);
+
+        $button33 = Button::new(Button::STYLE_SECONDARY)->setLabel('BLACK +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet1, &$gameData) {
+            $fromDiscordId = $interactionUser->member->user->id;
+            $userDiscord = $interactionUser->member->user;
+            $this->apostarRoleta($fromDiscordId, Roulette::BLACK, $rouletteId, $interaction, $roulette, $AmountBet1, $gameData, $userDiscord, $interactionUser);
         }, $this->discord);
 
         $action->addComponent($button1);
         $action->addComponent($button2);
         $action->addComponent($button3);
-
+        $action->addComponent($button11);
+        $action->addComponent($button33);
 
 
         $embed = $this->buildEmbedForRoulette($rouletteId, $roulette, $gameData);

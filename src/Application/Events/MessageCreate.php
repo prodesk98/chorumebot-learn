@@ -20,15 +20,15 @@ class MessageCreate
         $config,
         $redis,
         Talk $talkRepository
-    )
-    {
+    ) {
         $this->discord = $discord;
         $this->config = $config;
         $this->redis = $redis;
         $this->talkRepository = $talkRepository;
     }
 
-    public function messageCreate(Message $message, Discord $discord) {
+    public function messageCreate(Message $message, Discord $discord)
+    {
         if ($this->redis->get('talks')) {
             $textTriggers = json_decode($this->redis->get('talks'), true);
         } else {

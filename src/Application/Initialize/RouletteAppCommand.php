@@ -21,19 +21,6 @@ return [
         ],
         [
             'type' => Option::SUB_COMMAND,
-            'name' => 'iniciar',
-            'description' => 'Inicia roleta',
-            'options' => [
-                [
-                    'type' => Option::INTEGER,
-                    'name' => 'id',
-                    'description' => 'ID da Roleta',
-                    'required' => true,
-                ],
-            ]
-        ],
-        [
-            'type' => Option::SUB_COMMAND,
             'name' => 'fechar',
             'description' => 'Fecha Roleta e não recebe mais apostas',
             'options' => [
@@ -51,7 +38,7 @@ return [
             'name' => 'listar',
             'description' => 'Lista Roletas criados e pendentes para iniciar',
         ],
-      
+
         [
             'type' => Option::SUB_COMMAND,
             'name' => 'girar',
@@ -63,7 +50,7 @@ return [
                     'description' => 'ID do Roleta',
                     'required' => true,
                 ],
-                
+
             ]
         ],
         [
@@ -77,7 +64,7 @@ return [
                     'description' => 'ID do Roleta',
                     'required' => true,
                 ],
-                
+
             ]
         ]
     ]

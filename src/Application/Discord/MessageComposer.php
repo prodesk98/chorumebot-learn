@@ -24,8 +24,12 @@ class MessageComposer
             ->setTitle($title)
             ->setDescription($message);
 
-        if ($image) $embed->setImage($image);
-        if ($color) $embed->setColor($color);
+        if ($image) {
+            $embed->setImage($image);
+        }
+        if ($color) {
+            $embed->setColor($color);
+        }
 
         return MessageBuilder::new()->addEmbed($embed);
     }

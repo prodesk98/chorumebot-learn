@@ -23,5 +23,26 @@ return [
         'typer' => 'https://chorume.tech/imgs/typer.gif?v0.0.1',
         'gonna_press' => 'https://chorume.tech/imgs/gonna-press.gif?v0.0.1',
         'thinking' => 'https://chorume.tech/imgs/thinking.gif?v0.0.1',
+        'roulette' =>  [
+            'spin' =>  'https://chorume.tech/imgs/roulette/roulette_spin.gif?v0.0.2',
+            'list' => 'https://chorume.tech/imgs/roulette/roulette_list.gif?v0.0.1',
+            'numbers' => [
+                'https://chorume.tech/imgs/roulette/0.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/1.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/2.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/3.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/4.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/5.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/6.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/7.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/8.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/9.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/10.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/11.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/12.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/13.png?v0.0.1',
+                'https://chorume.tech/imgs/roulette/14.png?v0.0.1'
+            ]
+        ]
     ],
 ];

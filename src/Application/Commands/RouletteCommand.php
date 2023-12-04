@@ -21,6 +21,7 @@ class Player
     public int $bet;
     public $choice;
     public $userName;
+
     public function __construct($user, $bet, $choice, $userName)
     {
         $this->user = $user;
@@ -36,8 +37,9 @@ class GameData
     public int $AmountGreen = 0;
     public int $AmountBlack = 0;
     public int $AmountTotal = 0;
-    public $jogadores;
+    public array $jogadores;
     public int $rouletteId = 0;
+
     public function __construct($rouletteId)
     {
         $this->AmountRed = 0;
@@ -49,7 +51,6 @@ class GameData
     }
 }
 
-
 class RouletteCommand
 {
     public $discord;
@@ -58,6 +59,7 @@ class RouletteCommand
     public RouletteBet $rouletteBetRepository;
     public User $userRepository;
     private RedisClient $redis;
+
     public function __construct(
         Discord $discord,
         $config,
@@ -92,12 +94,15 @@ class RouletteCommand
     {
         $roulettesOpen = $this->rouletteRepository->listEventsOpen();
         $roulettesClosed = $this->rouletteRepository->listEventsClosed();
+
         if (!is_array($roulettesOpen)) {
             $roulettesOpen = [];
         }
+
         if (!is_array($roulettesClosed)) {
             $roulettesClosed = [];
         }
+
         $roulettes = array_merge($roulettesOpen, $roulettesClosed);
         $ephemeralMsg = true;
 
@@ -131,7 +136,7 @@ class RouletteCommand
             ->setTitle("ROLETAS")
             ->setColor('#F5D920')
             ->setDescription($roulettesDescription)
-            ->setImage($this->config['images']['event']);
+            ->setImage($this->config['images']['roulette']['list']);
         $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed), $ephemeralMsg);
     }
 
@@ -144,11 +149,12 @@ class RouletteCommand
 
         $rouletteId = $interaction->data->options['fechar']->options['id']->value;
         $event = $this->rouletteRepository->getRouletteById($rouletteId);
- 
+
         if ($event[0]['status'] !== $this->rouletteRepository::OPEN) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent('Roleta precisa estar aberta para ser fechada!'), true);
             return;
         }
+
         if (empty($event)) {
             $interaction->respondWithMessage(
                 MessageBuilder::new()->setContent(
@@ -175,34 +181,32 @@ class RouletteCommand
             ),
             false
         );
+
         return;
     }
+
     public function finish(Interaction $interaction)
     {
         $interaction->acknowledgeWithResponse(false);
 
-
-
         if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
+            $interaction->respondWithMessage(
+                MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'),
+                true
+            );
             return;
         }
 
-
-
         $eventId = $interaction->data->options['girar']->options['id']->value;
-
         $event = $this->rouletteRepository->getRouletteById($eventId);
-
         $winnerNumber = rand(0, 14);
-
         $winnerResult = null;
-
         $choice = null;
+
         if ($winnerNumber == 0) {
             $winnerResult = Roulette::GREEN;
             $choice = "🟩 [$winnerNumber] GREEN [$winnerNumber] 🟩";
-        } else if ($winnerNumber % 2 == 0) {
+        } elseif ($winnerNumber % 2 == 0) {
             $winnerResult = Roulette::BLACK;
             $choice = "⬛ [$winnerNumber] BLACK [$winnerNumber] ⬛";
         } else {
@@ -210,21 +214,24 @@ class RouletteCommand
             $choice = "🟥  [$winnerNumber] RED [$winnerNumber] 🟥";
         }
 
-
-
         $bets = $this->rouletteRepository->payoutRoulette($eventId, $winnerResult);
 
-        $events = $this->rouletteRepository->listEventsClosed();
-
         if (empty($event)) {
-            $interaction->updateOriginalResponse(MessageBuilder::new()->setContent('Roleta não existe!'), true);
+            $interaction->updateOriginalResponse(
+                MessageBuilder::new()->setContent('Roleta não existe!'),
+                true
+            );
             return;
         }
 
         if ($event[0]['status'] !== $this->rouletteRepository::CLOSED) {
-            $interaction->updateOriginalResponse(MessageBuilder::new()->setContent('Roleta precisa estar fechada para ser Girada!'), true);
+            $interaction->updateOriginalResponse(
+                MessageBuilder::new()->setContent('Roleta precisa estar fechada para ser Girada!'),
+                true
+            );
             return;
         }
+
         $eventsDescription = sprintf(
             "**Evento:** %s \n **Vencedor**: %s \n \n \n",
             $event[0]['description'],
@@ -238,7 +245,7 @@ class RouletteCommand
          */
         $embed = $this->discord->factory(Embed::class);
         $embed
-            ->setTitle(sprintf('ROLETA #%s ENCERRADA', $eventId))
+            ->setTitle(sprintf("ROLETA ENCERRADA\n[%s] %s", $eventId, $event[0]['description']))
             ->setColor('#F5D920')
             ->setDescription($eventsDescription)
             ->setImage($winnersImage);
@@ -246,6 +253,7 @@ class RouletteCommand
         $earningsByUser = [];
         $winners = '';
         $earningsString = '';
+
         foreach ($bets as $bet) {
             if ($bet['choice_key'] == $winnerResult) {
                 if (!isset($earningsByUser[$bet['discord_user_id']])) {
@@ -254,59 +262,41 @@ class RouletteCommand
                 $earningsByUser[$bet['discord_user_id']] += intval($bet['earnings']);
             }
         }
-        
+
         foreach ($earningsByUser as $userId => $earnings) {
             $winners .= sprintf("<@%s> \n", $userId);
             $earningsString .= sprintf("<@%s>: %s 🪙\n", $userId, $earnings);
         }
-        
-        $embed
-            ->addField(['name' => 'Ganhador(es) / Valor $', 'value' => $earningsString, 'inline' => 'true']);  
-        
 
+        $embed->addField([
+            'name' => 'Premiação / Valor C$',
+            'value' => $earningsString,
+            'inline' => 'true'
+        ]);
 
-
-        $builder = new MessageBuilder();
-
-        $descriptions = [
-            "https://i.imgur.com/0h7iY0w.png",
-            "https://i.imgur.com/sXwdVwj.png",
-            "https://i.imgur.com/QlINCFE.png",
-            "https://i.imgur.com/Fi7tCZJ.png",
-            "https://i.imgur.com/rBscYWA.png",
-            "https://i.imgur.com/h0ClHqm.png",
-            "https://i.imgur.com/cAc2GFA.png",
-            "https://i.imgur.com/55ZYwtC.png",
-            "https://i.imgur.com/W0AXOuN.png",
-            "https://i.imgur.com/jxHrthT.png",
-            "https://i.imgur.com/fUIJPcU.png",
-            "https://i.imgur.com/oAMzXY8.png",
-            "https://i.imgur.com/xiftlWC.png",
-            "https://i.imgur.com/M8t90KG.png",
-            "https://i.imgur.com/GoRnW6c.png"
-        ];
-        $gif = "https://i.imgur.com/Pul3tnz.gif";
+        $descriptions = $this->config['images']['roulette']['numbers'];
+        $imageRouletteSpin = "https://chorume.tech/imgs/roulette/roulette_spin.gif";
 
         if (count($bets) === 0) {
-
             $embednovo = new Embed($this->discord);
             $embednovo
                 ->setTitle(sprintf('ROLETA #%s ENCERRADA', $eventId))
                 ->setColor('#F5D920')
-                ->setDescription("**Resultado**: Não teve Vencedores.");
+                ->setDescription("**Resultado**: Não houveram vencedores.");
 
             $embed = $embednovo;
         }
+
         $embedLoop = new Embed($this->discord);
-        $embedLoop->setImage($gif);
+        $embedLoop->setImage($imageRouletteSpin);
         $embedLoop->setTitle(sprintf('ROLETA #%s ENCERRADA', $eventId));
         $embedLoop->setDescription("**Sorteando um número!**");
+
         $builderLoop = new MessageBuilder();
         $builderLoop->addEmbed($embedLoop);
         $interaction->updateOriginalResponse($builderLoop, false);
 
         $loop = $this->discord->getLoop();
-
         $loop->addTimer(8, function () use ($embed, $interaction, $descriptions, $winnerNumber) {
             $embed->setImage($descriptions[$winnerNumber]);
             $builder = new MessageBuilder();
@@ -315,145 +305,161 @@ class RouletteCommand
         });
     }
 
-
-    function expose(Interaction $interaction)
+    public function expose(Interaction $interaction)
     {
         $rouletteId = $interaction->data->options['apostar']->options['id']->value;
-      
         $builder = MessageBuilder::new();
         $action = ActionRow::new();
-        $AmountBet1 = 100;
-        $AmountBet2 = 50;
+        $amountBet = 100;
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
         $embed = new Embed($this->discord);
 
         if (empty($roulette)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Roleta não existe!'), true);
+            $interaction->respondWithMessage(
+                MessageBuilder::new()->setContent('Roleta não existe!'),
+                true
+            );
             return;
         }
-        
+
         if ($roulette[0]['status'] !== $this->rouletteRepository::OPEN) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Roleta precisa estar aberta para apostar!'), true);
+            $interaction->respondWithMessage(
+                MessageBuilder::new()->setContent('Roleta precisa estar aberta para apostar!'),
+                true
+            );
             return;
         }
 
+        $gameData = $this->redis->get($rouletteId);
+        $gameData = unserialize($gameData ?? '');
 
-        $gameData = $this->redis->get("{$rouletteId}");
-        $gameData = unserialize($gameData);
-
-        if ($gameData != null) {
-        } else {
+        if (!$gameData) {
             $gameData = new GameData($rouletteId);
-            $serializado =  serialize($gameData);
+            $serializado = serialize($gameData);
             $this->redis->set("{$rouletteId}", $serializado);
         }
 
+        var_dump($gameData);
 
-        $button1 = Button::new(Button::STYLE_DANGER)->setLabel('RED +50')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet2, &$gameData) {
-            $fromDiscordId = $interactionUser->member->user->id;
-            $userDiscord = $interactionUser->member->user;
-            $this->apostarRoleta($fromDiscordId, Roulette::RED, $rouletteId, $interaction, $roulette, $AmountBet2,  $gameData, $userDiscord, $interactionUser);
-        }, $this->discord);
-      
-
-        $button11 = Button::new(Button::STYLE_DANGER)->setLabel('RED +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet1, &$gameData) {
-            $fromDiscordId = $interactionUser->member->user->id;
-            $userDiscord = $interactionUser->member->user;
-            $this->apostarRoleta($fromDiscordId, Roulette::RED, $rouletteId, $interaction, $roulette, $AmountBet1,  $gameData, $userDiscord, $interactionUser);
-        }, $this->discord);
-      
-        $button2 = Button::new(Button::STYLE_SUCCESS)->setLabel('GREEN +50')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet2, &$gameData) {
+        $buttonRed = Button::new(Button::STYLE_DANGER)->setLabel("RED +{$amountBet}")->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
             $fromDiscordId = $interactionUser->member->user->id;
             $userDiscord = $interactionUser->member->user;
 
-
-            $this->apostarRoleta($fromDiscordId, Roulette::GREEN, $rouletteId, $interaction, $roulette, $AmountBet2, $gameData, $userDiscord, $interactionUser);
+            $this->apostarRoleta(
+                $fromDiscordId,
+                Roulette::RED,
+                $rouletteId,
+                $interaction,
+                $roulette,
+                $amountBet,
+                $gameData,
+                $userDiscord,
+                $interactionUser
+            );
         }, $this->discord);
 
-        $button22 = Button::new(Button::STYLE_SUCCESS)->setLabel('GREEN +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet1, &$gameData) {
+        $buttonGreen = Button::new(Button::STYLE_SUCCESS)->setLabel("GREEN +{$amountBet}")->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
             $fromDiscordId = $interactionUser->member->user->id;
             $userDiscord = $interactionUser->member->user;
 
-
-            $this->apostarRoleta($fromDiscordId, Roulette::GREEN, $rouletteId, $interaction, $roulette, $AmountBet1, $gameData, $userDiscord, $interactionUser);
+            $this->apostarRoleta(
+                $fromDiscordId,
+                Roulette::GREEN,
+                $rouletteId,
+                $interaction,
+                $roulette,
+                $amountBet,
+                $gameData,
+                $userDiscord,
+                $interactionUser
+            );
         }, $this->discord);
 
-        $button3 = Button::new(Button::STYLE_SECONDARY)->setLabel('BLACK +50')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet2, &$gameData) {
+        $buttonBlack = Button::new(Button::STYLE_SECONDARY)->setLabel("BLACK +{$amountBet}")->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
             $fromDiscordId = $interactionUser->member->user->id;
             $userDiscord = $interactionUser->member->user;
-            $this->apostarRoleta($fromDiscordId, Roulette::BLACK, $rouletteId, $interaction, $roulette, $AmountBet2, $gameData, $userDiscord, $interactionUser);
+
+            $this->apostarRoleta(
+                $fromDiscordId,
+                Roulette::BLACK,
+                $rouletteId,
+                $interaction,
+                $roulette,
+                $amountBet,
+                $gameData,
+                $userDiscord,
+                $interactionUser
+            );
         }, $this->discord);
 
-        $button33 = Button::new(Button::STYLE_SECONDARY)->setLabel('BLACK +100')->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $AmountBet1, &$gameData) {
-            $fromDiscordId = $interactionUser->member->user->id;
-            $userDiscord = $interactionUser->member->user;
-            $this->apostarRoleta($fromDiscordId, Roulette::BLACK, $rouletteId, $interaction, $roulette, $AmountBet1, $gameData, $userDiscord, $interactionUser);
-        }, $this->discord);
-
-        $action->addComponent($button1);
-        $action->addComponent($button2);
-        $action->addComponent($button3);
-        $action->addComponent($button11);
-        $action->addComponent($button33);
-
+        $action->addComponent($buttonRed);
+        $action->addComponent($buttonGreen);
+        $action->addComponent($buttonBlack);
 
         $embed = $this->buildEmbedForRoulette($rouletteId, $roulette, $gameData);
 
         $builder = new MessageBuilder();
         $builder->addEmbed($embed);
-
-
         $builder->addComponent($action);
-
 
         $interaction->respondWithMessage($builder, false);
     }
 
-    function apostarRoleta($userDiscordId, $choice, $rouletteId, Interaction $interaction, $roulette, $AmountBet, &$gameData, $userDiscord, Interaction $interactionUser)
-
+    public function apostarRoleta(
+        $userDiscordId,
+        $choice,
+        $rouletteId,
+        Interaction $interaction,
+        $roulette,
+        $amountBet,
+        &$gameData,
+        $userDiscord,
+        Interaction $interactionUser
+    )
     {
-
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
-            if ($roulette[0]['status'] !== $this->rouletteRepository::OPEN) {
-                $interactionUser->respondWithMessage(MessageBuilder::new()->setContent('Roleta precisa estar aberta para apostar!'), true);
-                return;
+
+        if ($roulette[0]['status'] !== $this->rouletteRepository::OPEN) {
+            $interactionUser->respondWithMessage(MessageBuilder::new()->setContent('Roleta precisa estar aberta para apostar!'), true);
+            return;
         }
 
         $user = $this->userRepository->getByDiscordId($userDiscordId);
         $userId = $user[0]['id'];
 
-        if (!$this->userRepository->hasAvailableCoins($userDiscordId, $AmountBet)) {
+        if (!$this->userRepository->hasAvailableCoins($userDiscordId, $amountBet)) {
             $interactionUser->respondWithMessage(MessageBuilder::new()->setContent('Você não possui coins suficientes! :crying_cat_face:'), true);
             return;
         }
 
-        if ($choice == Roulette::RED)
-            $gameData->AmountRed = $gameData->AmountRed + $AmountBet;
-        else if ($choice == Roulette::GREEN)
-            $gameData->AmountGreen = $gameData->AmountGreen + $AmountBet;
-        else
-            $gameData->AmountBlack = $gameData->AmountBlack + $AmountBet;
+        if ($choice == Roulette::RED) {
+            $gameData->AmountRed = $gameData->AmountRed + $amountBet;
+        } elseif ($choice == Roulette::GREEN) {
+            $gameData->AmountGreen = $gameData->AmountGreen + $amountBet;
+        } else {
+            $gameData->AmountBlack = $gameData->AmountBlack + $amountBet;
+        }
 
-
-        $gameData->AmountTotal = $gameData->AmountTotal + $AmountBet;
-
-        $player = new Player($userId, $AmountBet, $choice, $userDiscord);
+        $gameData->AmountTotal = $gameData->AmountTotal + $amountBet;
+        $player = new Player($userId, $amountBet, $choice, $userDiscord);
         $playerFound = false;
+
         foreach ($gameData->jogadores as &$existingPlayer) {
             if ($existingPlayer->user == $userId && $existingPlayer->choice === $choice) {
-                $existingPlayer->bet = $existingPlayer->bet + $AmountBet;
+                $existingPlayer->bet = $existingPlayer->bet + $amountBet;
                 $playerFound = true;
                 break;
             }
         }
+
         if (!$playerFound) {
             $gameData->jogadores[] = $player;
         }
-        $serializado =  serialize($gameData);
+
+        $serializado = serialize($gameData);
         $this->redis->set("{$rouletteId}", $serializado);
 
-
-        if ($this->rouletteBetRepository->createRouletteBet($userId, $rouletteId, $AmountBet, $choice)) {
+        if ($this->rouletteBetRepository->createRouletteBet($userId, $rouletteId, $amountBet, $choice)) {
             $embed = $this->buildEmbedForRoulette($rouletteId, $roulette, $gameData);
 
             $builder = new MessageBuilder();
@@ -477,20 +483,19 @@ class RouletteCommand
         });
 
         $embed = new Embed($this->discord);
-        $embed->setTitle("💰APOSTEM NA ROLETA: #{$rouletteId} {$roulette[0]['description']}💰")
+        $embed->setTitle("💰 APOSTEM NA ROLETA: 💰\n[#{$rouletteId}] {$roulette[0]['description']}")
             ->setColor(0x00ff00)
             ->setDescription("Total: {$gameData->AmountTotal}")
-            ->setFooter('💰💰CHORULETTA💰💰');
+            ->setFooter('💰💰 CHORULETTA 💰💰');
 
-        $embed->addFieldValues('🟥   RED  🟥 ', '', true)
-            ->addFieldValues('🟩  GREEN  🟩', '', true)
-            ->addFieldValues('⬛  BLACK  ⬛', '', true);
-
+        $embed->addFieldValues('🟥  RED  🟥 ', '', true)
+            ->addFieldValues('🟩 GREEN 🟩', '', true)
+            ->addFieldValues('⬛ BLACK ⬛', '', true);
 
         $embed->addFieldValues(
             '',
             implode("\n", array_map(function ($player) {
-                return "Nome: {$player->userName}\nBet: {$player->bet}";
+                return "{$player->userName}\nBet: {$player->bet}";
             }, $playersRed)),
             true
         );
@@ -498,7 +503,7 @@ class RouletteCommand
         $embed->addFieldValues(
             '',
             implode("\n", array_map(function ($player) {
-                return "Nome: {$player->userName}\nBet: {$player->bet}";
+                return "{$player->userName}\nBet: {$player->bet}";
             }, $playersGreen)),
             true
         );
@@ -506,7 +511,7 @@ class RouletteCommand
         $embed->addFieldValues(
             '',
             implode("\n", array_map(function ($player) {
-                return "Nome: {$player->userName}\nBet: {$player->bet}";
+                return "{$player->userName}\nBet: {$player->bet}";
             }, $playersBlack)),
             true
         );

@@ -24,8 +24,7 @@ class BetsCommand
         User $userRepository,
         Event $eventRepository,
         EventBet $eventBetsRepository
-    )
-    {
+    ) {
         $this->discord = $discord;
         $this->config = $config;
         $this->userRepository = $userRepository;

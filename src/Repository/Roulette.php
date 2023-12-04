@@ -118,26 +118,26 @@ class Roulette extends Repository
     ", [
         [ 'type' => 's', 'value' => $status ],
     ]);
-    
-    return empty($results) ? [] : $results;
-    
+
+        return empty($results) ? [] : $results;
+
     }
 
     public function normalizeRoulette(array $roulette)
     {
         return array_reduce($roulette, function ($acc, $item) {
-    
+
             if (!is_array($acc)) {
                 $acc = [];
             }
-    
+
             if (($subItem = array_search($item['description'], array_column($acc, 'description'))) === false) {
                 $acc[] = [
                     'roulette_id' => $item['roulette_id'],
                     'description' => $item['description'],
                     'status' => $item['status'],
                 ];
-    
+
                 return $acc;
             }
         }, []);
@@ -165,8 +165,7 @@ class Roulette extends Repository
 
         return $createEvent;
     }
-public function payoutRoulette(int $rouletteId, $winnerChoiceKey)
-
+    public function payoutRoulette(int $rouletteId, $winnerChoiceKey)
     {
         $winners = [];
         $bets = $this->rouletteBetRepository->getBetsByEventId($rouletteId);
@@ -174,19 +173,20 @@ public function payoutRoulette(int $rouletteId, $winnerChoiceKey)
 
 
         $odd = null;
-        
-        if($winnerChoiceKey == Roulette::GREEN)
-        $odd = 14;
-        else 
-        $odd = 2;
+
+        if($winnerChoiceKey == Roulette::GREEN) {
+            $odd = 14;
+        } else {
+            $odd = 2;
+        }
 
 
-        
+
         $this->updateRouletteWithWinner($winnerChoiceKey, $rouletteId);
 
 
         foreach ($bets as $bet) {
-           $choiceKey =  $bet['choice_key'];
+            $choiceKey =  $bet['choice_key'];
             if ($bet['choice_key'] !== $winnerChoiceKey) {
                 continue;
             }

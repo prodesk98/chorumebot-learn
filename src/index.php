@@ -27,11 +27,8 @@ use Chorume\Application\Commands\BetsCommand;
 use Chorume\Application\Commands\EventsCommand;
 use Chorume\Application\Commands\RouletteCommand;
 use Chorume\Application\Commands\MasterCommand;
+use Chorume\Application\Commands\TestCommand;
 use Chorume\Application\Events\MessageCreate;
-
-use Discord\Parts\Embed\Embed;
-use Discord\Parts\Interactions\MessageComponents\ActionRow;
-use Discord\Parts\Interactions\MessageComponents\Button;
 
 $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
 $dotenv->load();
@@ -74,7 +71,6 @@ if (getenv('ENVIRONMENT') === 'production') {
 
 $logger->pushHandler(new StreamHandler('php://stdout', Level::fromName(getenv('LOG_LEVEL'))));
 
-
 $discord = new Discord([
     'token' => getenv('TOKEN'),
     'logger' => $logger,
@@ -91,11 +87,12 @@ $rouletteBetRepository = new RouletteBet($db);
 $talkRepository = new Talk($db);
 
 $messageCreateEvent = new MessageCreate($discord, $config, $redis, $talkRepository);
+$testCommand = new TestCommand($discord, $config, $redis);
 $masterCommand = new MasterCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
 $genericCommand = new GenericCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
 $betsCommand = new BetsCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
 $eventsCommand = new EventsCommand($discord, $config, $eventChoiceRepository, $eventRepository);
-$rouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository, $rouletteBetRepository,$userRepository, $redis);
+$rouletteCommand = new RouletteCommand($discord, $config, $rouletteRepository, $rouletteBetRepository, $userRepository, $redis);
 
 $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) {
     // Initialize application commands
@@ -117,6 +114,7 @@ $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) 
 });
 
 $discord->on(DiscordEvent::MESSAGE_CREATE, [$messageCreateEvent, 'messageCreate']);
+$discord->listenCommand('test', [$testCommand, 'test']);
 $discord->listenCommand('coins', [$genericCommand, 'coins']);
 $discord->listenCommand('mestre', [$masterCommand, 'ask']);
 $discord->listenCommand(['top', 'apostadores'], [$genericCommand, 'topBetters']);

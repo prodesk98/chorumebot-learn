@@ -21,8 +21,7 @@ class EventsCommand
         $config,
         EventChoice $eventChoiceRepository,
         Event $eventRepository
-    )
-    {
+    ) {
         $this->discord = $discord;
         $this->config = $config;
         $this->eventRepository = $eventRepository;

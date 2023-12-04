@@ -2,11 +2,7 @@
 
 namespace Chorume\Repository;
 
-use Chorume\Repository\User;
-use Chorume\Repository\Event;
-use Chorume\Repository\EventChoice;
 use Chorume\Repository\UserCoinHistory;
-
 
 class RouletteBet extends Repository
 {
@@ -36,6 +32,7 @@ class RouletteBet extends Repository
         parent::__construct($db);
         $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);
     }
+
     public function createRouletteBet(int $userId, int $rouletteId, int $betAmount, int $choice)
     {
         $createBetEvent = $this->db->query('INSERT INTO roulette_bet (user_id, roulette_id, bet_amount, choice) VALUES (?, ?, ?, ?)', [
@@ -49,7 +46,6 @@ class RouletteBet extends Repository
 
         return $createBetEvent && $createUserBetHistory;
     }
-
 
     public function getChoiceByRouletteIdAndKey(int $rouletteId, string $choice)
     {
@@ -70,6 +66,7 @@ class RouletteBet extends Repository
 
         return $result;
     }
+
     public function getBetsByEventId(int $eventId)
     {
         $results = $this->db->select(

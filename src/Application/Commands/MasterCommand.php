@@ -161,7 +161,9 @@ class MasterCommand
                     )
                 );
 
-                if (getenv('MASTER_VOICE_ENABLED')) {
+                $voiceEnabled = (bool) getenv('MASTER_VOICE_ENABLED');
+
+                if ($voiceEnabled) {
                     $audioFilename = $this->generateVoice($questionData->choices[0]->message->content);
 
                     $interaction->updateOriginalResponse(

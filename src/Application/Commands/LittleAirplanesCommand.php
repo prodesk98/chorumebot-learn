@@ -42,7 +42,7 @@ class LittleAirplanesCommand
     public function fly(Interaction $interaction)
     {
         try {
-            if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
+            if (!find_role_array($this->config['master_role'], 'name', $interaction->member->roles)) {
                 $interaction->respondWithMessage(
                     MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'),
                     true

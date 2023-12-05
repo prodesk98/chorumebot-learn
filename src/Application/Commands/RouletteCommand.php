@@ -190,6 +190,11 @@ class RouletteCommand
     public function finish(Interaction $interaction)
     {
         $interaction->acknowledgeWithResponse(false);
+        $eventId = $interaction->data->options['girar']->options['id']->value;
+        $event = $this->rouletteRepository->getRouletteById($eventId);
+        $winnerNumber = rand(0, 14);
+        $winnerResult = null;
+        $choice = null;
 
         if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
             $interaction->respondWithMessage(
@@ -198,25 +203,6 @@ class RouletteCommand
             );
             return;
         }
-
-        $eventId = $interaction->data->options['girar']->options['id']->value;
-        $event = $this->rouletteRepository->getRouletteById($eventId);
-        $winnerNumber = rand(0, 14);
-        $winnerResult = null;
-        $choice = null;
-
-        if ($winnerNumber == 0) {
-            $winnerResult = Roulette::GREEN;
-            $choice = "🟩 [$winnerNumber] GREEN [$winnerNumber] 🟩";
-        } elseif ($winnerNumber % 2 == 0) {
-            $winnerResult = Roulette::BLACK;
-            $choice = "⬛ [$winnerNumber] BLACK [$winnerNumber] ⬛";
-        } else {
-            $winnerResult = Roulette::RED;
-            $choice = "🟥  [$winnerNumber] RED [$winnerNumber] 🟥";
-        }
-
-        $bets = $this->rouletteRepository->payoutRoulette($eventId, $winnerResult);
 
         if (empty($event)) {
             $interaction->updateOriginalResponse(
@@ -233,6 +219,19 @@ class RouletteCommand
             );
             return;
         }
+
+        if ($winnerNumber == 0) {
+            $winnerResult = Roulette::GREEN;
+            $choice = "🟩 [$winnerNumber] GREEN [$winnerNumber] 🟩";
+        } elseif ($winnerNumber % 2 == 0) {
+            $winnerResult = Roulette::BLACK;
+            $choice = "⬛ [$winnerNumber] BLACK [$winnerNumber] ⬛";
+        } else {
+            $winnerResult = Roulette::RED;
+            $choice = "🟥  [$winnerNumber] RED [$winnerNumber] 🟥";
+        }
+
+        $bets = $this->rouletteRepository->payoutRoulette($eventId, $winnerResult);
 
         $eventsDescription = sprintf(
             "**Evento:** %s \n **Vencedor**: %s \n \n \n",

@@ -172,24 +172,18 @@ class Roulette extends Repository
     {
         $winners = [];
         $bets = $this->rouletteBetRepository->getBetsByEventId($rouletteId);
-        $choiceId = $this->rouletteBetRepository->getChoiceByRouletteIdAndKey($rouletteId, $winnerChoiceKey);
 
+        $odd = 2;
 
-        $odd = null;
-
-        if($winnerChoiceKey == Roulette::GREEN) {
+        if ($winnerChoiceKey == Roulette::GREEN) {
             $odd = 14;
-        } else {
-            $odd = 2;
         }
-
-
 
         $this->updateRouletteWithWinner($winnerChoiceKey, $rouletteId);
 
-
         foreach ($bets as $bet) {
             $choiceKey =  $bet['choice_key'];
+
             if ($bet['choice_key'] !== $winnerChoiceKey) {
                 continue;
             }

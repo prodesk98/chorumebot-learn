@@ -144,6 +144,7 @@ class Roulette extends Repository
             WHERE
                 status IN (?)
                 $limitSQL
+            ORDER BY id DESC
         ";
 
         $results = $this->db->select($sql, $params);

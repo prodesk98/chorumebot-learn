@@ -339,7 +339,7 @@ class RouletteCommand
         if (!$gameData) {
             $gameData = new GameData($rouletteId);
             $serializado = serialize($gameData);
-            $this->redis->set("{$rouletteId}", $serializado);
+            $this->redis->set("roulette:{$rouletteId}", $serializado);
         }
 
         $buttonRed = Button::new(Button::STYLE_DANGER)->setLabel("RED +{$amountBet}")->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
@@ -463,7 +463,7 @@ class RouletteCommand
         }
 
         $serializado = serialize($gameData);
-        $this->redis->set("{$rouletteId}", $serializado);
+        $this->redis->set("roulette:{$rouletteId}", $serializado);
 
         if ($this->rouletteBetRepository->createRouletteBet($userId, $rouletteId, $amountBet, $choice)) {
             $embed = $this->buildEmbedForRoulette($rouletteId, $roulette, $gameData);

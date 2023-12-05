@@ -87,16 +87,14 @@ class LittleAirplanesCommand
                 $loop = $this->discord->getLoop();
                 $loop->addTimer(5, function () use ($members, $interaction) {
                     $extraValueProbability = getenv('LITTLE_AIRPLANES_PROBABILITY');
-                    $extraValue200Probability = getenv('LITTLE_AIRPLANES_PROBABILITY_200');
-                    $minValue = getenv('LITTLE_AIRPLANES_PROBABILITY_MIN');
-                    $maxValue = getenv('LITTLE_AIRPLANES_PROBABILITY_MIN');
-                    $boostedValue = getenv('LITTLE_AIRPLANES_PROBABILITY_BOOSTED');
+                    $extraValue200Probability = getenv('LITTLE_AIRPLANES_PROBABILITY_BOOSTED');
+                    $minValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_MIN');
+                    $maxValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_MAX');
+                    $boostedValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_BOOSTED');
                     $airplanes = [];
 
                     foreach ($members as $member) {
-                        $probRand = mt_rand(0, 99);
-                        $test = $extraValueProbability * 100;
-                        if ($probRand < $extraValueProbability * 100) {
+                        if (mt_rand(0, 99) < $extraValueProbability * 100) {
                             if (!$this->userRepository->userExistByDiscordId($member)) continue;
 
                             $extraValue = mt_rand(0, 99) < $extraValue200Probability * 100 ? $boostedValue : mt_rand($minValue, $maxValue);

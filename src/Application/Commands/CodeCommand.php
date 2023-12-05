@@ -32,7 +32,7 @@ class CodeCommand
         $interaction->respondWithMessage(
             $this->messageComposer->embed(
                 'Aí manolo o código do bot tá aqui ó, não palpite, commit!',
-                'https://github.com/brunofunnie/chorume_coins'
+                'https://github.com/brunofunnie/chorumebot'
             ),
         );
     }

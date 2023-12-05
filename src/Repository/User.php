@@ -28,6 +28,29 @@ class User extends Repository
         return $result;
     }
 
+    public function getUsersByDiscordIds(array $ids)
+    {
+        $idsPlaceholders = implode(',', array_fill(0, count($ids), '?'));
+        $ids = [];
+
+        foreach ($ids as $id) {
+            $ids[] = [ 'type' => 'i', 'value' => $id ];
+        }
+
+        $result = $this->db->select(
+            "
+                SELECT
+                    *
+                FROM users uch
+                WHERE
+                    uch.id IN ($idsPlaceholders)
+            ",
+            $ids
+        );
+
+        return empty($result);
+    }
+
     public function giveInitialCoins(int $discordId, $discordUsername)
     {
         $createUser = $this->db->query('INSERT INTO users (discord_user_id, discord_username, received_initial_coins) VALUES (?, ?, ?)', [

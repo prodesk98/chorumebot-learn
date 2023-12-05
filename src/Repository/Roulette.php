@@ -72,6 +72,7 @@ class Roulette extends Repository
 
         return $createEvent;
     }
+
     public function finish(int $eventId)
     {
         $data = [
@@ -83,9 +84,10 @@ class Roulette extends Repository
 
         return $createEvent;
     }
-    public function listEventsOpen()
+
+    public function listEventsOpen(int $limit = null)
     {
-        $results = $this->listEventsByStatus([self::OPEN]);
+        $results = $this->listEventsByStatus([self::OPEN], $limit);
 
         if (empty($results)) {
             return [];
@@ -94,9 +96,9 @@ class Roulette extends Repository
         return $this->normalizeRoulette($results);
     }
 
-    public function listEventsClosed()
+    public function listEventsClosed(int $limit = null)
     {
-        $results = $this->listEventsByStatus([self::CLOSED]);
+        $results = $this->listEventsByStatus([self::CLOSED], $limit);
 
         if (empty($results)) {
             return [];
@@ -105,30 +107,53 @@ class Roulette extends Repository
         return $this->normalizeRoulette($results);
     }
 
-    public function listEventsByStatus(int|array $status)
+    public function listEventsPaid(int $limit = null)
+    {
+        $results = $this->listEventsByStatus([self::PAID], $limit);
+
+        if (empty($results)) {
+            return [];
+        }
+
+        return $this->normalizeRoulette($results);
+    }
+
+    public function listEventsByStatus(int|array $status, int $limit = null)
     {
         $status = is_array($status) ? implode(',', $status) : $status;
 
-        $results = $this->db->select("
-        SELECT
-            id AS roulette_id,
-            description AS description,
-            status AS status,
-            amount AS amount
-        FROM roulette
-        WHERE status IN (?)
-    ", [
-        [ 'type' => 's', 'value' => $status ],
-    ]);
+        $params = [
+            [ 'type' => 's', 'value' => $status ],
+        ];
+
+        $limitSQL = '';
+
+        if ($limit) {
+            $params[] = [ 'type' => 'i', 'value' => $limit ];
+            $limitSQL = " LIMIT ?";
+        }
+
+        $sql = "
+            SELECT
+                id AS roulette_id,
+                description AS description,
+                status AS status,
+                choice AS choice,
+                amount AS amount
+            FROM roulette
+            WHERE
+                status IN (?)
+                $limitSQL
+        ";
+
+        $results = $this->db->select($sql, $params);
 
         return empty($results) ? [] : $results;
-
     }
 
     public function normalizeRoulette(array $roulette)
     {
         return array_reduce($roulette, function ($acc, $item) {
-
             if (!is_array($acc)) {
                 $acc = [];
             }
@@ -138,6 +163,7 @@ class Roulette extends Repository
                     'roulette_id' => $item['roulette_id'],
                     'description' => $item['description'],
                     'amount' => $item['amount'],
+                    'choice' => $item['choice'],
                     'status' => $item['status'],
                 ];
 
@@ -145,6 +171,7 @@ class Roulette extends Repository
             }
         }, []);
     }
+
     public function getRouletteById(int $rouletteId)
     {
         $result = $this->db->select(
@@ -168,11 +195,11 @@ class Roulette extends Repository
 
         return $createEvent;
     }
+
     public function payoutRoulette(int $rouletteId, $winnerChoiceKey)
     {
         $winners = [];
         $bets = $this->rouletteBetRepository->getBetsByEventId($rouletteId);
-
         $odd = 2;
 
         if ($winnerChoiceKey == Roulette::GREEN) {
@@ -202,7 +229,6 @@ class Roulette extends Repository
         return $winners;
     }
 
-
     public function updateRouletteWithWinner(int $choiceId, int $eventId)
     {
         $createEvent = $this->db->query('UPDATE roulette SET status = ?, choice = ? WHERE id = ?', [
@@ -213,5 +239,4 @@ class Roulette extends Repository
 
         return $createEvent;
     }
-
 }

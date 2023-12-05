@@ -119,7 +119,6 @@ class RouletteCommand
         }
 
         foreach ($roulettes as $event) {
-
             $roulettesDescription .= sprintf(
                 "**[#%s] %s** \n **Status: %s C$ %s** \n \n \n",
                 $event['roulette_id'],
@@ -314,6 +313,7 @@ class RouletteCommand
         $builder = MessageBuilder::new();
         $action = ActionRow::new();
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
+        $lastRoulettes = $this->rouletteRepository->listEventsPaid(10);
         $amountBet = (int)$roulette[0]['amount'];
         $embed = new Embed($this->discord);
 
@@ -492,7 +492,7 @@ class RouletteCommand
         $embed->setTitle("💰 APOSTEM NA ROLETA: 💰\n[#{$rouletteId}] {$roulette[0]['description']}")
             ->setColor(0x00ff00)
             ->setDescription("Total: {$gameData->AmountTotal}")
-            ->setFooter('💰💰 CHORULETTA 💰💰');
+            ->setFooter("Últimos giros:\n" . $this->buildLastRoulettesChoices());
 
         $embed->addFieldValues('🟥  RED  🟥 2x', '', true)
             ->addFieldValues('🟩 GREEN 🟩 14x', '', true)
@@ -523,5 +523,20 @@ class RouletteCommand
         );
 
         return $embed;
+    }
+
+    public function buildLastRoulettesChoices() : string
+    {
+        $lastRoulettes = $this->rouletteRepository->listEventsPaid(15);
+
+        $choices = array_map(function ($arr) {
+            return match ($arr['choice']) {
+                Roulette::GREEN => $choice = "🟩",
+                Roulette::BLACK => $choice = "⬛",
+                Roulette::RED => $choice = "🟥"
+            };
+        }, $lastRoulettes);
+
+        return implode(' ', $choices);
     }
 }

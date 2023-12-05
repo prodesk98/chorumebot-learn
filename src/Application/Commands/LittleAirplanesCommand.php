@@ -42,6 +42,14 @@ class LittleAirplanesCommand
     public function fly(Interaction $interaction)
     {
         try {
+            if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
+                $interaction->respondWithMessage(
+                    MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'),
+                    true
+                );
+                return;
+            }
+
             $extraValueProbability = 0.5;
             $extraValue200Probability = 0.1;
             $members = array_keys($this->discord->getChannel($interaction->channel_id)->members->toArray());

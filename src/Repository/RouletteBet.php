@@ -42,7 +42,7 @@ class RouletteBet extends Repository
             [ 'type' => 'i', 'value' => $choice ],
         ]);
 
-        $createUserBetHistory = $this->userCoinHistoryRepository->create($userId, -$betAmount, 'BetRoulette');
+        $createUserBetHistory = $this->userCoinHistoryRepository->create($userId, -$betAmount, 'BetRoulette', $rouletteId);
 
         return $createBetEvent && $createUserBetHistory;
     }

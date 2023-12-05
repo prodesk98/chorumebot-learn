@@ -63,12 +63,6 @@ class GenericCommand
 
             $discordId = $interaction->member->user->id;
             $user = $this->userRepository->getByDiscordId($discordId);
-            $message = '';
-
-            if (!$discordId) {
-                $interaction->updateOriginalResponse(MessageBuilder::new()->setContent('Aconteceu um erro com seu usuário, encha o saco do admin do bot!'));
-                return;
-            }
 
             if (empty($user)) {
                 if ($this->userRepository->giveInitialCoins(
@@ -85,6 +79,7 @@ class GenericCommand
             $coinsQuery = $this->userRepository->getCurrentCoins($interaction->member->user->id);
             $currentCoins = $coinsQuery[0]['total'];
             $dailyCoins = 100;
+            $message = '';
 
             if ($this->userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
                 $currentCoins += $dailyCoins;

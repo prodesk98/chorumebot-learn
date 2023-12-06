@@ -1,6 +1,6 @@
 # Chorume Bot
 
-![](https://github.com/brunofunnie/chorumebot/blob/main/chorumebot.jpg?raw=true)
+![](https://github.com/brunofunnie/chorumebot/blob/main/docs/images/chorumebot.png?raw=true)
 
 This bot was developed using [DiscordPHP](https://github.com/discord-php/DiscordPHP)
 

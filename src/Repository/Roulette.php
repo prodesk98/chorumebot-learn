@@ -52,12 +52,12 @@ class Roulette extends Repository
 
     public function createEvent(string $eventName, $value)
     {
-
         $createEvent = $this->db->query('INSERT INTO roulette (status, description, amount) VALUES (?, ?,?)', [
             ['type' => 'i', 'value' => self::OPEN],
             ['type' => 's', 'value' => $eventName],
             ['type' => 's', 'value' => $value],
         ]);
+
         return $createEvent;
     }
 
@@ -130,7 +130,7 @@ class Roulette extends Repository
 
         if ($limit) {
             $params[] = [ 'type' => 'i', 'value' => $limit ];
-            $limitSQL = " LIMIT ?";
+            $limitSQL = "LIMIT 0,?";
         }
 
         $sql = "
@@ -141,10 +141,7 @@ class Roulette extends Repository
                 choice AS choice,
                 amount AS amount
             FROM roulette
-            WHERE
-                status IN (?)
-                $limitSQL
-            ORDER BY id DESC
+            WHERE status IN (?) ORDER BY id DESC $limitSQL
         ";
 
         $results = $this->db->select($sql, $params);
@@ -154,23 +151,15 @@ class Roulette extends Repository
 
     public function normalizeRoulette(array $roulette)
     {
-        return array_reduce($roulette, function ($acc, $item) {
-            if (!is_array($acc)) {
-                $acc = [];
-            }
-
-            if (($subItem = array_search($item['description'], array_column($acc, 'description'))) === false) {
-                $acc[] = [
-                    'roulette_id' => $item['roulette_id'],
-                    'description' => $item['description'],
-                    'amount' => $item['amount'],
-                    'choice' => $item['choice'],
-                    'status' => $item['status'],
-                ];
-
-                return $acc;
-            }
-        }, []);
+        return array_map(function ($item) {
+            return [
+                'roulette_id' => $item['roulette_id'],
+                'description' => $item['description'],
+                'amount' => $item['amount'],
+                'choice' => $item['choice'],
+                'status' => $item['status'],
+            ];
+        }, $roulette);
     }
 
     public function getRouletteById(int $rouletteId)

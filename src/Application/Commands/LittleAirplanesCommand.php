@@ -70,7 +70,7 @@ class LittleAirplanesCommand
                 $interaction->respondWithMessage(
                     $this->messageComposer->embed(
                         'MAH ÔÊÊ!',
-                        'Aguarde 1 minuto para mandar mais aviõeszinhos... ôêê!',
+                        sprintf('Aguarde %s minuto para mandar mais aviõeszinhos... ôêê!', $this->cooldownTimer / 60),
                         $this->config['images']['gonna_press']
                     ),
                     true

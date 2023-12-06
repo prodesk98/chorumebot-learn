@@ -21,6 +21,11 @@ class LittleAirplanesCommand
     private $userCoinHistoryRepository;
     private int $cooldownTimer;
     private int $cooldownLimit;
+    private float $extraValueProbability;
+    private float $extraValue200Probability;
+    private float $minValue;
+    private float $maxValue;
+    private float $boostedValue;
 
     public function __construct(
         Discord $discord,
@@ -37,6 +42,11 @@ class LittleAirplanesCommand
         $this->userCoinHistoryRepository = $userCoinHistoryRepository;
         $this->cooldownTimer = getenv('LITTLE_AIRPLANES_COOLDOWN_TIMER');
         $this->cooldownLimit = getenv('LITTLE_AIRPLANES_COOLDOWN_LIMIT');
+        $this->extraValueProbability = getenv('LITTLE_AIRPLANES_PROBABILITY');
+        $this->extraValue200Probability = getenv('LITTLE_AIRPLANES_PROBABILITY_BOOSTED');
+        $this->minValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_MIN');
+        $this->maxValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_MAX');
+        $this->boostedValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_BOOSTED');
     }
 
     public function fly(Interaction $interaction)
@@ -99,18 +109,15 @@ class LittleAirplanesCommand
 
                 $loop = $this->discord->getLoop();
                 $loop->addTimer(5, function () use ($members, $interaction) {
-                    $extraValueProbability = getenv('LITTLE_AIRPLANES_PROBABILITY');
-                    $extraValue200Probability = getenv('LITTLE_AIRPLANES_PROBABILITY_BOOSTED');
-                    $minValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_MIN');
-                    $maxValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_MAX');
-                    $boostedValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_BOOSTED');
                     $airplanes = [];
 
                     foreach ($members as $member) {
-                        if (mt_rand(0, 99) < $extraValueProbability * 100) {
+                        if (mt_rand(0, 99) < $this->extraValueProbability * 100) {
                             if (!$this->userRepository->userExistByDiscordId($member)) continue;
 
-                            $extraValue = mt_rand(0, 99) < $extraValue200Probability * 100 ? $boostedValue : mt_rand($minValue, $maxValue);
+                            $extraValue = mt_rand(0, 99) < $this->extraValue200Probability * 100
+                                ? $this->boostedValue
+                                : mt_rand($this->minValue, $this->maxValue);
 
                             $airplanes[] = [
                                 'discord_user_id' => $member,
@@ -146,7 +153,13 @@ class LittleAirplanesCommand
 
                     foreach ($airplanes as $airplane) {
                         $airports .= sprintf("<@%s> \n", $airplane['discord_user_id']);
-                        $amount .= sprintf("%s %s \n", $airplane['amount'] < $boostedValue ? ':airplane_small:' : ':airplane:', $airplane['amount']);
+                        $amount .= sprintf(
+                            "%s %s \n",
+                            $airplane['amount'] < $this->boostedValue
+                                ? ':airplane_small:'
+                                : ':airplane:',
+                            $airplane['amount']
+                        );
                     }
 
                     $embed

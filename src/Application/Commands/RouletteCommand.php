@@ -125,13 +125,11 @@ class RouletteCommand
 
             foreach ($roulettes as $event) {
                 $roulettesDescription .= sprintf(
-                    "**[#%s] %s** \n **Status: %s C$ %s** \n \n \n",
+                    "**[%s] %s (Bet: C$ %s)**\n**Status: %s**\n \n \n",
                     $event['roulette_id'],
                     strtoupper($event['description']),
-                    $this->rouletteRepository::LABEL_LONG[(int) $event['status']],
                     strtoupper($event['amount']),
-                    sprintf(''),
-                    sprintf('')
+                    $this->rouletteRepository::LABEL_LONG[(int) $event['status']]
                 );
             }
 
@@ -503,7 +501,7 @@ class RouletteCommand
         });
 
         $embed = new Embed($this->discord);
-        $embed->setTitle("💰 APOSTEM NA ROLETA: 💰\n[#{$rouletteId}] {$roulette[0]['description']}")
+        $embed->setTitle("💰 APOSTEM NA ROLETA: 💰\n**[{$rouletteId}]** {$roulette[0]['description']}")
             ->setColor(0x00ff00)
             ->setDescription("Total: {$gameData->AmountTotal}")
             ->setFooter("Últimos giros:\n" . $this->buildLastRoulettesChoices());

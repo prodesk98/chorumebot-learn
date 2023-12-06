@@ -19,8 +19,8 @@ class LittleAirplanesCommand
     private MessageComposer $messageComposer;
     private $userRepository;
     private $userCoinHistoryRepository;
-    private int $cooldownSeconds;
-    private int $cooldownTimes;
+    private int $cooldownTimer;
+    private int $cooldownLimit;
 
     public function __construct(
         Discord $discord,
@@ -35,14 +35,14 @@ class LittleAirplanesCommand
         $this->messageComposer = new MessageComposer($this->discord);
         $this->userRepository = $userRepository;
         $this->userCoinHistoryRepository = $userCoinHistoryRepository;
-        $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_SECONDS');
-        $this->cooldownTimes = getenv('COMMAND_COOLDOWN_TIMES');
+        $this->cooldownTimer = getenv('LITTLE_AIRPLANES_COOLDOWN_TIMER');
+        $this->cooldownLimit = getenv('LITTLE_AIRPLANES_COOLDOWN_LIMIT');
     }
 
     public function fly(Interaction $interaction)
     {
         try {
-            if (!find_role_array($this->config['master_role'], 'name', $interaction->member->roles)) {
+            if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
                 $interaction->respondWithMessage(
                     MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'),
                     true
@@ -53,8 +53,8 @@ class LittleAirplanesCommand
             if (
                 !$this->redisHelper->cooldown(
                     'cooldown:littleairplanes:fly:' . $interaction->member->user->id,
-                    $this->cooldownSeconds,
-                    $this->cooldownTimes
+                    $this->cooldownTimer,
+                    $this->cooldownLimit
                 )
             ) {
                 $interaction->respondWithMessage(
@@ -62,6 +62,19 @@ class LittleAirplanesCommand
                         'MAH ÔÊÊ!',
                         'Aguarde 1 minuto para mandar mais aviõeszinhos... ôêê!',
                         $this->config['images']['gonna_press']
+                    ),
+                    true
+                );
+                return;
+            }
+
+            if ($this->userCoinHistoryRepository->reachedMaximumAirplanesToday()) {
+                $interaction->respondWithMessage(
+                    $this->messageComposer->embed(
+                        'MAH ÔÊÊ!',
+                        'Enviei tantos :airplane_small: aviõeszinhos hoje que não dava pra ver o céu oêê! Agora só amanhã!',
+                        $this->config['images']['see_you_tomorrow'],
+                        '#FF0000'
                     ),
                     true
                 );

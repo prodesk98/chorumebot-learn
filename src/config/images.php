@@ -47,5 +47,6 @@ return [
         'airplanes' => 'https://chorume.tech/imgs/airplanes.gif?v0.0.1',
         'silvio_cheers' => 'https://chorume.tech/imgs/silvio_cheers.gif?v0.0.1',
         'silvio_thats_ok' => 'https://chorume.tech/imgs/silvio_thats_ok.gif?v0.0.1',
+        'see_you_tomorrow' => 'https://chorume.tech/imgs/see_you_tomorrow.gif?v0.0.1',
     ],
 ];

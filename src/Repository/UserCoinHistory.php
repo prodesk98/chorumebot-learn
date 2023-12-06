@@ -83,4 +83,21 @@ class UserCoinHistory extends Repository
 
         return $totalCoins >= $amount;
     }
+
+    public function reachedMaximumAirplanesToday()
+    {
+        $result = $this->db->select("
+            SELECT
+                sum(uch.amount) AS total_coins
+            FROM users_coins_history uch
+                INNER JOIN users u ON u.id = uch.user_id
+            WHERE
+                `type` like '%Airplane%'
+            AND DATE(uch.created_at) = DATE(NOW())
+        ", []);
+
+        $totalCoins = $result[0]['total_coins'] ?? 0;
+
+        return $totalCoins > getenv('LITTLE_AIRPLANES_MAXIMUM_AMOUNT_DAY');
+    }
 }

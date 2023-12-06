@@ -35,8 +35,8 @@ class PicassoCommand
         $this->messageComposer = new MessageComposer($this->discord);
         $this->userRepository = $userRepository;
         $this->userCoinHistoryRepository = $userCoinHistoryRepository;
-        $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_SECONDS');
-        $this->cooldownTimes = getenv('COMMAND_COOLDOWN_TIMES');
+        $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_TIMER');
+        $this->cooldownTimes = getenv('COMMAND_COOLDOWN_LIMIT');
     }
 
     public function paint(Interaction $interaction)

@@ -33,6 +33,8 @@ use Chorume\Application\Commands\TestCommand;
 use Chorume\Application\Commands\CodeCommand;
 use Chorume\Application\Events\MessageCreate;
 
+date_default_timezone_set('America/Sao_Paulo');
+
 $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
 $dotenv->load();
 $dotenv->required(['TOKEN']);
@@ -111,12 +113,15 @@ $discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) 
         $discord->application->commands->save($command);
     }
 
+    $botStartedAt = date('Y-m-d H:i:s');
+
     echo "  _______                           ___      __   " . PHP_EOL;
     echo " / ___/ / ___  ______ ____ _ ___   / _ )___ / /_  " . PHP_EOL;
     echo "/ /__/ _ / _ \/ __/ // /  ' / -_) / _  / _ / __/  " . PHP_EOL;
     echo "\___/_//_\___/_/  \_,_/_/_/_\__/ /____/\___\__/   " . PHP_EOL;
     echo "                                                  " . PHP_EOL;
     echo "                 Bot is ready!                    " . PHP_EOL;
+    echo "         Started at: $botStartedAt                " . PHP_EOL;
 });
 
 $discord->on(DiscordEvent::MESSAGE_CREATE, [$messageCreateEvent, 'messageCreate']);

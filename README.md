@@ -1,11 +1,10 @@
-# ChorumeCoins
+# Chorume Bot
+
+![](https://github.com/brunofunnie/chorumebot/blob/main/chorumebot.jpg?raw=true)
 
 This bot was developed using [DiscordPHP](https://github.com/discord-php/DiscordPHP)
 
-## Run migrations
+# Getting started
 
-To run the migrations do:
-
-    vendor/bin/phinx migrate -e development
-
-PS: Where 'development' you should keep it like this or put the desired environment
+- [Installation](docs/Installation.md)
+- [Bot Commands](docs/BotCommands.md)

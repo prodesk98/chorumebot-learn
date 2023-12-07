@@ -85,8 +85,7 @@ class LittleAirplanesCommand
                         'Enviei tantos :airplane_small: aviõeszinhos hoje que não dava pra ver o céu oêê! Agora só amanhã!',
                         $this->config['images']['see_you_tomorrow'],
                         '#FF0000'
-                    ),
-                    true
+                    )
                 );
                 return;
             }

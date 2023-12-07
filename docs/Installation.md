@@ -58,7 +58,11 @@ Now let's get the Bot Token to be used by the Bot application. Navigate to [Deve
 
 ![](https://github.com/brunofunnie/chorumebot/blob/main/docs/images/6.png?raw=true)
 
-You almost there, now let's run the docker containers, now navigate to the **docker** directory and type:
+For our final step on this screen, we must enable some **Gateway Intents", since this is a develop environment don't worry about enabling all the three as shown in the image below:
+
+![](https://github.com/brunofunnie/chorumebot/blob/main/docs/images/8.png?raw=true)
+
+You're almost there, now let's run the docker containers, navigate to the **docker** directory and type:
 
 	docker compose up -d
 
@@ -70,6 +74,12 @@ You should see something similar to:
 
 ![](https://github.com/brunofunnie/chorumebot/blob/main/docs/images/7.png?raw=true)
 
+Before you can install the PHP packages and run the migrations let's create our database that will receive the migrations. Navigate to the PHPMyAdmin, log in it and create a database called:
+
+	chorume_coins
+
+I would choose **utf8mb4_general_ci** for the collation. But feel free to choose the one you like, just remember it will influence in the sorting of things for example.
+
 For the next commands you'll need to be in the top level of this repository. The .env copied from the example already contain the default credentials for the dev environment so you'll only need to run the migrations. For that you'll need to:
 
 	composer install && vendor/bin/phinx migrate -e development
@@ -80,7 +90,7 @@ If everything went up ok you'll can just run the next command and your Bot will 
 
 ##  Commands
 
-To run the migrations do:
+Run migrations:
 
 	vendor/bin/phinx migrate -e development
 

@@ -33,8 +33,6 @@ use Chorume\Application\Commands\TestCommand;
 use Chorume\Application\Commands\CodeCommand;
 use Chorume\Application\Events\MessageCreate;
 
-date_default_timezone_set('America/Sao_Paulo');
-
 $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
 $dotenv->load();
 $dotenv->required(['TOKEN']);

@@ -1,33 +1,29 @@
 <?php
 
-namespace Chorume\Application\Commands;
+namespace Chorume\Application\Commands\Code;
 
 use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Parts\Interactions\Interaction;
+use Chorume\Application\Commands\Command;
 use Chorume\Application\Discord\MessageComposer;
 use Chorume\Helpers\RedisHelper;
-use Discord\Parts\Channel\Message;
 
-class CodeCommand
+class CodeCommand extends Command
 {
-    private Discord $discord;
-    private $config;
     private RedisHelper $redisHelper;
     private MessageComposer $messageComposer;
 
     public function __construct(
-        Discord $discord,
-        $config,
-        RedisClient $redis
+        private Discord $discord,
+        private $config,
+        private RedisClient $redis
     ) {
-        $this->discord = $discord;
-        $this->config = $config;
         $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
     }
 
-    public function code(Interaction $interaction)
+    public function handle(Interaction $interaction): void
     {
         $interaction->respondWithMessage(
             $this->messageComposer->embed(

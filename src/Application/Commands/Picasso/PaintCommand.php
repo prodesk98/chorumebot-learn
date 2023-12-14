@@ -1,45 +1,37 @@
 <?php
 
-namespace Chorume\Application\Commands;
+namespace Chorume\Application\Commands\Picasso;
 
 use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Parts\Interactions\Interaction;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\Request;
+use Chorume\Application\Commands\Command;
 use Chorume\Application\Discord\MessageComposer;
 use Chorume\Helpers\RedisHelper;
-use Exception;
 
-class PicassoCommand
+class PaintCommand extends Command
 {
-    private Discord $discord;
-    private $config;
     private RedisHelper $redisHelper;
     private MessageComposer $messageComposer;
-    private $userRepository;
-    private $userCoinHistoryRepository;
     private int $cooldownSeconds;
     private int $cooldownTimes;
 
     public function __construct(
-        Discord $discord,
-        $config,
-        RedisClient $redis,
-        $userRepository,
-        $userCoinHistoryRepository
+        private Discord $discord,
+        private $config,
+        private RedisClient $redis,
+        private $userRepository,
+        private $userCoinHistoryRepository
     ) {
-        $this->discord = $discord;
-        $this->config = $config;
         $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
-        $this->userRepository = $userRepository;
-        $this->userCoinHistoryRepository = $userCoinHistoryRepository;
         $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_TIMER');
         $this->cooldownTimes = getenv('COMMAND_COOLDOWN_LIMIT');
     }
 
-    public function paint(Interaction $interaction)
+    public function handle(Interaction $interaction): void
     {
         $prompt = $interaction->data->options['pinte']->value;
         $askCost = $originalAskCost = getenv('PICASSO_COINS_COST');

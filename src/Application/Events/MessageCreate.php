@@ -8,26 +8,17 @@ use Discord\Parts\Channel\Message;
 use Discord\Parts\Embed\Embed;
 use Chorume\Repository\Talk;
 
-class MessageCreate
+class MessageCreate extends Event
 {
-    private $discord;
-    private $config;
-    private $redis;
-    private Talk $talkRepository;
-
     public function __construct(
-        $discord,
-        $config,
-        $redis,
-        Talk $talkRepository
+        private $discord,
+        private $config,
+        private $redis,
+        private Talk $talkRepository
     ) {
-        $this->discord = $discord;
-        $this->config = $config;
-        $this->redis = $redis;
-        $this->talkRepository = $talkRepository;
     }
 
-    public function messageCreate(Message $message, Discord $discord)
+    public function handle(Message $message): void
     {
         if ($this->redis->get('talks')) {
             $textTriggers = json_decode($this->redis->get('talks'), true);
@@ -47,7 +38,10 @@ class MessageCreate
 
             switch ($talk[0]['type']) {
                 case 'media':
-                    $embed = $discord->factory(Embed::class);
+                    /**
+                     * @var Embed $embed
+                     */
+                    $embed = $this->discord->factory(Embed::class);
                     $embed
                         ->setTitle($talkMessage->text)
                         ->setImage($talkMessage->image);

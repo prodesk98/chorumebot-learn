@@ -1,38 +1,28 @@
 <?php
 
-namespace Chorume\Application\Commands;
+namespace Chorume\Application\Commands\Event;
 
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Parts\Embed\Embed;
+use Chorume\Application\Commands\Command;
 use Chorume\Repository\User;
 use Chorume\Repository\Event;
 use Chorume\Repository\EventBet;
 
-class BetsCommand
+class BetCommand extends Command
 {
-    public $discord;
-    public $config;
-    public User $userRepository;
-    public Event $eventRepository;
-    public EventBet $eventBetsRepository;
-
     public function __construct(
-        Discord $discord,
-        $config,
-        User $userRepository,
-        Event $eventRepository,
-        EventBet $eventBetsRepository
+        public Discord $discord,
+        public $config,
+        public User $userRepository,
+        public Event $eventRepository,
+        public EventBet $eventBetsRepository
     ) {
-        $this->discord = $discord;
-        $this->config = $config;
-        $this->userRepository = $userRepository;
-        $this->eventRepository = $eventRepository;
-        $this->eventBetsRepository = $eventBetsRepository;
     }
 
-    public function makeBet(Interaction $interaction)
+    public function handle(Interaction $interaction): void
     {
         $discordId = $interaction->member->user->id;
         $eventId = $interaction->data->options['entrar']->options['evento']->value;

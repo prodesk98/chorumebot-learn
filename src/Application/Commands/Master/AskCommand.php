@@ -1,45 +1,37 @@
 <?php
 
-namespace Chorume\Application\Commands;
+namespace Chorume\Application\Commands\Master;
 
 use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Parts\Interactions\Interaction;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\Request;
+use Chorume\Application\Commands\Command;
 use Chorume\Application\Discord\MessageComposer;
 use Chorume\Helpers\RedisHelper;
-use Exception;
 
-class MasterCommand
+class AskCommand extends Command
 {
-    private Discord $discord;
-    private $config;
     private RedisHelper $redisHelper;
     private MessageComposer $messageComposer;
-    private $userRepository;
-    private $userCoinHistoryRepository;
     private int $cooldownSeconds;
     private int $cooldownTimes;
 
     public function __construct(
-        Discord $discord,
-        $config,
-        RedisClient $redis,
-        $userRepository,
-        $userCoinHistoryRepository
+        private Discord $discord,
+        private $config,
+        private RedisClient $redis,
+        private $userRepository,
+        private $userCoinHistoryRepository
     ) {
-        $this->discord = $discord;
-        $this->config = $config;
         $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
-        $this->userRepository = $userRepository;
-        $this->userCoinHistoryRepository = $userCoinHistoryRepository;
         $this->cooldownSeconds = getenv('COMMAND_COOLDOWN_TIMER');
         $this->cooldownTimes = getenv('COMMAND_COOLDOWN_LIMIT');
     }
 
-    public function ask(Interaction $interaction)
+    public function handle(Interaction $interaction): void
     {
         $question = $interaction->data->options['pergunta']->value;
         $askCost = $originalAskCost = getenv('MASTER_COINS_COST');

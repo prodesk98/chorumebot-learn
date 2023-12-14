@@ -1,24 +1,23 @@
 <?php
 
-namespace Chorume\Application\Commands;
+namespace Chorume\Application\Commands\LittleAirplanes;
 
 use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Parts\Embed\Embed;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Builders\MessageBuilder;
+use Chorume\Application\Commands\Command;
 use Chorume\Application\Discord\MessageComposer;
 use Chorume\Helpers\RedisHelper;
+use Chorume\Repository\User;
+use Chorume\Repository\UserCoinHistory;
 use Exception;
 
-class LittleAirplanesCommand
+class FlyCommand extends Command
 {
-    private Discord $discord;
-    private $config;
     private RedisHelper $redisHelper;
     private MessageComposer $messageComposer;
-    private $userRepository;
-    private $userCoinHistoryRepository;
     private int $cooldownTimer;
     private int $cooldownLimit;
     private float $extraValueProbability;
@@ -28,18 +27,16 @@ class LittleAirplanesCommand
     private float $boostedValue;
 
     public function __construct(
-        Discord $discord,
-        $config,
-        RedisClient $redis,
-        $userRepository,
-        $userCoinHistoryRepository
+        private Discord $discord,
+        private $config,
+        private RedisClient $redis,
+        private User $userRepository,
+        private UserCoinHistory $userCoinHistoryRepository
     ) {
         $this->discord = $discord;
         $this->config = $config;
         $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
-        $this->userRepository = $userRepository;
-        $this->userCoinHistoryRepository = $userCoinHistoryRepository;
         $this->cooldownTimer = getenv('LITTLE_AIRPLANES_COOLDOWN_TIMER');
         $this->cooldownLimit = getenv('LITTLE_AIRPLANES_COOLDOWN_LIMIT');
         $this->extraValueProbability = getenv('LITTLE_AIRPLANES_PROBABILITY');
@@ -49,7 +46,7 @@ class LittleAirplanesCommand
         $this->boostedValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_BOOSTED');
     }
 
-    public function fly(Interaction $interaction)
+    public function handle(Interaction $interaction): void
     {
         try {
             if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {

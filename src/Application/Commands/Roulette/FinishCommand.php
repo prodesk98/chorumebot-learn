@@ -1,0 +1,152 @@
+<?php
+
+namespace Chorume\Application\Commands\Roulette;
+
+use Discord\Discord;
+use Discord\Builders\MessageBuilder;
+use Discord\Parts\Interactions\Interaction;
+use Chorume\Application\Commands\Command;
+use Chorume\Repository\Roulette;
+use Chorume\Repository\RouletteBet;
+use Discord\Parts\Embed\Embed;
+use Chorume\Repository\User;
+use Predis\Client as RedisClient;
+
+class FinishCommand extends Command
+{
+    public function __construct(
+        private Discord $discord,
+        private $config,
+        private RedisClient $redis,
+        private User $userRepository,
+        private Roulette $rouletteRepository,
+        private RouletteBet $rouletteBetRepository
+    ) {
+    }
+
+    public function handle(Interaction $interaction): void
+    {
+        $interaction->acknowledgeWithResponse(false)->then(function () use ($interaction) {
+            $eventId = $interaction->data->options['girar']->options['id']->value;
+            $event = $this->rouletteRepository->getRouletteById($eventId);
+            $status = (int) $event[0]['status'];
+            $winnerNumber = rand(0, 14);
+            $winnerResult = null;
+            $choice = null;
+
+            if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
+                $interaction->updateOriginalResponse(
+                    MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'),
+                    true
+                );
+                return;
+            }
+
+            if (empty($event)) {
+                $interaction->updateOriginalResponse(
+                    MessageBuilder::new()->setContent('Roleta não existe!'),
+                    true
+                );
+                return;
+            }
+
+            if ($status !== $this->rouletteRepository::CLOSED) {
+                $message = sprintf('Roleta **#%s** precisa estar fechada para ser Girada!', $eventId);
+
+                if ($status === $this->rouletteRepository::PAID) {
+                    $message = sprintf('Roleta **#%s** já foi finalizada!', $eventId);
+                }
+
+                $interaction->updateOriginalResponse(
+                    MessageBuilder::new()->setContent($message),
+                    true
+                );
+                return;
+            }
+
+            if ($winnerNumber == 0) {
+                $winnerResult = Roulette::GREEN;
+                $choice = "🟩 G[$winnerNumber]";
+            } elseif ($winnerNumber % 2 == 0) {
+                $winnerResult = Roulette::BLACK;
+                $choice = "⬛ BL[$winnerNumber]";
+            } else {
+                $winnerResult = Roulette::RED;
+                $choice = "🟥 R[$winnerNumber]";
+            }
+
+            $bets = $this->rouletteRepository->payoutRoulette($eventId, $winnerResult);
+
+            $eventsDescription = sprintf(
+                "**Evento:** %s \n **Vencedor**: %s \n \n \n",
+                $event[0]['description'],
+                "{$choice}",
+            );
+
+            $winnersImage = $this->config['images']['winners'][array_rand($this->config['images']['winners'])];
+
+            /**
+             * @var Embed $embed
+             */
+            $embed = $this->discord->factory(Embed::class);
+            $embed
+                ->setTitle(sprintf("ROLETA ENCERRADA 💰\n[%s] %s", $eventId, $event[0]['description']))
+                ->setColor('#F5D920')
+                ->setDescription($eventsDescription)
+                ->setImage($winnersImage);
+
+            $earningsByUser = [];
+
+            foreach ($bets as $bet) {
+                if ($bet['choice_key'] == $winnerResult) {
+                    if (!isset($earningsByUser[$bet['discord_user_id']])) {
+                        $earningsByUser[$bet['discord_user_id']] = 0;
+                    }
+                    $earningsByUser[$bet['discord_user_id']] += intval($bet['earnings']);
+                }
+            }
+
+            $awarded = '';
+            $amount = '';
+
+            foreach ($earningsByUser as $userId => $earnings) {
+                $awarded .= sprintf("<@%s>\n", $userId);
+                $amount .= sprintf("🪙 %s\n", $earnings);
+            }
+
+            $embed
+                ->addField(['name' => 'Premiação', 'value' => $awarded, 'inline' => 'true'])
+                ->addField(['name' => 'Valor (C$)', 'value' => $amount, 'inline' => 'true']);
+
+            $descriptions = $this->config['images']['roulette']['numbers'];
+            $imageRouletteSpin = $this->config['images']['roulette']['spin'];
+
+            if (count($bets) === 0) {
+                $embednovo = new Embed($this->discord);
+                $embednovo
+                    ->setTitle(sprintf('ROLETA #%s ENCERRADA', $eventId))
+                    ->setColor('#F5D920')
+                    ->setDescription("**Resultado**: Não houveram vencedores.");
+
+                $embed = $embednovo;
+            }
+
+            $embedLoop = new Embed($this->discord);
+            $embedLoop->setImage($imageRouletteSpin);
+            $embedLoop->setTitle(sprintf('ROLETA #%s ENCERRADA', $eventId));
+            $embedLoop->setDescription("**Sorteando um número!**");
+
+            $builderLoop = new MessageBuilder();
+            $builderLoop->addEmbed($embedLoop);
+            $interaction->updateOriginalResponse($builderLoop, false);
+
+            $loop = $this->discord->getLoop();
+            $loop->addTimer(8, function () use ($embed, $interaction, $descriptions, $winnerNumber) {
+                $embed->setImage($descriptions[$winnerNumber]);
+                $builder = new MessageBuilder();
+                $builder->addEmbed($embed);
+                $interaction->updateOriginalResponse($builder, false);
+            });
+        });
+    }
+}

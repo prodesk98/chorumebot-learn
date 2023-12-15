@@ -102,6 +102,7 @@ class FinishCommand extends Command
                 }
 
                 $bets = $this->rouletteRepository->payoutRoulette($roulette[0]['id'], $winnerResult);
+                $this->redis->del("roulette:{$rouletteId}");
 
                 $roulettesDescription = sprintf(
                     "**Evento:** %s \n **Vencedor**: %s \n \n \n",

@@ -11,39 +11,30 @@ class User extends Repository
 
     public function all()
     {
-        $result = $this->db->select("SELECT * FROM users");
-
-        return $result;
+        return $this->db->query("SELECT * FROM users");
     }
 
-    public function getByDiscordId(int $discordId)
+    public function getByDiscordId(int $discordId) : array
     {
-        $result = $this->db->select(
-            "SELECT * FROM users WHERE discord_user_id = ?",
+        return $this->db->query(
+            "SELECT * FROM users WHERE discord_user_id = :discord_user_id",
             [
-                [ 'type' => 'i', 'value' => $discordId ]
+                "discord_user_id" => $discordId
             ]
         );
-
-        return $result;
     }
 
     public function getUsersByDiscordIds(array $ids)
     {
-        $idsPlaceholders = implode(',', array_fill(0, count($ids), '?'));
-        $ids = [];
+        $idsKeys = implode(', ', array_map(fn ($item) => ":{$item}", array_keys($ids)));
 
-        foreach ($ids as $id) {
-            $ids[] = [ 'type' => 'i', 'value' => $id ];
-        }
-
-        $result = $this->db->select(
+        $result = $this->db->query(
             "
                 SELECT
                     *
                 FROM users uch
                 WHERE
-                    uch.id IN ($idsPlaceholders)
+                    uch.id IN ($idsKeys)
             ",
             $ids
         );
@@ -51,100 +42,102 @@ class User extends Repository
         return empty($result);
     }
 
-    public function giveInitialCoins(int $discordId, $discordUsername)
+    public function giveInitialCoins(int $discordId, $discordUsername) : bool
     {
-        $createUser = $this->db->query('INSERT INTO users (discord_user_id, discord_username, received_initial_coins) VALUES (?, ?, ?)', [
-            [ 'type' => 'i', 'value' => $discordId ],
-            [ 'type' => 's', 'value' => $discordUsername ],
-            [ 'type' => 'i', 'value' => 1 ]
-        ]);
+        $createUser = $this->db->query(
+            'INSERT INTO users (discord_user_id, discord_username, received_initial_coins) VALUES (:discord_user_id, :discord_username, :received_initial_coins)',
+            [
+                'discord_user_id' => $discordId,
+                'discord_username' => $discordUsername,
+                'received_initial_coins' => 1
+            ]
+        );
 
-        $giveCoins = $this->db->query('INSERT INTO users_coins_history (user_id, amount, type) VALUES (?, ?, ?)', [
-            [ 'type' => 'i', 'value' => $createUser->insert_id ],
-            [ 'type' => 'i', 'value' => 100 ],
-            [ 'type' => 's', 'value' => 'Initial' ]
-        ]);
+        $giveCoins = $this->db->query(
+            'INSERT INTO users_coins_history (user_id, amount, type) VALUES (:user_id, :amount, :type)',
+            [
+                'user_id' => $this->db->getLastInsertId(),
+                'amount' => 100,
+                'type' => 'Initial'
+            ]
+        );
 
         return $giveCoins;
     }
 
-    public function giveDailyCoins(int $discordId, float $amount)
+    public function giveDailyCoins(int $discordId, float $amount) : bool
     {
         $user = $this->getByDiscordId($discordId);
 
-        $giveCoins = $this->db->query('INSERT INTO users_coins_history (user_id, amount, type) VALUES (?, ?, ?)', [
-            [ 'type' => 'i', 'value' => $user[0]['id'] ],
-            [ 'type' => 'i', 'value' => $amount ],
-            [ 'type' => 's', 'value' => 'Daily' ]
-        ]);
-
-        return $giveCoins;
+        return $this->db->query(
+            'INSERT INTO users_coins_history (`user_id`, `amount`, `type`) VALUES (:user_id, :amount, :type)',
+            [
+                'user_id' => $user[0]['id'],
+                'amount' => $amount,
+                'type' => 'Daily'
+            ]
+        );
     }
 
-    public function canReceivedDailyCoins(int $discordId)
+    public function canReceivedDailyCoins(int $discordId) : bool
     {
-        $result = $this->db->select(
-            "
-                SELECT
+        $result = $this->db->query(
+            "SELECT
                     *
                 FROM users_coins_history uch
                 JOIN users u ON u.id = uch.user_id
                 WHERE
-                    u.discord_user_id = ?
+                    u.discord_user_id = :discord_user_id
                     AND uch.type = 'Daily'
                     AND DATE(uch.created_at) = CURDATE();
             ",
             [
-                [ 'type' => 'i', 'value' => $discordId ]
+                'discord_user_id' => $discordId
             ]
         );
 
         return empty($result);
     }
 
-    public function getCurrentCoins(int $discordId)
+    public function getCurrentCoins(int $discordId) : array
     {
-        $result = $this->db->select(
-            "
-                SELECT
+        return $this->db->query(
+            "SELECT
                     SUM(amount) AS total
                 FROM users_coins_history uch
                 JOIN users u ON u.id = uch.user_id
-                WHERE u.discord_user_id = ?
+                WHERE u.discord_user_id = :discord_user_id
             ",
             [
-                [ 'type' => 'i', 'value' => $discordId ]
+                'discord_user_id' => $discordId
             ]
         );
-
-        return $result;
     }
 
-    public function hasAvailableCoins(int $discordId, int $amount)
+    public function hasAvailableCoins(int $discordId, int $amount) : bool
     {
-        $result = $this->db->select(
-            "
-                SELECT
+        $result = $this->db->query(
+            "SELECT
                     SUM(amount) AS total
                 FROM users_coins_history uch
                 JOIN users u ON u.id = uch.user_id
                 WHERE
-                    u.discord_user_id = ?
+                    u.discord_user_id = :discord_user_id
             ",
             [
-                [ 'type' => 'i', 'value' => $discordId ]
+                'discord_user_id' => $discordId
             ]
         );
 
         return $result[0]['total'] >= $amount;
     }
 
-    public function userExistByDiscordId(int $discordId)
+    public function userExistByDiscordId(int $discordId) : bool
     {
-        $result = $this->db->select(
-            "SELECT * FROM users WHERE discord_user_id = ?",
+        $result = $this->db->query(
+            "SELECT * FROM users WHERE discord_user_id = :discord_user_id",
             [
-                [ 'type' => 'i', 'value' => $discordId ]
+                'discord_user_id' => $discordId
             ]
         );
 

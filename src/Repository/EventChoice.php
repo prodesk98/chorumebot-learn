@@ -9,50 +9,42 @@ class EventChoice extends Repository
         parent::__construct($db);
     }
 
-    public function all()
+    public function all() : array
     {
-        $result = $this->db->select("SELECT * FROM events_choices");
-
-        return $result;
+        return $this->db->query("SELECT * FROM events_choices");
     }
 
-    public function getByEventIdAndChoice(int $eventId, string $choiceKey)
+    public function getByEventIdAndChoice(int $eventId, string $choiceKey) : array
     {
-        $result = $this->db->select(
-            "
-                SELECT
+        return $this->db->query(
+            'SELECT
                     *
                 FROM events_choices
                 WHERE
-                    event_id = ?
-                    AND choice_key = ?
-            ",
+                    event_id = :event_id
+                    AND choice_key = :choice_key
+            ',
             [
-                [ 'type' => 'i', 'value' => $eventId ],
-                [ 'type' => 's', 'value' => $choiceKey ]
+                'event_id' => $eventId,
+                'choice_key' => $choiceKey
             ]
         );
-
-        return $result;
     }
 
-    public function getChoiceByEventIdAndKey(int $eventId, string $choiceKey)
+    public function getChoiceByEventIdAndKey(int $eventId, string $choiceKey) : array
     {
-        $result = $this->db->select(
-            "
-                SELECT
+        return $this->db->query(
+            "SELECT
                     *
                 FROM events_choices
                 WHERE
-                    event_id = ?
-                    AND choice_key = ?
+                    event_id = :event_id
+                    AND choice_key = :choice_key
             ",
             [
-                [ 'type' => 'i', 'value' => $eventId ],
-                [ 'type' => 's', 'value' => $choiceKey ]
+                'event_id' => $eventId,
+                'choice_key' => $choiceKey
             ]
         );
-
-        return $result;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Chorume\Repository;
 
+use PDOStatement;
+
 class UserCoinHistory extends Repository
 {
     public function __construct($db)
@@ -9,32 +11,30 @@ class UserCoinHistory extends Repository
         parent::__construct($db);
     }
 
-    public function all()
+    public function all(): array
     {
-        $result = $this->db->select("SELECT * FROM users_coins_history");
+        $result = $this->db->query("SELECT * FROM users_coins_history");
 
         return $result;
     }
 
-    public function create(int $userId, float $amount, string $type, int $entityId = null)
+    public function create(int $userId, float $amount, string $type, int $entityId = null): bool
     {
-        $result = $this->db->query(
-            "INSERT INTO users_coins_history (user_id, entity_id, amount, type) VALUES (?, ?, ?, ?)",
+        return $this->db->query(
+            "INSERT INTO users_coins_history (user_id, entity_id, amount, type) VALUES (:user_id, :entity_id, :amount, :type)",
             [
-                [ 'type' => 'i', 'value' => $userId ],
-                [ 'type' => 'i', 'value' => $entityId ],
-                [ 'type' => 'd', 'value' => $amount ],
-                [ 'type' => 's', 'value' => $type ]
+                "user_id" => $userId,
+                "entity_id" => $entityId,
+                "amount" => $amount,
+                "type" => $type,
             ]
         );
-
-        return $result;
     }
 
-    public function listTop10()
+    public function listTop10(): array
     {
-        $result = $this->db->select("
-            SELECT
+        $result = $this->db->query(
+            "SELECT
                 SUM(uch.amount) AS total_coins,
                 u.discord_user_id
             FROM users_coins_history uch
@@ -50,32 +50,40 @@ class UserCoinHistory extends Repository
     /**
      * do not performs any validation here, so be careful as this method can be used to "steal" coins
      */
-    public function transfer(int $fromId, float $amount, int $toId)
+    public function transfer(int $fromId, float $amount, int $toId): bool
     {
         $type = 'Transfer';
-        $result = $this->db->query(
-            "INSERT INTO users_coins_history (user_id, entity_id, amount, type) VALUES (?, ?, ?, ?), (?, ?, ?, ?)",
+
+        return $this->db->query(
+            "INSERT INTO users_coins_history (user_id, entity_id, amount, type)
+            VALUES
+                (:from_user_id, :from_entity_id, :from_amount, :from_type),
+                (:to_user_id, :to_entity_id, :to_amount, :to_type)
+            ",
             [
-                [ 'type' => 'i', 'value' => $fromId ],
-                [ 'type' => 'i', 'value' => $toId ],
-                [ 'type' => 'd', 'value' => -$amount ],
-                [ 'type' => 's', 'value' => $type ],
-                [ 'type' => 'i', 'value' => $toId ],
-                [ 'type' => 'i', 'value' => $fromId ],
-                [ 'type' => 'd', 'value' => $amount ],
-                [ 'type' => 's', 'value' => $type ],
+                'from_user_id' => $fromId,
+                'from_entity_id' => $toId,
+                'from_amount' => -$amount,
+                'from_type' => $type,
+                'to_user_id' => $toId,
+                'to_entity_id' => $fromId,
+                'to_amount' => $amount,
+                'to_type' => $type,
             ]
         );
-
-        return $result;
     }
 
-    public function hasAvailableCoins(int $discordUserId, float $amount)
+    public function hasAvailableCoins(int $discordUserId, float $amount): bool
     {
-        $result = $this->db->select(
-            "SELECT SUM(uch.amount) AS total_coins FROM users_coins_history uch JOIN users u ON u.id = uch.user_id WHERE u.discord_user_id = ?",
+        $result = $this->db->query(
+            "SELECT
+                SUM(uch.amount) AS total_coins
+            FROM users_coins_history uch
+            JOIN users u ON u.id = uch.user_id
+            WHERE u.discord_user_id = :discord_user_id
+            ",
             [
-                [ 'type' => 'i', 'value' => $discordUserId ]
+                'discord_user_id' => $discordUserId,
             ]
         );
 
@@ -84,17 +92,17 @@ class UserCoinHistory extends Repository
         return $totalCoins >= $amount;
     }
 
-    public function reachedMaximumAirplanesToday()
+    public function reachedMaximumAirplanesToday(): bool
     {
-        $result = $this->db->select("
-            SELECT
+        $result = $this->db->query(
+            "SELECT
                 sum(uch.amount) AS total_coins
             FROM users_coins_history uch
                 INNER JOIN users u ON u.id = uch.user_id
             WHERE
                 `type` like '%Airplane%'
             AND DATE(uch.created_at) = DATE(NOW())
-        ", []);
+        ");
 
         $totalCoins = $result[0]['total_coins'] ?? 0;
 

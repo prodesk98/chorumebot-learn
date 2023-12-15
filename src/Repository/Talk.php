@@ -22,52 +22,47 @@ class Talk extends Repository
     public const STATUS_ACTIVE = 1;
     public const STATUS_INACTIVE = 0;
 
-    public function create(string $triggertext, string $type, string $answer)
+    public function create(string $triggertext, string $type, string $answer) : bool
     {
-        $result = $this->db->query('INSERT INTO talks (triggertext, type, answer, status) VALUES (?, ?, ?, ?)', [
-            [ 'type' => 's', 'value' => $triggertext ],
-            [ 'type' => 's', 'value' => $type ],
-            [ 'type' => 's', 'value' => $answer ],
-            [ 'type' => 'i', 'value' => self::STATUS_ACTIVE ]
-        ]);
-
-        return $result;
-    }
-
-    public function findById(int $id)
-    {
-        $result = $this->db->select(
-            "SELECT * FROM talks WHERE id = ?",
+        return $this->db->query(
+            "INSERT INTO talks (triggertext, type, answer, status) VALUES (:triggertext, :type, :answer, :status)",
             [
-                [ 'type' => 'i', 'value' => $id ]
+                'triggertext' => $triggertext,
+                'type' => $type,
+                'answer' => $answer,
+                'status' => self::STATUS_ACTIVE
             ]
         );
-
-        return $result;
     }
 
-    public function findTrigger(string $triggertext)
+    public function findById(int $id) : array
     {
-        $result = $this->db->select(
-            "SELECT answer FROM talks WHERE triggertext = ? WHERE status = ?",
+        return $this->db->query(
+            'SELECT * FROM talks WHERE id = :id',
             [
-                [ 'type' => 's', 'value' => $triggertext ],
-                [ 'type' => 'i', 'value' => self::STATUS_ACTIVE ]
+                'id' => $id
             ]
         );
-
-        return $result;
     }
 
-    public function listAllTriggers()
+    public function findTrigger(string $triggertext) : array
     {
-        $result = $this->db->select(
-            "SELECT id, triggertext FROM talks WHERE status = ?",
+        return $this->db->query(
+            'SELECT answer FROM talks WHERE triggertext = :triggertext WHERE status = :status',
             [
-                [ 'type' => 'i', 'value' => self::STATUS_ACTIVE ]
+                'triggertext' => $triggertext,
+                'status' => self::STATUS_ACTIVE
             ]
         );
+    }
 
-        return $result;
+    public function listAllTriggers() : array
+    {
+        return $this->db->query(
+            "SELECT id, triggertext FROM talks WHERE status = :status",
+            [
+                'status' => self::STATUS_ACTIVE
+            ]
+        );
     }
 }

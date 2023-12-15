@@ -40,91 +40,101 @@ class Event extends Repository
         parent::__construct($db);
     }
 
-    public function all()
+    public function all() : array
     {
-        $result = $this->db->select("SELECT * FROM events");
+        return $this->db->query("SELECT * FROM events");
 
-        return $result;
     }
 
-    public function getEventById(int $eventId)
+    public function getEventById(int $eventId) : array
     {
-        $result = $this->db->select(
-            "SELECT * FROM events WHERE id = ?",
+        return $this->db->query(
+            "SELECT * FROM events WHERE id = :event_id",
             [
-                [ 'type' => 'i', 'value' => $eventId ]
+                'event_id' => $eventId
+            ]
+        );
+    }
+
+    public function create(string $eventName, string $optionA, string $optionB) : bool
+    {
+        $this->db->beginTransaction();
+
+        $createEvent = $this->db->query(
+            'INSERT INTO events (name, status) VALUES (:name, :status)',
+            [
+                'name' => $eventName,
+                'status' => self::OPEN,
             ]
         );
 
-        return $result;
-    }
+        $lastInsertId = $this->db->getLastInsertId();
 
-    public function create(string $eventName, string $optionA, string $optionB)
-    {
-        $createEvent = $this->db->query('INSERT INTO events (name, status) VALUES (?, ?)', [
-            [ 'type' => 's', 'value' => $eventName ],
-            [ 'type' => 's', 'value' => self::OPEN ],
-        ]);
-
-        $this->db->query('INSERT INTO events_choices (`event_id`, `choice_key`, `description`) VALUES (?, ?, ?)', [
-            [ 'type' => 'i', 'value' => $createEvent->insert_id ],
-            [ 'type' => 's', 'value' => 'A' ],
-            [ 'type' => 's', 'value' => $optionA ],
-        ]);
-
-        $this->db->query('INSERT INTO events_choices (`event_id`, `choice_key`, `description`) VALUES (?, ?, ?)', [
-            [ 'type' => 'i', 'value' => $createEvent->insert_id ],
-            [ 'type' => 's', 'value' => 'B' ],
-            [ 'type' => 's', 'value' => $optionB ],
-        ]);
-
-        return $createEvent;
-    }
-
-    public function closeEvent(int $eventId)
-    {
-        $data = [
-            [ 'type' => 's', 'value' => self::CLOSED ],
-            [ 'type' => 'i', 'value' => $eventId ],
-        ];
-
-        $createEvent = $this->db->query('UPDATE events SET status = ? WHERE id = ?', $data);
-
-        return $createEvent;
-    }
-
-    public function finishEvent(int $eventId)
-    {
-        $data = [
-            [ 'type' => 's', 'value' => self::PAID ],
-            [ 'type' => 'i', 'value' => $eventId ],
-        ];
-
-        $createEvent = $this->db->query('UPDATE events SET status = ? WHERE id = ?', $data);
-
-        return $createEvent;
-    }
-
-    public function canBet(int $eventId)
-    {
-        $result = $this->db->select(
-            "SELECT * FROM events WHERE id = ? AND status NOT IN (?, ?)",
+        $this->db->query(
+            'INSERT INTO events_choices (`event_id`, `choice_key`, `description`) VALUES (:event_id, :choice_key, :description)',
             [
-                [ 'type' => 'i', 'value' => $eventId ],
-                [ 'type' => 'i', 'value' => self::CLOSED ],
-                [ 'type' => 'i', 'value' => self::PAID ],
+                'event_id' => $lastInsertId,
+                'choice_key' => 'A',
+                'description' => $optionA,
+            ]
+        );
+
+        $this->db->query(
+            'INSERT INTO events_choices (`event_id`, `choice_key`, `description`) VALUES (:event_id, :choice_key, :description)',
+            [
+                'event_id' => $lastInsertId,
+                'choice_key' => 'B',
+                'description' => $optionB,
+            ]
+        );
+
+        $this->db->commit();
+
+        return $createEvent;
+    }
+
+    public function closeEvent(int $eventId) : bool
+    {
+        return $this->db->query(
+            'UPDATE events SET status = :status WHERE id = :event_id',
+            [
+                'status' => self::CLOSED,
+                'event_id' => $eventId,
+            ]
+        );
+    }
+
+    public function finishEvent(int $eventId) : bool
+    {
+        return $this->db->query(
+            'UPDATE events SET status = :status WHERE id = :event_id',
+            [
+                'status' => self::PAID,
+                'event_id' => $eventId,
+            ]
+        );
+    }
+
+    public function canBet(int $eventId) : bool
+    {
+        $result = $this->db->query(
+            "SELECT * FROM events WHERE id = :event_id AND status NOT IN (:status_closed, :status_paid)",
+            [
+                'event_id' => $eventId,
+                'status_closed' => self::CLOSED,
+                'status_paid' => self::PAID,
             ]
         );
 
         return empty($result);
     }
 
-    public function listEventsChoicesByStatus(int|array $status)
+    public function listEventsChoicesByStatus(array $status) : array
     {
-        $status = is_array($status) ? implode(',', $status) : $status;
+        $statusKeys = implode(',', array_map(fn ($item) => ":{$item}", array_keys($status)));
 
-        $results = $this->db->select("
-            SELECT
+        return $this->db->query(
+            "SELECT
                 e.id AS event_id,
                 e.name AS event_name,
                 e.status AS event_status,
@@ -132,18 +142,16 @@ class Event extends Repository
                 ec.description AS choice_description
             FROM events_choices ec
             JOIN events e ON e.id = ec.event_id
-            WHERE e.status IN (?)
-        ", [
-            [ 'type' => 's', 'value' => $status ],
-        ]);
-
-        return empty($results) ? [] : $results;
+            WHERE e.status IN ({$statusKeys})
+            ",
+            $status
+        );
     }
 
-    public function getEventDataById(int $eventId)
+    public function getEventDataById(int $eventId) : array
     {
-        $results = $this->db->select("
-            SELECT
+        return $this->db->query(
+            "SELECT
                 e.id AS event_id,
                 e.name AS event_name,
                 e.status AS event_status,
@@ -151,48 +159,30 @@ class Event extends Repository
                 ec.description AS choice_description
             FROM events_choices ec
             JOIN events e ON e.id = ec.event_id
-            WHERE e.id = ?
-        ", [
-            [ 'type' => 'i', 'value' => $eventId ],
-        ]);
-
-        return empty($results) ? [] : $results;
+            WHERE e.id = :event_id
+            ",
+            [
+                'event_id' => $eventId
+            ]
+        );
     }
 
-    public function listEventsOpen()
+    public function listEventsOpen() : array
     {
-        $results = $this->listEventsChoicesByStatus([self::OPEN]);
-
-        if (empty($results)) {
-            return [];
-        }
-
-        return $this->normalizeEventChoices($results);
+        return $this->normalizeEventChoices($this->listEventsChoicesByStatus(['status_open' => self::OPEN]));
     }
 
-    public function listEventsClosed()
+    public function listEventsClosed() : array
     {
-        $results = $this->listEventsChoicesByStatus([self::CLOSED]);
-
-        if (empty($results)) {
-            return [];
-        }
-
-        return $this->normalizeEventChoices($results);
+        return $this->normalizeEventChoices($this->listEventsChoicesByStatus(['status_closed' => self::CLOSED]));
     }
 
-    public function listEventById(int $eventId)
+    public function listEventById(int $eventId) : array
     {
-        $results = $this->getEventDataById($eventId);
-
-        if (empty($results)) {
-            return [];
-        }
-
-        return $this->normalizeEventChoices($results);
+        return $this->normalizeEventChoices($this->getEventDataById($eventId));
     }
 
-    public function normalizeEventChoices(array $eventChoices)
+    public function normalizeEventChoices(array $eventChoices) : array
     {
         return array_reduce($eventChoices, function ($acc, $item) {
             if (($subItem = array_search($item['event_name'], array_column($acc, 'event_name'))) === false) {
@@ -220,18 +210,19 @@ class Event extends Repository
         }, []);
     }
 
-    public function updateEventWithWinner(int $choiceId, int $eventId)
+    public function updateEventWithWinner(int $choiceId, int $eventId) : bool
     {
-        $createEvent = $this->db->query('UPDATE events SET status = ?, winner_choice_id = ? WHERE id = ?', [
-            [ 'type' => 's', 'value' => self::PAID ],
-            [ 'type' => 'i', 'value' => $choiceId, ],
-            [ 'type' => 'i', 'value' => $eventId ],
-        ]);
-
-        return $createEvent;
+        return $this->db->query(
+            'UPDATE events SET status = :status, winner_choice_id = :winner_choice_id WHERE id = :event_id',
+            [
+                'status' => self::PAID,
+                'winner_choice_id' => $choiceId,
+                'event_id' => $eventId,
+            ]
+        );
     }
 
-    public function calculateOdds(int $eventId)
+    public function calculateOdds(int $eventId) : array
     {
         $bets = $this->eventBetRepository->getBetsByEventId($eventId);
         $totalBetsA = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'A' ? $acc += $item['amount'] : $acc, 0);
@@ -246,7 +237,7 @@ class Event extends Repository
         ];
     }
 
-    public function payoutEvent(int $eventId, string $winnerChoiceKey)
+    public function payoutEvent(int $eventId, string $winnerChoiceKey) : array
     {
         $winners = [];
         $bets = $this->eventBetRepository->getBetsByEventId($eventId);

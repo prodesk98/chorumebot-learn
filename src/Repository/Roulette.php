@@ -50,106 +50,85 @@ class Roulette extends Repository
         parent::__construct($db);
     }
 
-    public function createEvent(string $eventName, $value)
+    public function createEvent(string $eventName, $value) : int|bool
     {
-        $createEvent = $this->db->query('INSERT INTO roulette (status, description, amount) VALUES (?, ?,?)', [
-            ['type' => 'i', 'value' => self::OPEN],
-            ['type' => 's', 'value' => $eventName],
-            ['type' => 's', 'value' => $value],
-        ]);
+        $createEvent = $this->db->query(
+            'INSERT INTO roulette (status, description, amount) VALUES (:status, :description, :amount)',
+            [
+                "status" => self::OPEN,
+                "description" => $eventName,
+                "amount" => $value,
+            ]
+        );
 
-        return $createEvent;
+        return $createEvent ? $this->db->getLastInsertId() : false;
     }
 
-    public function close(int $eventId)
+    public function close(int $eventId) : bool
     {
-        $data = [
-            ['type' => 's', 'value' => self::CLOSED],
-            ['type' => 'i', 'value' => $eventId],
-        ];
-
-        $createEvent = $this->db->query('UPDATE roulette SET status = ? WHERE id = ?', $data);
-
-        return $createEvent;
+        return $this->db->query(
+            'UPDATE roulette SET status = :status WHERE id = :event_id',
+            [
+                'status' => self::CLOSED,
+                'event_id' => $eventId,
+            ]
+        );
     }
 
-    public function finish(int $eventId)
+    public function finish(int $eventId) : bool
     {
-        $data = [
-            ['type' => 's', 'value' => self::PAID],
-            ['type' => 'i', 'value' => $eventId],
-        ];
-
-        $createEvent = $this->db->query('UPDATE roulette SET status = ? WHERE id = ?', $data);
-
-        return $createEvent;
+        return $this->db->query(
+            'UPDATE roulette SET status = :status WHERE id = :event_id',
+            [
+                'status' => self::PAID,
+                'event_id' => $eventId,
+            ]
+        );
     }
 
-    public function listEventsOpen(int $limit = null)
+    public function listEventsOpen(int $limit = null) : array
     {
-        $results = $this->listEventsByStatus([self::OPEN], $limit);
-
-        if (empty($results)) {
-            return [];
-        }
-
-        return $this->normalizeRoulette($results);
+        return $this->normalizeRoulette($this->listEventsByStatus(['status_open' => self::OPEN], $limit));
     }
 
-    public function listEventsClosed(int $limit = null)
+    public function listEventsClosed(int $limit = null) : array
     {
-        $results = $this->listEventsByStatus([self::CLOSED], $limit);
 
-        if (empty($results)) {
-            return [];
-        }
-
-        return $this->normalizeRoulette($results);
+        return $this->normalizeRoulette($this->listEventsByStatus(['status_closed' => self::CLOSED], $limit));
     }
 
-    public function listEventsPaid(int $limit = null)
+    public function listEventsPaid(int $limit = null) : array
     {
-        $results = $this->listEventsByStatus([self::PAID], $limit);
-
-        if (empty($results)) {
-            return [];
-        }
-
-        return $this->normalizeRoulette($results);
+        return $this->normalizeRoulette($this->listEventsByStatus(['status_paid' => self::PAID], $limit));
     }
 
-    public function listEventsByStatus(int|array $status, int $limit = null)
+    public function listEventsByStatus(array $status, int $limit = null) : array
     {
-        $status = is_array($status) ? implode(',', $status) : $status;
+        $statusKeys = implode(',', array_map(fn ($item) => ":{$item}", array_keys($status)));
 
-        $params = [
-            [ 'type' => 's', 'value' => $status ],
-        ];
-
+        $params = [];
         $limitSQL = '';
 
         if ($limit) {
-            $params[] = [ 'type' => 'i', 'value' => $limit ];
-            $limitSQL = "LIMIT 0,?";
+            $params['limit'] = (int) $limit;
+            $limitSQL = "LIMIT 0, :limit";
         }
 
-        $sql = "
-            SELECT
+        return $this->db->query(
+            "SELECT
                 id AS roulette_id,
                 description AS description,
                 status AS status,
                 choice AS choice,
                 amount AS amount
             FROM roulette
-            WHERE status IN (?) ORDER BY id DESC $limitSQL
-        ";
-
-        $results = $this->db->select($sql, $params);
-
-        return empty($results) ? [] : $results;
+            WHERE status IN ({$statusKeys}) ORDER BY id DESC $limitSQL
+            ",
+            [...$status, ...$params]
+        );
     }
 
-    public function normalizeRoulette(array $roulette)
+    public function normalizeRoulette(array $roulette) : array
     {
         return array_map(function ($item) {
             return [
@@ -162,31 +141,28 @@ class Roulette extends Repository
         }, $roulette);
     }
 
-    public function getRouletteById(int $rouletteId)
+    public function getRouletteById(int $rouletteId) : array
     {
-        $result = $this->db->select(
-            "SELECT * FROM roulette WHERE id = ?",
+        return $this->db->query(
+            "SELECT * FROM roulette WHERE id = :event_id",
             [
-                [ 'type' => 'i', 'value' => $rouletteId ]
+                'event_id' => $rouletteId
             ]
         );
-
-        return $result;
     }
 
-    public function closeEvent(int $rouletteId)
+    public function closeEvent(int $rouletteId) : bool
     {
-        $data = [
-            [ 'type' => 's', 'value' => self::CLOSED ],
-            [ 'type' => 'i', 'value' => $rouletteId ],
-        ];
-
-        $createEvent = $this->db->query('UPDATE roulette SET status = ? WHERE id = ?', $data);
-
-        return $createEvent;
+        return $this->db->query(
+            'UPDATE roulette SET status = :status WHERE id = :event_id',
+            [
+                'status' => self::CLOSED,
+                'event_id' => $rouletteId,
+            ]
+        );
     }
 
-    public function payoutRoulette(int $rouletteId, $winnerChoiceKey)
+    public function payoutRoulette(int $rouletteId, $winnerChoiceKey) : array
     {
         $winners = [];
         $bets = $this->rouletteBetRepository->getBetsByEventId($rouletteId);
@@ -219,14 +195,15 @@ class Roulette extends Repository
         return $winners;
     }
 
-    public function updateRouletteWithWinner(int $choiceId, int $eventId)
+    public function updateRouletteWithWinner(int $choiceId, int $eventId) : bool
     {
-        $createEvent = $this->db->query('UPDATE roulette SET status = ?, choice = ? WHERE id = ?', [
-            [ 'type' => 's', 'value' => self::PAID ],
-            [ 'type' => 'i', 'value' => $choiceId, ],
-            [ 'type' => 'i', 'value' => $eventId ],
-        ]);
-
-        return $createEvent;
+        return $this->db->query(
+            'UPDATE roulette SET status = :status, choice = :choice WHERE id = :event_id',
+            [
+                'status' => self::PAID,
+                'choice' => $choiceId,
+                'event_id' => $eventId,
+            ]
+        );
     }
 }

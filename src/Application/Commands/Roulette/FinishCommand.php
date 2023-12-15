@@ -27,9 +27,8 @@ class FinishCommand extends Command
     public function handle(Interaction $interaction): void
     {
         $interaction->acknowledgeWithResponse(false)->then(function () use ($interaction) {
-            $eventId = $interaction->data->options['girar']->options['id']->value;
-            $event = $this->rouletteRepository->getRouletteById($eventId);
-            $status = (int) $event[0]['status'];
+            $rouletteId = $interaction->data->options['girar']->options['id']->value;
+            $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
             $winnerNumber = rand(0, 14);
             $winnerResult = null;
             $choice = null;
@@ -42,7 +41,7 @@ class FinishCommand extends Command
                 return;
             }
 
-            if (empty($event)) {
+            if (empty($roulette)) {
                 $interaction->updateOriginalResponse(
                     MessageBuilder::new()->setContent('Roleta não existe!'),
                     true
@@ -50,11 +49,23 @@ class FinishCommand extends Command
                 return;
             }
 
+            if (!$this->rouletteRepository->closeEvent($rouletteId)) {
+                $interaction->updateOriginalResponse(
+                    MessageBuilder::new()->setContent(
+                        sprintf('Ocorreu um erro ao finalizar Roleta **#%s**', $rouletteId)
+                    )
+                );
+                return;
+            }
+
+            $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
+            $status = (int) $roulette[0]['status'];
+
             if ($status !== $this->rouletteRepository::CLOSED) {
-                $message = sprintf('Roleta **#%s** precisa estar fechada para ser Girada!', $eventId);
+                $message = sprintf('Roleta **#%s** precisa estar fechada para ser Girada!', $rouletteId);
 
                 if ($status === $this->rouletteRepository::PAID) {
-                    $message = sprintf('Roleta **#%s** já foi finalizada!', $eventId);
+                    $message = sprintf('Roleta **#%s** já foi finalizada!', $rouletteId);
                 }
 
                 $interaction->updateOriginalResponse(
@@ -75,11 +86,11 @@ class FinishCommand extends Command
                 $choice = "🟥 R[$winnerNumber]";
             }
 
-            $bets = $this->rouletteRepository->payoutRoulette($eventId, $winnerResult);
+            $bets = $this->rouletteRepository->payoutRoulette($rouletteId, $winnerResult);
 
-            $eventsDescription = sprintf(
+            $roulettesDescription = sprintf(
                 "**Evento:** %s \n **Vencedor**: %s \n \n \n",
-                $event[0]['description'],
+                $roulette[0]['description'],
                 "{$choice}",
             );
 
@@ -90,9 +101,9 @@ class FinishCommand extends Command
              */
             $embed = $this->discord->factory(Embed::class);
             $embed
-                ->setTitle(sprintf("ROLETA ENCERRADA 💰\n[%s] %s", $eventId, $event[0]['description']))
+                ->setTitle(sprintf("ROLETA ENCERRADA 💰\n[%s] %s", $rouletteId, $roulette[0]['description']))
                 ->setColor('#F5D920')
-                ->setDescription($eventsDescription)
+                ->setDescription($roulettesDescription)
                 ->setImage($winnersImage);
 
             $earningsByUser = [];
@@ -124,7 +135,7 @@ class FinishCommand extends Command
             if (count($bets) === 0) {
                 $embednovo = new Embed($this->discord);
                 $embednovo
-                    ->setTitle(sprintf('ROLETA #%s ENCERRADA', $eventId))
+                    ->setTitle(sprintf('ROLETA #%s ENCERRADA', $rouletteId))
                     ->setColor('#F5D920')
                     ->setDescription("**Resultado**: Não houveram vencedores.");
 
@@ -133,7 +144,7 @@ class FinishCommand extends Command
 
             $embedLoop = new Embed($this->discord);
             $embedLoop->setImage($imageRouletteSpin);
-            $embedLoop->setTitle(sprintf('ROLETA #%s ENCERRADA', $eventId));
+            $embedLoop->setTitle(sprintf('ROLETA #%s ENCERRADA', $rouletteId));
             $embedLoop->setDescription("**Sorteando um número!**");
 
             $builderLoop = new MessageBuilder();

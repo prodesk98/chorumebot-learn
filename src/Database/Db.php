@@ -2,93 +2,112 @@
 
 namespace Chorume\Database;
 
+use PDO;
+use PDOException;
+use PDOStatement;
+
 class Db
 {
-    /**
-     * @var string
-     */
-    private $server;
-    /**
-     * @var string
-     */
-    private $database;
-    /**
-     * @var string
-     */
-    private $user;
-    /**
-     * @var string
-     */
-    private $password;
+    protected static $instance;
 
-    /**
-     * @var PDO
-     */
-    private static $conn;
+    protected PDO $pdo;
 
-    public function __construct(string $server, string $database, string $user, string $password)
+    private function __construct()
     {
-        $this->server = $server;
-        $this->database = $database;
-        $this->user = $user;
-        $this->password = $password;
+        try
+        {
+            $hostname = getenv('DB_SERVER');
+            $dbname = getenv('DB_DATABASE');
+            $username = getenv('DB_USER');
+            $password = getenv('DB_PASSWORD');
 
-        $this->getDb();
+            $this->pdo = new PDO("mysql:host=$hostname;dbname=$dbname;charset=utf8mb4", $username, $password);
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            die($e->getMessage());
+        }
     }
 
-    private function __clone()
+    public static function getInstance()
     {
-    }
-
-    public function __wakeup()
-    {
-    }
-
-    public function getDb()
-    {
-        if (!self::$conn) {
-            try {
-                self::$conn = mysqli_connect($this->server, $this->user, $this->password, $this->database);
-            } catch (\Throwable $th) {
-                echo $th->getMessage();
-                exit();
+        try
+        {
+            if (self::$instance === null) {
+                self::$instance = new self();
             }
+
+            return self::$instance;
+        } catch (PDOException $e) {
+            die($e->getMessage());
         }
-
-        return self::$conn;
     }
 
-    private function setParams($stmt, $parametros = [])
+    public function query($sql, $params = []): PDOStatement|array|bool|null
     {
-        $params = [];
-        $params[] = array_reduce($parametros, function ($acc, $item) {
-            return $acc .= $item['type'];
-        }, '');
+        try {
+            $query = trim($sql);
+            $stmt = $this->pdo->prepare($query);
+            $rawStatement = preg_split("/( |\r|\n)/", $query);
+            $statement = strtolower($rawStatement[0]);
 
-        foreach ($parametros as $valor) {
-            $params[] = &$valor['value'];
+            foreach ($params as $key => $value) {
+                if ($key === 'limit') {
+                    $stmt->bindValue($key, $value, PDO::PARAM_INT);
+                    continue;
+                }
+
+                $stmt->bindValue($key, $value);
+            }
+
+            switch($statement) {
+                case 'select':
+                case 'show':
+                case 'call':
+                case 'describe':
+                    $stmt->execute();
+                    return $stmt->fetchAll();
+                    break;
+                case 'insert':
+                case 'update':
+                case 'delete':
+                    return $stmt->execute();
+                    break;
+                default:
+                    return null;
+                    break;
+            }
+        } catch (PDOException $e) {
+            if ($this->inTransaction()) {
+                $this->rollBack();
+            }
+
+            die($e->getMessage());
         }
-
-        call_user_func_array([$stmt, 'bind_param'], $params);
     }
 
-    public function query($sql, $params = [])
+    public function getLastInsertId(): int|bool
     {
-        $server = self::$conn->prepare($sql);
-
-        if (!empty($params)) {
-            $this->setParams($server, $params);
-        }
-
-        $server->execute();
-
-        return $server;
+        return $this->pdo->lastInsertId();
     }
 
-    public function select($sql, $params = [])
+    public function beginTransaction(): bool
+	{
+		return $this->pdo->beginTransaction();
+	}
+
+    public function commit(): bool
     {
-        $server = $this->query($sql, $params);
-
-        return $server->get_result()->fetch_all(MYSQLI_ASSOC);
+        return $this->pdo->commit();
     }
+
+    public function rollBack(): bool
+	{
+		return $this->pdo->rollBack();
+	}
+
+    public function inTransaction(): bool
+	{
+		return $this->pdo->inTransaction();
+	}
 }

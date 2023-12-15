@@ -59,12 +59,7 @@ foreach ($configFiles as $file) {
     }
 }
 
-$db = new Db(
-    getenv('DB_SERVER'),
-    getenv('DB_DATABASE'),
-    getenv('DB_USER'),
-    getenv('DB_PASSWORD')
-);
+$db = Db::getInstance();
 
 $redis = new RedisClient([
     'scheme' => 'tcp',

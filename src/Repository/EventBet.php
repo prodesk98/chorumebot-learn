@@ -22,65 +22,66 @@ class EventBet extends Repository
         parent::__construct($db);
     }
 
-    public function all()
+    public function all() : array
     {
-        $result = $this->db->select("SELECT * FROM events_bets");
-
-        return $result;
+        return $this->db->query("SELECT * FROM events_bets");
     }
 
-    public function create(int $discordId, int $eventId, string $choiceKey, float $amount)
+    public function create(int $discordId, int $eventId, string $choiceKey, float $amount) : bool
     {
         $user = $this->userRepository->getByDiscordId($discordId);
         $choiceId = $this->eventChoiceRepository->getByEventIdAndChoice($eventId, $choiceKey);
         $userId = $user[0]['id'];
 
-        $createEvent = $this->db->query('INSERT INTO events_bets (user_id, event_id, choice_id, amount) VALUES (?, ?, ?, ?)', [
-            [ 'type' => 'i', 'value' => $userId ],
-            [ 'type' => 'i', 'value' => $eventId ],
-            [ 'type' => 'i', 'value' => $choiceId[0]['id'] ],
-            [ 'type' => 'd', 'value' => $amount ]
-        ]);
+        $this->db->beginTransaction();
+
+        $createEvent = $this->db->query(
+            'INSERT INTO events_bets (user_id, event_id, choice_id, amount) VALUES (:user_id, :event_id, :choice_id, :amount)',
+            [
+                'user_id' => $userId,
+                'event_id' => $eventId,
+                'choice_id' => $choiceId[0]['id'],
+                'amount' => $amount,
+            ]
+        );
 
         $createUserBetHistory = $this->userCoinHistoryRepository->create($userId, -$amount, 'Bet', $eventId);
+
+        $this->db->commit();
 
         return $createEvent && $createUserBetHistory;
     }
 
-    public function getOpenBetsByDiscordIdAndEvent(int $discordId, int $eventId)
+    public function getOpenBetsByDiscordIdAndEvent(int $discordId, int $eventId) : array
     {
-        $results = $this->db->select(
-            sprintf("
-                SELECT
+        return $this->db->query(
+            sprintf("SELECT
                     eb.*
                 FROM events_bets eb
                 JOIN events e ON e.id = eb.event_id
                 WHERE
-                    eb.user_id = ?
-                    AND eb.event_id = ?
+                    eb.user_id = :user_id
+                    AND eb.event_id = :event_id
                     AND e.status = %s
             ", Event::OPEN),
             [
-                [ 'type' => 'i', 'value' => $discordId ],
-                [ 'type' => 'i', 'value' => $eventId ]
+                'user_id' => $discordId,
+                'event_id' => $eventId
             ]
         );
-
-        return $results;
     }
 
-    public function alreadyBetted(int $discordId, int $eventId)
+    public function alreadyBetted(int $discordId, int $eventId) : int
     {
         $user = $this->userRepository->getByDiscordId($discordId);
 
         return count($this->getOpenBetsByDiscordIdAndEvent($user[0]['id'], $eventId)) > 0;
     }
 
-    public function getBetsByEventId(int $eventId)
+    public function getBetsByEventId(int $eventId) : array
     {
-        $results = $this->db->select(
-            "
-                SELECT
+        return $this->db->query(
+            "SELECT
                     eb.user_id AS user_id,
                     eb.amount AS amount,
                     u.discord_user_id AS discord_user_id,
@@ -90,13 +91,11 @@ class EventBet extends Repository
                 JOIN users u ON u.id = eb.user_id
                 JOIN events_choices ec ON ec.id = eb.choice_id
                 WHERE
-                    eb.event_id = ?
+                    eb.event_id = :event_id
             ",
             [
-                [ 'type' => 'i', 'value' => $eventId ]
+                'event_id' => $eventId
             ]
         );
-
-        return $results;
     }
 }

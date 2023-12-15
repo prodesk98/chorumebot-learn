@@ -4,6 +4,7 @@ namespace Chorume\Application\Commands\LittleAirplanes;
 
 use Predis\Client as RedisClient;
 use Discord\Discord;
+use Discord\Voice\VoiceClient;
 use Discord\Parts\Embed\Embed;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Builders\MessageBuilder;
@@ -104,8 +105,28 @@ class FlyCommand extends Command
                     $this->config['images']['airplanes']
                 ));
 
+                // Little Airplanes Spinning Sound
+                $channel = $this->discord->getChannel($interaction->channel_id);
+                $audio = __DIR__ . '/../../../Audio/avioeszinhos.mp3';
+
+                $voice = $this->discord->getVoiceClient($channel->guild_id);
+
+                if ($voice) {
+                    $this->discord->getLogger()->info('Voice client already exists, playing audio...');
+                    $voice->playFile($audio);
+                    return;
+                }
+
+                $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio, $interaction) {
+                    $voice
+                        ->playFile($audio)
+                        ->done(function () use ($voice) {
+                            $voice->close();
+                        });
+                });
+
                 $loop = $this->discord->getLoop();
-                $loop->addTimer(5, function () use ($members, $interaction) {
+                $loop->addTimer(6, function () use ($members, $interaction) {
                     $airplanes = [];
 
                     foreach ($members as $member) {

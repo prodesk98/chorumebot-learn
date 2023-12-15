@@ -6,19 +6,14 @@ use PDOStatement;
 
 class UserCoinHistory extends Repository
 {
-    public function __construct($db)
-    {
-        parent::__construct($db);
-    }
-
-    public function all(): array
+    public function all() : array
     {
         $result = $this->db->query("SELECT * FROM users_coins_history");
 
         return $result;
     }
 
-    public function create(int $userId, float $amount, string $type, int $entityId = null): bool
+    public function create(int $userId, float $amount, string $type, int $entityId = null) : bool
     {
         return $this->db->query(
             "INSERT INTO users_coins_history (user_id, entity_id, amount, type) VALUES (:user_id, :entity_id, :amount, :type)",
@@ -31,7 +26,7 @@ class UserCoinHistory extends Repository
         );
     }
 
-    public function listTop10(): array
+    public function listTop10() : array
     {
         $result = $this->db->query(
             "SELECT
@@ -50,7 +45,7 @@ class UserCoinHistory extends Repository
     /**
      * do not performs any validation here, so be careful as this method can be used to "steal" coins
      */
-    public function transfer(int $fromId, float $amount, int $toId): bool
+    public function transfer(int $fromId, float $amount, int $toId) : bool
     {
         $type = 'Transfer';
 
@@ -73,7 +68,7 @@ class UserCoinHistory extends Repository
         );
     }
 
-    public function hasAvailableCoins(int $discordUserId, float $amount): bool
+    public function hasAvailableCoins(int $discordUserId, float $amount) : bool
     {
         $result = $this->db->query(
             "SELECT
@@ -92,7 +87,7 @@ class UserCoinHistory extends Repository
         return $totalCoins >= $amount;
     }
 
-    public function reachedMaximumAirplanesToday(): bool
+    public function reachedMaximumAirplanesToday() : bool
     {
         $result = $this->db->query(
             "SELECT

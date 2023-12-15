@@ -9,15 +9,15 @@ use Chorume\Repository\UserCoinHistory;
 
 class EventBet extends Repository
 {
-    public function __construct(
-        $db,
-        protected User|null $userRepository = null,
-        protected EventChoice|null $eventChoiceRepository = null,
-        protected UserCoinHistory|null $userCoinHistoryRepository = null
-    ) {
-        $this->userRepository = $userRepository ?? new User($db);
-        $this->eventChoiceRepository = $eventChoiceRepository ?? new EventChoice($db);
-        $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);
+    private User $userRepository;
+    private EventChoice $eventChoiceRepository;
+    private UserCoinHistory $userCoinHistoryRepository;
+
+    public function __construct($db)
+    {
+        $this->userRepository = new User($db);
+        $this->eventChoiceRepository = new EventChoice($db);
+        $this->userCoinHistoryRepository = new UserCoinHistory($db);
 
         parent::__construct($db);
     }

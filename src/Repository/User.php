@@ -4,11 +4,6 @@ namespace Chorume\Repository;
 
 class User extends Repository
 {
-    public function __construct($db)
-    {
-        parent::__construct($db);
-    }
-
     public function all()
     {
         return $this->db->query("SELECT * FROM users");

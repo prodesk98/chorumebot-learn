@@ -6,17 +6,6 @@ use Chorume\Repository\EventBet;
 use Chorume\Repository\EventChoice;
 use Chorume\Repository\UserCoinHistory;
 
-/**
- * table: talks
- *
- * id (int)
- * triggertext (varchar)
- * type (varchar)
- * answer (json)
- * status (tinyint)
- *
- */
-
 class Talk extends Repository
 {
     public const STATUS_ACTIVE = 1;

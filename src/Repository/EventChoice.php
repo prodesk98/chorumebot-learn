@@ -4,11 +4,6 @@ namespace Chorume\Repository;
 
 class EventChoice extends Repository
 {
-    public function __construct($db)
-    {
-        parent::__construct($db);
-    }
-
     public function all() : array
     {
         return $this->db->query("SELECT * FROM events_choices");

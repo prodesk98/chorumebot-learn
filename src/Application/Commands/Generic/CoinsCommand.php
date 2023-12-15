@@ -4,6 +4,7 @@ namespace Chorume\Application\Commands\Generic;
 
 use Predis\Client as RedisClient;
 use Discord\Discord;
+use Discord\Voice\VoiceClient;
 use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
 use Chorume\Application\Commands\Command;
@@ -11,6 +12,7 @@ use Chorume\Application\Discord\MessageComposer;
 use Chorume\Helpers\RedisHelper;
 use Chorume\Repository\User;
 use Chorume\Repository\UserCoinHistory;
+use Exception;
 
 class CoinsCommand extends Command
 {

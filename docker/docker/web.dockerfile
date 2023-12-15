@@ -24,7 +24,7 @@ RUN apt-get update -y \
     && apt-get install -y nodejs yarn \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-configure intl \
-    && docker-php-ext-install -j "$(nproc)" bcmath exif gd gmp intl mysqli opcache pcntl pdo_mysql zip \
+    && docker-php-ext-install -j "$(nproc)" bcmath exif gd gmp intl mysqli opcache pcntl pdo_mysql zip sodium \
     && pecl install imagick pcntl redis swoole xdebug --with-maximum-processors="$(nproc)" \
     && docker-php-ext-enable imagick opcache redis swoole xdebug \
     && apt-get purge -y --auto-remove \

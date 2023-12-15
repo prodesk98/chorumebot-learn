@@ -4,6 +4,7 @@ namespace Chorume\Application\Commands\Roulette;
 
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
+use Discord\Voice\VoiceClient;
 use Discord\Parts\Interactions\Interaction;
 use Chorume\Application\Commands\Command;
 use Chorume\Repository\Roulette;
@@ -82,6 +83,26 @@ class FinishCommand extends Command
             $builderLoop = new MessageBuilder();
             $builderLoop->addEmbed($embedLoop);
             $interaction->updateOriginalResponse($builderLoop, false);
+
+            // Roulette Spinning Sound
+            $channel = $this->discord->getChannel($interaction->channel_id);
+            $audio = __DIR__ . '/../../../Audio/roulette.mp3';
+
+            $voice = $this->discord->getVoiceClient($channel->guild_id);
+
+            if ($voice) {
+                $this->discord->getLogger()->info('Voice client already exists, playing audio...');
+                $voice->playFile($audio);
+                return;
+            }
+
+            $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio, $interaction) {
+                $voice
+                    ->playFile($audio)
+                    ->done(function () use ($voice) {
+                        $voice->close();
+                    });
+            });
 
             $loop = $this->discord->getLoop();
             $loop->addTimer(8, function () use ($interaction, $roulette) {

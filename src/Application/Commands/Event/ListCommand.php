@@ -13,10 +13,10 @@ use Chorume\Repository\EventChoice;
 class ListCommand extends Command
 {
     public function __construct(
-        public Discord $discord,
-        public $config,
-        public Event $eventRepository,
-        public EventChoice $eventChoiceRepository
+        private Discord $discord,
+        private $config,
+        private Event $eventRepository,
+        private EventChoice $eventChoiceRepository
     ) {
     }
 

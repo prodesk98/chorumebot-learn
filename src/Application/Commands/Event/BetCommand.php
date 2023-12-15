@@ -14,11 +14,11 @@ use Chorume\Repository\EventBet;
 class BetCommand extends Command
 {
     public function __construct(
-        public Discord $discord,
-        public $config,
-        public User $userRepository,
-        public Event $eventRepository,
-        public EventBet $eventBetsRepository
+        private Discord $discord,
+        private $config,
+        private User $userRepository,
+        private Event $eventRepository,
+        private EventBet $eventBetsRepository
     ) {
     }
 

@@ -33,8 +33,6 @@ class FlyCommand extends Command
         private User $userRepository,
         private UserCoinHistory $userCoinHistoryRepository
     ) {
-        $this->discord = $discord;
-        $this->config = $config;
         $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
         $this->cooldownTimer = getenv('LITTLE_AIRPLANES_COOLDOWN_TIMER');

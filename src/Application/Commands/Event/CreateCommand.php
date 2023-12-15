@@ -11,9 +11,9 @@ use Chorume\Repository\Event;
 class CreateCommand extends Command
 {
     public function __construct(
-        public Discord $discord,
-        public $config,
-        public Event $eventRepository
+        private Discord $discord,
+        private $config,
+        private Event $eventRepository
     ) {
     }
 

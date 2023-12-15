@@ -14,11 +14,11 @@ use Chorume\Repository\UserCoinHistory;
 class TopBettersCommand extends Command
 {
     public function __construct(
-        public Discord $discord,
-        public $config,
-        public RedisClient $redis,
-        public User $userRepository,
-        public UserCoinHistory $userCoinHistoryRepository
+        private Discord $discord,
+        private $config,
+        private RedisClient $redis,
+        private User $userRepository,
+        private UserCoinHistory $userCoinHistoryRepository
     ) {
     }
 

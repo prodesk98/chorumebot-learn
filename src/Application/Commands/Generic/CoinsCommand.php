@@ -20,11 +20,11 @@ class CoinsCommand extends Command
     private int $cooldownTimes = 6;
 
     public function __construct(
-        public Discord $discord,
-        public $config,
-        public RedisClient $redis,
-        public User $userRepository,
-        public UserCoinHistory $userCoinHistoryRepository
+        private Discord $discord,
+        private $config,
+        private RedisClient $redis,
+        private User $userRepository,
+        private UserCoinHistory $userCoinHistoryRepository
     ) {
         $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);

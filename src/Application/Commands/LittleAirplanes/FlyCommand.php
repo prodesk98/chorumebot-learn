@@ -113,11 +113,15 @@ class FlyCommand extends Command
 
                 if ($voice) {
                     $this->discord->getLogger()->info('Voice client already exists, playing audio...');
-                    $voice->playFile($audio);
+                    $voice
+                        ->playFile($audio)
+                        ->done(function () use ($voice) {
+                            $voice->close();
+                        });
                     return;
                 }
 
-                $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio, $interaction) {
+                $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
                     $voice
                         ->playFile($audio)
                         ->done(function () use ($voice) {

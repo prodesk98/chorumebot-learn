@@ -11,7 +11,7 @@ use Chorume\Application\Commands\Command;
 use Chorume\Repository\User;
 use Chorume\Repository\UserCoinHistory;
 
-class TopBettersCommand extends Command
+class TopForbesCommand extends Command
 {
     public function __construct(
         private Discord $discord,

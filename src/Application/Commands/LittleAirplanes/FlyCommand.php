@@ -66,7 +66,7 @@ class FlyCommand extends Command
                 $interaction->respondWithMessage(
                     $this->messageComposer->embed(
                         'MAH ÔÊÊ!',
-                        sprintf('Aguarde %s minuto para mandar mais aviõeszinhos... ôêê!', $this->cooldownTimer / 60),
+                        sprintf('Aguarde %s minutos para mandar mais aviõeszinhos... ôêê!', $this->cooldownTimer / 60),
                         $this->config['images']['gonna_press']
                     ),
                     true
@@ -122,6 +122,7 @@ class FlyCommand extends Command
                 }
 
                 $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+                    $this->discord->getLogger()->info('Tocando audio');
                     $voice
                         ->playFile($audio)
                         ->done(function () use ($voice) {

@@ -112,23 +112,24 @@ class FlyCommand extends Command
                 $voice = $this->discord->getVoiceClient($channel->guild_id);
 
                 if ($voice) {
-                    $this->discord->getLogger()->info('Voice client already exists, playing audio...');
+                    $this->discord->getLogger()->info('Voice client already exists, playing Little Airplanes audio...');
+                    $voice->setVolume(50);
                     $voice
-                        ->playFile($audio)
-                        ->done(function () use ($voice) {
-                            $voice->close();
-                        });
-                    return;
+                        ->playFile($audio);
+                        // ->done(function () use ($voice) {
+                        //     $voice->close();
+                        // });
+                } else {
+                    $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+                        $this->discord->getLogger()->info('Playing Little Airplanes audio...');
+                        $voice->setVolume(50);
+                        $voice
+                            ->playFile($audio);
+                            // ->done(function () use ($voice) {
+                            //     $voice->close();
+                            // });
+                    });
                 }
-
-                $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
-                    $this->discord->getLogger()->info('Tocando audio');
-                    $voice
-                        ->playFile($audio)
-                        ->done(function () use ($voice) {
-                            $voice->close();
-                        });
-                });
 
                 $loop = $this->discord->getLoop();
                 $loop->addTimer(6, function () use ($members, $interaction) {

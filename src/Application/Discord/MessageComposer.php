@@ -3,15 +3,13 @@
 namespace Chorume\Application\Discord;
 
 use Discord\Builders\MessageBuilder;
+use Discord\Discord;
 use Discord\Parts\Embed\Embed;
 
 class MessageComposer
 {
-    private $discord;
-
-    public function __construct($discord)
+    public function __construct(private Discord $discord)
     {
-        $this->discord = $discord;
     }
 
     public function embed(string $title, string $message, string $image = null, string $color = null, string $file = null): MessageBuilder

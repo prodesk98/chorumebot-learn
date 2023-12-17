@@ -105,7 +105,7 @@ class FinishCommand extends Command
                 $voice
                     ->playFile($audio)
                     ->done(function () use ($voice) {
-                        $voice->close();
+                        // $voice->close();
                     });
             });
 

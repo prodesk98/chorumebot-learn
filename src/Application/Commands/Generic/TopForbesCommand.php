@@ -32,7 +32,7 @@ class TopForbesCommand extends Command
          */
         $embed = $this->discord->factory(Embed::class);
         $embed
-            ->setTitle(sprintf('TOP 10 APOSTADORES'))
+            ->setTitle(sprintf('TOP 10 FORBES'))
             ->setColor('#F5D920')
             ->setDescription('')
             ->setImage($topBettersImage);

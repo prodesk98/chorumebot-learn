@@ -116,7 +116,7 @@ $rouletteFinishCommand = new RouletteFinishCommand($discord, $config, $redis, $u
 $rouletteExposeCommand = new RouletteExposeCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository);
 
 
-$discord->on('ready', function (Discord $discord) use ($talkRepository, $redis) {
+$discord->on('init', function (Discord $discord) use ($talkRepository, $redis) {
     // Initialize application commands
     $initializeCommandsFiles = glob(__DIR__ . '/Application/Initialize/*Command.php');
 

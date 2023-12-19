@@ -25,7 +25,7 @@ return [
         'thinking' => 'https://chorume.tech/imgs/thinking.gif?v0.0.1',
         'roulette' =>  [
             'spin' =>  'https://chorume.tech/imgs/roulette/christmas/roulette_spin.gif?v0.0.6',
-            'list' => 'https://chorume.tech/imgs/roulette/roulette_list.gif?v0.0.1',
+            'list' => 'https://chorume.tech/imgs/roulette/roulette_list.png?v0.0.3',
             'numbers' => [
                 'https://chorume.tech/imgs/roulette/christmas/0.png?v0.0.2',
                 'https://chorume.tech/imgs/roulette/christmas/1.png?v0.0.2',

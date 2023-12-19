@@ -54,9 +54,6 @@ class FinishCommand extends Command
     {
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
 
-        var_dump($this->config['admin_role']);
-        var_dump($interaction->member->roles);
-
         if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
             $interaction->respondWithMessage(
                 MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'),
@@ -102,7 +99,12 @@ class FinishCommand extends Command
         $embedLoop = new Embed($this->discord);
         $embedLoop->setImage($imageRouletteSpin);
         $embedLoop->setTitle(":moneybag: ROLETA ENCERRADA");
-        $embedLoop->setDescription(sprintf("**Girador:** <@%s>\n**Roleta**: [#%s]\n**Sorteando um número!**", $interaction->user->id, $rouletteId));
+        $embedLoop->setDescription(sprintf(
+            "**Girador:** <@%s>\n**Roleta**: [#%s] %s\n**Sorteando um número!**",
+            $interaction->user->id,
+            $rouletteId,
+            $roulette[0]['description']
+        ));
 
         $builderLoop = new MessageBuilder();
         $builderLoop->addEmbed($embedLoop);
@@ -178,7 +180,7 @@ class FinishCommand extends Command
             $embed = $this->discord->factory(Embed::class);
             $embed
                 ->setTitle(":moneybag: ROLETA ENCERRADA")
-                ->setColor('#F5D920')
+                ->setColor('#00FF00')
                 ->setDescription($roulettesDescription)
                 ->setImage($winnersImage);
 
@@ -210,8 +212,13 @@ class FinishCommand extends Command
                 $embednovo = new Embed($this->discord);
                 $embednovo
                     ->setTitle(":moneybag: ROLETA ENCERRADA")
-                    ->setColor('#F5D920')
-                    ->setDescription(sprintf("**Girador:** <@%s>\n**Roleta:** [#%s]\n**Resultado**: Não houveram vencedores.", $interaction->user->id, $rouletteId));
+                    ->setColor('#FF0000')
+                    ->setDescription(sprintf(
+                        "**Girador:** <@%s>\n**Roleta:** [#%s] %s\n**Resultado**: Não houveram vencedores.",
+                        $interaction->user->id,
+                        $rouletteId,
+                        $roulette[0]['description']
+                    ));
                 $embed = $embednovo;
             }
 

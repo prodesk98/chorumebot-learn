@@ -164,10 +164,10 @@ class RouletteBuilder
                 $this->discord
             );
 
+        $action->addComponent($buttonSpin);
         $action->addComponent($buttonRed);
         $action->addComponent($buttonGreen);
         $action->addComponent($buttonBlack);
-        $action->addComponent($buttonSpin);
 
         $embed = $this->buildEmbedForRoulette($rouletteId, $roulette, $gameData);
 
@@ -277,7 +277,7 @@ class RouletteBuilder
 
         $embed = new Embed($this->discord);
         $embed->setTitle(":moneybag: APOSTEM NA ROLETA")
-            ->setColor(0x00ff00)
+            ->setColor('#5266ED')
             ->setDescription(sprintf("**Roleta:** [#%s] %s\n**Total:** %s", $rouletteId, $roulette[0]['description'], $gameData->AmountTotal))
             ->setFooter("Últimos giros:\n" . $this->buildLastRoulettesChoices());
 

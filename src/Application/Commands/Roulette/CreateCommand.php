@@ -44,13 +44,18 @@ class CreateCommand extends Command
         $eventName = $interaction->data->options['criar']->options['nome']->value;
         $value = $interaction->data->options['criar']->options['valor']->value;
 
+        $this->createRoulette($interaction, $eventName, $value);
+    }
 
-        if ($rouletteId = $this->rouletteRepository->createEvent(strtoupper($eventName), $value)) {
-            $this->rouletteBuilder->build($interaction, $rouletteId);
-            // $interaction->respondWithMessage(MessageBuilder::new()->setContent("Roleta criado com sucesso! Valor por aposta: **C\${$value}**"), true);
+    public function createRoulette(Interaction $interaction, string $eventName, float $value): void
+    {
+        $rouletteId = $this->rouletteRepository->createEvent(strtoupper($eventName), $value);
+
+        if (!$rouletteId) {
+            $interaction->respondWithMessage(MessageBuilder::new()->setContent("Não foi possível criar a roleta!"), true);
             return;
         }
 
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent("Não foi possível criar a roleta!"), true);
+        $this->rouletteBuilder->build($interaction, $rouletteId);
     }
 }

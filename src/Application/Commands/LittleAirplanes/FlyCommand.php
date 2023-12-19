@@ -95,7 +95,7 @@ class FlyCommand extends Command
                 $interaction->respondWithMessage($this->messageComposer->embed(
                     'MAH ÔÊÊ!',
                     'Ma, ma, ma, mas tem ninguém nessa sala, não tem como eu jogar meus :airplane_small:aviõeszinhos... ôêê!'
-                ));
+                ), true);
             }
 
             $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $members) {
@@ -111,24 +111,24 @@ class FlyCommand extends Command
 
                 $voice = $this->discord->getVoiceClient($channel->guild_id);
 
-                if ($voice) {
-                    $this->discord->getLogger()->info('Voice client already exists, playing Little Airplanes audio...');
-                    $voice->setVolume(50);
-                    $voice
-                        ->playFile($audio);
-                        // ->done(function () use ($voice) {
-                        //     $voice->close();
-                        // });
-                } else {
-                    $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
-                        $this->discord->getLogger()->info('Playing Little Airplanes audio...');
-                        $voice->setVolume(50);
+                if ($channel->isVoiceBased()) {
+                    if ($voice) {
+                        $this->discord->getLogger()->info('Voice client already exists, playing Little Airplanes audio...');
                         $voice
                             ->playFile($audio);
                             // ->done(function () use ($voice) {
                             //     $voice->close();
                             // });
-                    });
+                    } else {
+                        $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+                            $this->discord->getLogger()->info('Playing Little Airplanes audio...');
+                            $voice
+                                ->playFile($audio);
+                                // ->done(function () use ($voice) {
+                                //     $voice->close();
+                                // });
+                        });
+                    }
                 }
 
                 $loop = $this->discord->getLoop();

@@ -9,6 +9,7 @@ use Discord\Builders\Components\ActionRow;
 use Discord\Builders\Components\Button;
 use Discord\Parts\Embed\Embed;
 use Discord\Parts\Interactions\Interaction;
+use Chorume\Application\Commands\Roulette\FinishCommand;
 use Chorume\Application\Commands\Roulette\GameData;
 use Chorume\Application\Commands\Roulette\Player;
 use Chorume\Repository\Roulette;
@@ -17,6 +18,8 @@ use Chorume\Repository\User;
 
 class RouletteBuilder
 {
+    private FinishCommand $finishCommand;
+
     public function __construct(
         private Discord $discord,
         private $config,
@@ -25,6 +28,14 @@ class RouletteBuilder
         private Roulette $rouletteRepository,
         private RouletteBet $rouletteBetRepository
     ) {
+        $this->finishCommand = new FinishCommand(
+            $this->discord,
+            $this->config,
+            $this->redis,
+            $this->userRepository,
+            $this->rouletteRepository,
+            $this->rouletteBetRepository
+        );
     }
 
     public function build(Interaction $interaction, int $rouletteId): void
@@ -62,71 +73,101 @@ class RouletteBuilder
         }
 
         $buttonRed = Button::new(Button::STYLE_DANGER)
-                        ->setLabel("R +{$amountBet}")
-                        ->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
-                            $fromDiscordId = $interactionUser->member->user->id;
-                            $userDiscord = $interactionUser->member->user;
+            ->setLabel("R +{$amountBet}")
+            ->setListener(
+                function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
+                    $fromDiscordId = $interactionUser->member->user->id;
+                    $userDiscord = $interactionUser->member->user;
 
-                            $this->apostarRoleta(
-                                $fromDiscordId,
-                                Roulette::RED,
-                                $rouletteId,
-                                $interaction,
-                                $roulette,
-                                $amountBet,
-                                $gameData,
-                                $userDiscord,
-                                $interactionUser
-                            );
-                        },
-                        $this->discord
+                    $this->apostarRoleta(
+                        $fromDiscordId,
+                        Roulette::RED,
+                        $rouletteId,
+                        $interaction,
+                        $roulette,
+                        $amountBet,
+                        $gameData,
+                        $userDiscord,
+                        $interactionUser
                     );
+                },
+                $this->discord
+            );
 
         $buttonGreen = Button::new(Button::STYLE_SUCCESS)
-                            ->setLabel("G +{$amountBet}")
-                            ->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
-                                $fromDiscordId = $interactionUser->member->user->id;
-                                $userDiscord = $interactionUser->member->user;
+            ->setLabel("G +{$amountBet}")
+            ->setListener(
+                function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
+                    $fromDiscordId = $interactionUser->member->user->id;
+                    $userDiscord = $interactionUser->member->user;
 
-                                $this->apostarRoleta(
-                                    $fromDiscordId,
-                                    Roulette::GREEN,
-                                    $rouletteId,
-                                    $interaction,
-                                    $roulette,
-                                    $amountBet,
-                                    $gameData,
-                                    $userDiscord,
-                                    $interactionUser
-                                );
-                            },
-                            $this->discord
-                        );
+                    $this->apostarRoleta(
+                        $fromDiscordId,
+                        Roulette::GREEN,
+                        $rouletteId,
+                        $interaction,
+                        $roulette,
+                        $amountBet,
+                        $gameData,
+                        $userDiscord,
+                        $interactionUser
+                    );
+                },
+                $this->discord
+            );
 
         $buttonBlack = Button::new(Button::STYLE_SECONDARY)
-                            ->setLabel("BL +{$amountBet}")
-                            ->setListener(function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
-                                $fromDiscordId = $interactionUser->member->user->id;
-                                $userDiscord = $interactionUser->member->user;
+            ->setLabel("BL +{$amountBet}")
+            ->setListener(
+                function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
+                    $fromDiscordId = $interactionUser->member->user->id;
+                    $userDiscord = $interactionUser->member->user;
 
-                                $this->apostarRoleta(
-                                    $fromDiscordId,
-                                    Roulette::BLACK,
-                                    $rouletteId,
-                                    $interaction,
-                                    $roulette,
-                                    $amountBet,
-                                    $gameData,
-                                    $userDiscord,
-                                    $interactionUser
-                                );
-                            },
-                            $this->discord
+                    $this->apostarRoleta(
+                        $fromDiscordId,
+                        Roulette::BLACK,
+                        $rouletteId,
+                        $interaction,
+                        $roulette,
+                        $amountBet,
+                        $gameData,
+                        $userDiscord,
+                        $interactionUser
+                    );
+                },
+                $this->discord
+            );
+
+        $buttonSpin = Button::new(Button::STYLE_PRIMARY)
+            ->setLabel("Girar")
+            ->setListener(
+                function (Interaction $interactionUser) use ($interaction, $rouletteId, &$isSpinning) {
+                    $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
+                    $status = (int) $roulette[0]['status'];
+
+                    if ($this->redis->get("roulette:{$rouletteId}:spinning")) {
+                        $message = sprintf('Roleta **#%s** já está girando!', $rouletteId);
+
+                        if ($status === $this->rouletteRepository::PAID) {
+                            $message = sprintf('Roleta **#%s** já foi finalizada!', $rouletteId);
+                        }
+
+                        $interactionUser->respondWithMessage(
+                            MessageBuilder::new()->setContent($message),
+                            true
                         );
+                        return;
+                    }
+
+                    $this->finishCommand->spinRoulette($rouletteId, $interaction);
+                },
+                $this->discord
+            );
 
         $action->addComponent($buttonRed);
         $action->addComponent($buttonGreen);
         $action->addComponent($buttonBlack);
+        $action->addComponent($buttonSpin);
 
         $embed = $this->buildEmbedForRoulette($rouletteId, $roulette, $gameData);
 
@@ -147,14 +188,13 @@ class RouletteBuilder
         &$gameData,
         $userDiscord,
         Interaction $interactionUser
-    ): void
-    {
+    ): void {
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
 
         if (!$this->userRepository->userExistByDiscordId($userDiscordId)) {
             $interaction->respondWithMessage(
                 MessageBuilder::new()->setContent(
-                    'Você ainda não coleteu suas coins iniciais! Digita **/coins** e pegue suas coins! :coin::coin::coin: '
+                    'Você ainda não coleteu suas coins iniciais! Digita **/coins** e pegue suas coins! :coin:'
                 ),
                 true
             );
@@ -164,9 +204,10 @@ class RouletteBuilder
         if ($roulette[0]['status'] !== $this->rouletteRepository::OPEN) {
             $interactionUser->respondWithMessage(
                 MessageBuilder::new()->setContent(
-                    'Roleta precisa estar aberta para apostar!'),
-                    true
-                );
+                    'Roleta precisa estar aberta para apostar!'
+                ),
+                true
+            );
             return;
         }
 
@@ -176,9 +217,10 @@ class RouletteBuilder
         if (!$this->userRepository->hasAvailableCoins($userDiscordId, $amountBet)) {
             $interactionUser->respondWithMessage(
                 MessageBuilder::new()->setContent(
-                    'Você não possui coins suficientes! :crying_cat_face:'),
-                    true
-                );
+                    'Você não possui coins suficientes! :crying_cat_face:'
+                ),
+                true
+            );
             return;
         }
 
@@ -285,5 +327,4 @@ class RouletteBuilder
 
         return '➡' . implode(' ', $choices);
     }
-
 }

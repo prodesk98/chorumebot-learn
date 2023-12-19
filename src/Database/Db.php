@@ -82,7 +82,7 @@ class Db
                 $this->rollBack();
             }
 
-            die($e->getMessage());
+            echo $e->getMessage();
         }
     }
 

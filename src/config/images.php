@@ -18,7 +18,7 @@ return [
             'LIBERTADORES' => 'https://chorume.tech/imgs/libertadores.gif?v0.0.1',
         ],
         'place_bet' => 'https://chorume.tech/imgs/placebet.gif?v0.0.1',
-        'top_betters' => 'https://chorume.tech/imgs/tom.gif?v0.0.1',
+        'top_betters' => 'https://chorume.tech/imgs/forbes_chorume.png?v0.0.2',
         'master' => 'https://chorume.tech/imgs/master.gif?v0.0.1',
         'typer' => 'https://chorume.tech/imgs/typer.gif?v0.0.1',
         'gonna_press' => 'https://chorume.tech/imgs/gonna-press.gif?v0.0.1',

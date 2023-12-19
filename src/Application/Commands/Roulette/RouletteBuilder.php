@@ -159,7 +159,7 @@ class RouletteBuilder
                         return;
                     }
 
-                    $this->finishCommand->spinRoulette($rouletteId, $interaction);
+                    $this->finishCommand->spinRoulette($rouletteId, $interactionUser);
                 },
                 $this->discord
             );

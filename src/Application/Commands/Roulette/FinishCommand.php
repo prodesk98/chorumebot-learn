@@ -54,6 +54,9 @@ class FinishCommand extends Command
     {
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
 
+        var_dump($this->config['admin_role']);
+        var_dump($interaction->member->roles);
+
         if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
             $interaction->respondWithMessage(
                 MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'),
@@ -98,8 +101,8 @@ class FinishCommand extends Command
 
         $embedLoop = new Embed($this->discord);
         $embedLoop->setImage($imageRouletteSpin);
-        $embedLoop->setTitle(sprintf('ROLETA #%s ENCERRADA', $rouletteId));
-        $embedLoop->setDescription("**Sorteando um número!**");
+        $embedLoop->setTitle(sprintf("ROLETA #%s ENCERRADA", $rouletteId));
+        $embedLoop->setDescription(sprintf("**Girador:** <@%s>\n**Sorteando um número!**", $interaction->user->id));
 
         $builderLoop = new MessageBuilder();
         $builderLoop->addEmbed($embedLoop);
@@ -160,7 +163,8 @@ class FinishCommand extends Command
             $this->redis->del("roulette:{$rouletteId}:spinning");
 
             $roulettesDescription = sprintf(
-                "**Evento:** %s \n **Vencedor**: %s \n \n \n",
+                "**Girador:** <@%s>\n**Evento:** %s \n **Vencedor**: %s \n \n \n",
+                $interaction->user->id,
                 $roulette[0]['description'],
                 "{$choice}",
             );
@@ -204,9 +208,9 @@ class FinishCommand extends Command
             if (count($bets) === 0) {
                 $embednovo = new Embed($this->discord);
                 $embednovo
-                    ->setTitle(sprintf('ROLETA #%s ENCERRADA', $rouletteId))
+                    ->setTitle(sprintf("ROLETA #%s ENCERRADA", $rouletteId))
                     ->setColor('#F5D920')
-                    ->setDescription("**Resultado**: Não houveram vencedores.");
+                    ->setDescription(sprintf("**Girador:** <@%s>\n**Resultado**: Não houveram vencedores.", $interaction->user->id));
                 $embed = $embednovo;
             }
 

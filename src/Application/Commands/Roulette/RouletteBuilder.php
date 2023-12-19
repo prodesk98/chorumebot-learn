@@ -15,6 +15,9 @@ use Chorume\Application\Commands\Roulette\Player;
 use Chorume\Repository\Roulette;
 use Chorume\Repository\RouletteBet;
 use Chorume\Repository\User;
+use Discord\Builders\Components\Option;
+use Discord\Builders\Components\StringSelect;
+use Discord\Builders\Components\TextInput;
 
 class RouletteBuilder
 {
@@ -41,7 +44,8 @@ class RouletteBuilder
     public function build(Interaction $interaction, int $rouletteId): void
     {
         $builder = MessageBuilder::new();
-        $action = ActionRow::new();
+        $roulleteBetRow = ActionRow::new();
+        $roulleteBetRow2 = ActionRow::new();
         $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
         $amountBet = (int) $roulette[0]['amount'];
         $status = (int) $roulette[0]['status'];
@@ -164,16 +168,17 @@ class RouletteBuilder
                 $this->discord
             );
 
-        $action->addComponent($buttonSpin);
-        $action->addComponent($buttonRed);
-        $action->addComponent($buttonGreen);
-        $action->addComponent($buttonBlack);
+        $roulleteBetRow->addComponent($buttonSpin);
+        $roulleteBetRow2->addComponent($buttonRed);
+        $roulleteBetRow2->addComponent($buttonGreen);
+        $roulleteBetRow2->addComponent($buttonBlack);
 
         $embed = $this->buildEmbedForRoulette($rouletteId, $roulette, $gameData);
 
         $builder = new MessageBuilder();
         $builder->addEmbed($embed);
-        $builder->addComponent($action);
+        $builder->addComponent($roulleteBetRow);
+        $builder->addComponent($roulleteBetRow2);
 
         $interaction->respondWithMessage($builder, false);
     }

@@ -276,9 +276,9 @@ class RouletteBuilder
         });
 
         $embed = new Embed($this->discord);
-        $embed->setTitle("APOSTEM NA ROLETA 💰\n**[#{$rouletteId}]** {$roulette[0]['description']}")
+        $embed->setTitle(":moneybag: APOSTEM NA ROLETA")
             ->setColor(0x00ff00)
-            ->setDescription("Total: {$gameData->AmountTotal}")
+            ->setDescription(sprintf("**Roleta:** [#%s] %s\n**Total:** %s", $rouletteId, $roulette[0]['description'], $gameData->AmountTotal))
             ->setFooter("Últimos giros:\n" . $this->buildLastRoulettesChoices());
 
         $embed->addFieldValues('🟥 RED 2x', '', true)

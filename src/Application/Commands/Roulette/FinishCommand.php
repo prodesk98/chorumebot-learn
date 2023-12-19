@@ -101,8 +101,8 @@ class FinishCommand extends Command
 
         $embedLoop = new Embed($this->discord);
         $embedLoop->setImage($imageRouletteSpin);
-        $embedLoop->setTitle(sprintf("ROLETA #%s ENCERRADA", $rouletteId));
-        $embedLoop->setDescription(sprintf("**Girador:** <@%s>\n**Sorteando um número!**", $interaction->user->id));
+        $embedLoop->setTitle(":moneybag: ROLETA ENCERRADA");
+        $embedLoop->setDescription(sprintf("**Girador:** <@%s>\n**Roleta**: [#%s]\n**Sorteando um número!**", $interaction->user->id, $rouletteId));
 
         $builderLoop = new MessageBuilder();
         $builderLoop->addEmbed($embedLoop);
@@ -163,8 +163,9 @@ class FinishCommand extends Command
             $this->redis->del("roulette:{$rouletteId}:spinning");
 
             $roulettesDescription = sprintf(
-                "**Girador:** <@%s>\n**Evento:** %s \n **Vencedor**: %s \n \n \n",
+                "**Girador:** <@%s>\n**Roleta:** [#%s] %s\n **Vencedor**: %s \n \n \n",
                 $interaction->user->id,
+                $rouletteId,
                 $roulette[0]['description'],
                 "{$choice}",
             );
@@ -176,7 +177,7 @@ class FinishCommand extends Command
              */
             $embed = $this->discord->factory(Embed::class);
             $embed
-                ->setTitle(sprintf("ROLETA ENCERRADA 💰\n[%s] %s", $rouletteId, $roulette[0]['description']))
+                ->setTitle(":moneybag: ROLETA ENCERRADA")
                 ->setColor('#F5D920')
                 ->setDescription($roulettesDescription)
                 ->setImage($winnersImage);
@@ -208,9 +209,9 @@ class FinishCommand extends Command
             if (count($bets) === 0) {
                 $embednovo = new Embed($this->discord);
                 $embednovo
-                    ->setTitle(sprintf("ROLETA #%s ENCERRADA", $rouletteId))
+                    ->setTitle(":moneybag: ROLETA ENCERRADA")
                     ->setColor('#F5D920')
-                    ->setDescription(sprintf("**Girador:** <@%s>\n**Resultado**: Não houveram vencedores.", $interaction->user->id));
+                    ->setDescription(sprintf("**Girador:** <@%s>\n**Roleta:** [#%s]\n**Resultado**: Não houveram vencedores.", $interaction->user->id, $rouletteId));
                 $embed = $embednovo;
             }
 

@@ -83,6 +83,9 @@ $discord = new Discord([
     'token' => getenv('TOKEN'),
     'logger' => $logger,
     'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES,
+    'socket_options' => [
+        'dns' => '8.8.8.8',
+    ],
 ]);
 
 $userRepository = new User($db);

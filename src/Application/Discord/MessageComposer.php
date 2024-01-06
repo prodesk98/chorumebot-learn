@@ -14,10 +14,7 @@ class MessageComposer
 
     public function embed(string $title, string $message, string $image = null, string $color = null, string $file = null): MessageBuilder
     {
-        /**
-         * @var Embed $embed
-         */
-        $embed = $this->discord->factory(Embed::class);
+        $embed = new Embed($this->discord);
         $embed
             ->setTitle($title)
             ->setDescription($message);

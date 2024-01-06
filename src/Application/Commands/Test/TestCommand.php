@@ -49,4 +49,20 @@ class TestCommand extends Command
 
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Teste!'));
     }
+
+    public function getAllRoulettesResults(): void
+    {
+        // $result = $db->getInstance()->query('SELECT * FROM roulette ORDER BY id DESC LIMIT 100');
+
+        // foreach ($result as $row) {
+        //      echo match($row['choice']) {
+        //         Roulette::RED => ':red_square:',
+        //         Roulette::BLACK => ':blue_square:',
+        //         Roulette::GREEN => ':green_square:',
+        //         null => ''
+        //      };
+        // }
+
+        // exit;
+    }
 }

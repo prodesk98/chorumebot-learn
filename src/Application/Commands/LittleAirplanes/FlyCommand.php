@@ -49,10 +49,18 @@ class FlyCommand extends Command
     {
         try {
             if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
+                $this->discord->getLogger()->info(sprintf(
+                    'Little Airplanes command not allowed for user #%s (%s - %s)',
+                    $interaction->member->user->id,
+                    $interaction->member->user->username,
+                    $interaction->member->user->global_name
+                ));
+
                 $interaction->respondWithMessage(
                     MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'),
                     true
                 );
+
                 return;
             }
 
@@ -63,6 +71,13 @@ class FlyCommand extends Command
                     $this->cooldownLimit
                 )
             ) {
+                $this->discord->getLogger()->info(sprintf(
+                    'Little Airplanes cooldown reached for user #%s (%s - %s)',
+                    $interaction->member->user->id,
+                    $interaction->member->user->username,
+                    $interaction->member->user->global_name
+                ));
+
                 $interaction->respondWithMessage(
                     $this->messageComposer->embed(
                         'MAH ÔÊÊ!',
@@ -71,10 +86,18 @@ class FlyCommand extends Command
                     ),
                     true
                 );
+
                 return;
             }
 
             if ($this->userCoinHistoryRepository->reachedMaximumAirplanesToday()) {
+                $this->discord->getLogger()->info(sprintf(
+                    'Little Airplanes reached maximum amount of airplanes for user #%s (%s - %s)',
+                    $interaction->member->user->id,
+                    $interaction->member->user->username,
+                    $interaction->member->user->global_name
+                ));
+
                 $interaction->respondWithMessage(
                     $this->messageComposer->embed(
                         'MAH ÔÊÊ!',
@@ -92,6 +115,8 @@ class FlyCommand extends Command
             $members = array_keys($this->discord->getChannel($interaction->channel_id)->members->toArray());
 
             if (empty($members)) {
+                $this->discord->getLogger()->info(sprintf('Little Airplanes no members found'));
+
                 $interaction->respondWithMessage($this->messageComposer->embed(
                     'MAH ÔÊÊ!',
                     'Ma, ma, ma, mas tem ninguém nessa sala, não tem como eu jogar meus :airplane_small:aviõeszinhos... ôêê!'
@@ -99,6 +124,8 @@ class FlyCommand extends Command
             }
 
             $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $members) {
+                $this->discord->getLogger()->info(sprintf('Little Airplanes started for %s members', count($members)));
+
                 $interaction->updateOriginalResponse($this->messageComposer->embed(
                     'MAH ÔÔÊ!',
                     'Olha só quero ver, quero ver quem vai pegar os aviõeszinhos... ôêê!',
@@ -113,7 +140,8 @@ class FlyCommand extends Command
 
                 if ($channel->isVoiceBased()) {
                     if ($voice) {
-                        $this->discord->getLogger()->info('Voice client already exists, playing Little Airplanes audio...');
+                        $this->discord->getLogger()->debug('Voice client already exists, playing Little Airplanes audio...');
+
                         $voice
                             ->playFile($audio);
                             // ->done(function () use ($voice) {
@@ -121,7 +149,8 @@ class FlyCommand extends Command
                             // });
                     } else {
                         $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
-                            $this->discord->getLogger()->info('Playing Little Airplanes audio...');
+                            $this->discord->getLogger()->debug('Playing Little Airplanes audio...');
+
                             $voice
                                 ->playFile($audio);
                                 // ->done(function () use ($voice) {
@@ -150,10 +179,18 @@ class FlyCommand extends Command
 
                             $user = $this->userRepository->getByDiscordId($member);
                             $this->userCoinHistoryRepository->create($user[0]['id'], $extraValue, 'Airplane');
+
+                            $this->discord->getLogger()->debug(sprintf(
+                                'Little Airplanes won %s coins for user #%s',
+                                $extraValue,
+                                $member
+                            ));
                         }
                     }
 
                     if (empty($airplanes)) {
+                        $this->discord->getLogger()->info(sprintf('Little Airplanes no one won :('));
+
                         $interaction->updateOriginalResponse($this->messageComposer->embed(
                             'MAH ÔÔÊ!',
                             'Acho que o Roque esqueceu de fazer meus :airplane_small:aviõeszinhos... ôêê!',
@@ -189,6 +226,8 @@ class FlyCommand extends Command
                     $embed
                         ->addField(['name' => 'Nome', 'value' => $airports, 'inline' => 'true'])
                         ->addField(['name' => 'Valor (C$)', 'value' => $amount, 'inline' => 'true']);
+
+                    $this->discord->getLogger()->info(sprintf('Little Airplanes finished with %s winners', count($airplanes)));
 
                     $interaction->updateOriginalResponse(MessageBuilder::new()->addEmbed($embed));
                 });

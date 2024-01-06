@@ -8,7 +8,7 @@ use Predis\Client as RedisClient;
 use Monolog\Logger as Monolog;
 use Monolog\Level;
 use Monolog\Handler\StreamHandler;
-use Monolog\Formatter\JsonFormatter;
+use Monolog\Handler\RotatingFileHandler;
 use Discord\Discord;
 use Discord\Parts\Interactions\Command\Command;
 use Discord\WebSockets\Intents;
@@ -71,10 +71,15 @@ $redis = new RedisClient([
 $logger = new Monolog('ChorumeCoins');
 
 if (getenv('ENVIRONMENT') === 'production') {
-    $formatter = new JsonFormatter();
-    $stream = new StreamHandler(__DIR__ . '/application-json.log', Level::fromName(getenv('LOG_LEVEL')));
-    $stream->setFormatter($formatter);
-    $logger->pushHandler($stream);
+    $rotatingHandler = new RotatingFileHandler(
+        __DIR__ . '/../logs/chorumebot.log',
+        0,
+        Level::fromName(getenv('LOG_LEVEL')),
+        true,
+        0664
+    );
+    $rotatingHandler->setFilenameFormat('{date}-{filename}', 'Y/m/d');
+    $logger->pushHandler($rotatingHandler);
 }
 
 $logger->pushHandler(new StreamHandler('php://stdout', Level::fromName(getenv('LOG_LEVEL'))));
@@ -141,24 +146,24 @@ $discord->on('init', function (Discord $discord) use ($talkRepository, $redis) {
     echo "         Started at: $botStartedAt                " . PHP_EOL;
 });
 
-$discord->on(DiscordEvent::MESSAGE_CREATE       , $messageCreateEvent);
-$discord->listenCommand('test'                  , $testCommand);
-$discord->listenCommand('codigo'                , $codeCommand);
-$discord->listenCommand('coins'                 , $coinsCommand);
-$discord->listenCommand('mestre'                , $askCommand);
-$discord->listenCommand('picasso'               , $paintCommand);
-$discord->listenCommand('avioeszinhos'          , $flyCommand);
-$discord->listenCommand('transferir'            , $transferCommand);
-$discord->listenCommand(['top', 'forbes']       , $topForbesCommand);
-$discord->listenCommand(['evento', 'anunciar']  , $eventAdvertiseCommand);
-$discord->listenCommand(['aposta', 'entrar']    , $eventBetCommand);
-$discord->listenCommand(['evento', 'criar']     , $eventCreateCommand);
-$discord->listenCommand(['evento', 'fechar']    , $eventCloseCommand);
-$discord->listenCommand(['evento', 'encerrar']  , $eventFinishCommand);
-$discord->listenCommand(['evento', 'listar']    , $eventListCommand);
-$discord->listenCommand(['roleta', 'criar']     , $rouletteCreateCommand);
-$discord->listenCommand(['roleta', 'listar']    , $rouletteListCommand);
-$discord->listenCommand(['roleta', 'fechar']    , $rouletteCloseCommand);
-$discord->listenCommand(['roleta', 'girar']     , $rouletteFinishCommand);
-$discord->listenCommand(['roleta', 'apostar']   , $rouletteExposeCommand);
+$discord->on(DiscordEvent::MESSAGE_CREATE, $messageCreateEvent);
+$discord->listenCommand('test', $testCommand);
+$discord->listenCommand('codigo', $codeCommand);
+$discord->listenCommand('coins', $coinsCommand);
+$discord->listenCommand('mestre', $askCommand);
+$discord->listenCommand('picasso', $paintCommand);
+$discord->listenCommand('avioeszinhos', $flyCommand);
+$discord->listenCommand('transferir', $transferCommand);
+$discord->listenCommand(['top', 'forbes'], $topForbesCommand);
+$discord->listenCommand(['evento', 'anunciar'], $eventAdvertiseCommand);
+$discord->listenCommand(['aposta', 'entrar'], $eventBetCommand);
+$discord->listenCommand(['evento', 'criar'], $eventCreateCommand);
+$discord->listenCommand(['evento', 'fechar'], $eventCloseCommand);
+$discord->listenCommand(['evento', 'encerrar'], $eventFinishCommand);
+$discord->listenCommand(['evento', 'listar'], $eventListCommand);
+$discord->listenCommand(['roleta', 'criar'], $rouletteCreateCommand);
+$discord->listenCommand(['roleta', 'listar'], $rouletteListCommand);
+$discord->listenCommand(['roleta', 'fechar'], $rouletteCloseCommand);
+$discord->listenCommand(['roleta', 'girar'], $rouletteFinishCommand);
+$discord->listenCommand(['roleta', 'apostar'], $rouletteExposeCommand);
 $discord->run();

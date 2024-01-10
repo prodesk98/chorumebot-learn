@@ -42,6 +42,7 @@ use Chorume\Application\Commands\Roulette\FinishCommand as RouletteFinishCommand
 use Chorume\Application\Commands\Roulette\ListCommand as RouletteListCommand;
 use Chorume\Application\Commands\Test\TestCommand;
 use Chorume\Application\Events\MessageCreate;
+use Phinx\Db\Plan\Intent;
 
 $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
 $dotenv->load();
@@ -87,7 +88,7 @@ $logger->pushHandler(new StreamHandler('php://stdout', Level::fromName(getenv('L
 $discord = new Discord([
     'token' => getenv('TOKEN'),
     'logger' => $logger,
-    'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES,
+    'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES | Intents::GUILD_MESSAGES | Intents::MESSAGE_CONTENT,
     'socket_options' => [
         'dns' => '8.8.8.8',
     ],

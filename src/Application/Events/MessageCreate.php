@@ -27,7 +27,9 @@ class MessageCreate extends Event
             $this->redis->set('talks', json_encode($textTriggers), 'EX', 60);
         }
 
-        if ($found = find_in_array(strtolower($message->content), 'triggertext', $textTriggers)) {
+        $found = find_in_array(strtolower($message->content), 'triggertext', $textTriggers);
+
+        if ($found) {
             $talk = $this->talkRepository->findById($found['id']);
 
             if (empty($talk)) {
@@ -38,13 +40,11 @@ class MessageCreate extends Event
 
             switch ($talk[0]['type']) {
                 case 'media':
-                    /**
-                     * @var Embed $embed
-                     */
-                    $embed = $this->discord->factory(Embed::class);
+                    $embed = new Embed($this->discord);
                     $embed
                         ->setTitle($talkMessage->text)
                         ->setImage($talkMessage->image);
+
                     $message->channel->sendMessage(MessageBuilder::new()->addEmbed($embed));
                     break;
                 default:

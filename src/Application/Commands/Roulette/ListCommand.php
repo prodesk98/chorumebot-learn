@@ -68,7 +68,7 @@ class ListCommand extends Command
             /**
              * @var Embed $embed
              */
-            $embed = $this->discord->factory(Embed::class);
+            $embed = new Embed($this->discord);
             $embed
                 ->setTitle("ROLETAS")
                 ->setColor('#F5D920')

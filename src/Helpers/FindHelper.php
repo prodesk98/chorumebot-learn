@@ -27,10 +27,10 @@ if (!function_exists('find_role_array')) {
 }
 
 if (!function_exists('find_in_array')) {
-    function find_in_array($needle, $property, $haystack)
+    function find_in_array($needle, $column, $haystack)
     {
         foreach ($haystack as $hay) {
-            if ($hay[$property] === $needle) {
+            if ($hay[$column] === $needle) {
                 return $hay;
             }
         }

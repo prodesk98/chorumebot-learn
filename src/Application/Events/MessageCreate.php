@@ -41,9 +41,13 @@ class MessageCreate extends Event
             switch ($talk[0]['type']) {
                 case 'media':
                     $embed = new Embed($this->discord);
-                    $embed
-                        ->setTitle($talkMessage->text)
-                        ->setImage($talkMessage->image);
+                    $embed->setTitle($talkMessage->text);
+
+                    if ($talkMessage->description) {
+                        $embed->setDescription($talkMessage->description);
+                    }
+
+                    $embed->setImage($talkMessage->image);
 
                     $message->channel->sendMessage(MessageBuilder::new()->addEmbed($embed));
                     break;

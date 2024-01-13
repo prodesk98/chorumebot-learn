@@ -156,6 +156,8 @@ class AskCommand extends Command
                 $voiceEnabled = (bool) getenv('MASTER_VOICE_ENABLED');
 
                 if ($voiceEnabled) {
+                    $this->discord->getLogger()->info('Generating voice for question: ' . $question);
+
                     $audioFilename = $this->generateVoice($questionData->choices[0]->message->content);
 
                     $interaction->updateOriginalResponse(
@@ -205,7 +207,9 @@ class AskCommand extends Command
             $request = new Request('POST', 'https://api.elevenlabs.io/v1/text-to-speech/SXhqBBsJYJNySHJXyoDs', $headers, json_encode($body));
             $response = $client->send($request);
             $data = $response->getBody()->getContents();
-            $filename = sprintf("%s/../../../temp_audio/%s.mp3", __DIR__, date('d-m-Y_H-i-s-m-u'));
+            $filename = sprintf("%s/temp_audio/%s.mp3", realpath(__DIR__ . '/../../../../'), date('d-m-Y_H-i-s-m-u'));
+
+            $this->discord->getLogger()->info('Saving audio file: ' . $filename);
 
             file_put_contents($filename, $data);
 

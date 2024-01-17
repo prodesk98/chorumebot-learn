@@ -60,7 +60,7 @@ class FinishCommand extends Command
         /**
          * @var Embed $embed
          */
-        $embed = $this->discord->factory(Embed::class);
+        $embed = new Embed($this->discord);
         $embed
             ->setTitle(sprintf('EVENTO #%s ENCERRADO', $eventId))
             ->setColor('#F5D920')

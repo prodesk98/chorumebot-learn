@@ -27,10 +27,13 @@ class MessageCreate extends Event
             $this->redis->set('talks', json_encode($textTriggers), 'EX', 60);
         }
 
-        $found = find_in_array(strtolower($message->content), 'triggertext', $textTriggers);
+        $found = $this->matchTriggers(strtolower($message->content), $textTriggers);
 
         if ($found) {
-            $talk = $this->talkRepository->findById($found['id']);
+            $this->discord->getLogger()->debug("Message: $message->content");
+            $this->discord->getLogger()->debug("Matched word: {$found[0]['triggertext']}");
+
+            $talk = $this->talkRepository->findById($found[0]['id']);
 
             if (empty($talk)) {
                 return;
@@ -43,7 +46,7 @@ class MessageCreate extends Event
                     $embed = new Embed($this->discord);
                     $embed->setTitle($talkMessage->text);
 
-                    if ($talkMessage->description) {
+                    if (isset($talkMessage->description)) {
                         $embed->setDescription($talkMessage->description);
                     }
 
@@ -56,5 +59,35 @@ class MessageCreate extends Event
                     break;
             }
         }
+    }
+
+    public function matchTriggers($message, $triggers): array|bool
+    {
+        $matched = [];
+
+        foreach ($triggers as $trigger) {
+            preg_match_all("/\b{$trigger['triggertext']}\b/i", $message, $matches);
+
+            if (!empty($matches[0])) {
+                foreach ($matches[0] as $word) {
+                    if (($foundKey = array_search($word, array_column($matched, 'trigger'))) !== false) {
+                        $matched[$foundKey]['qty']++;
+                        continue;
+                    }
+
+                    $matched[] = [
+                        'id' => $trigger['id'],
+                        'trigger' => $word,
+                        'qty' => 1,
+                    ];
+                }
+            }
+        }
+
+        usort($matched, function ($a, $b) {
+            return $b['qty'] - $a['qty'];
+        });
+
+        return count($matched) > 0 ? $matched : false;
     }
 }

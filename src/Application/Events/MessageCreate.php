@@ -61,7 +61,7 @@ class MessageCreate extends Event
         }
     }
 
-    public function matchTriggers($message, $triggers): array|bool
+    public function matchTriggers(string $message, array $triggers): array|bool
     {
         $matched = [];
 

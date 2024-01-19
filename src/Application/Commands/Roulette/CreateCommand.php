@@ -56,7 +56,7 @@ class CreateCommand extends Command
             return;
         }
 
-        if ($value < 0 || $value < 1) {
+        if ($value < 1) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent("Só é possível criar roletas a partir de 1 coin!"), true);
             return;
         }

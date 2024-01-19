@@ -50,6 +50,14 @@ Join an Event bet
 
 ### /roleta apostar \<roulette id\>
 
+## Learn / Question with retrieval
+
+### /ensinar <content>
+Teaches content to the model
+
+### /perguntar <question>
+Ask a question with data recovery
+
 ## Generic
 
 ### /codigo

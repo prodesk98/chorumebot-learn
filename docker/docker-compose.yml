@@ -1,9 +1,11 @@
+version: '3.5'
+
 services:
   mysql:
     container_name: dbot-mysql
     image: mysql:8.1.0
     ports:
-      - 3306:3306
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=chorume_coins
@@ -17,7 +19,7 @@ services:
     container_name: dbot-pma
     image: phpmyadmin
     ports:
-      - 8081:80
+      - "8081:80"
     environment:
       - PMA_ARBITRARY=1
       - MEMORY_LIMIT=2048M
@@ -27,7 +29,7 @@ services:
     container_name: dbot-redis
     image: redis:7.2.0-alpine
     ports:
-      - 6379:6379
+      - "6379:6379"
     command: redis-server --save 20 1 --loglevel warning --requirepass redis
     volumes:
       - app_redis:/data
@@ -36,8 +38,8 @@ services:
     container_name: dbot-mailpit
     image: axllent/mailpit
     ports:
-      - 8025:8025
-      - 1025:1025
+      - "8025:8025"
+      - "1025:1025"
     environment:
       - TZ=America/Sao_Paulo
 networks:

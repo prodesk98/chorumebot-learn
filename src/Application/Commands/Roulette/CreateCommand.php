@@ -56,6 +56,11 @@ class CreateCommand extends Command
             return;
         }
 
+        if ($value < 1) {
+            $interaction->respondWithMessage(MessageBuilder::new()->setContent("Só é possível criar roletas a partir de 1 coin!"), true);
+            return;
+        }
+
         $this->rouletteBuilder->build($interaction, $rouletteId);
     }
 }

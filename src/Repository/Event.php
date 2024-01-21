@@ -264,8 +264,9 @@ class Event extends Repository
             $extra = rand(0, 99) < $this->eventExtraLuckyChance ? $this->extraMultiplier() : 1;
             $ownExtra = $extra > 1;
 
-            $betPayout = $winnerChoiceKey === 'A' ? round(($bet['amount'] * $oddsA), 2) : round($bet['amount'] * $oddsB, 2);
-            $betPayoutFinal = $betPayout * $extra;
+            $oddMultiplier = $winnerChoiceKey === 'A' ? round($oddsA, 2) : round($oddsB, 2);
+            $betPayout = $bet['amount'] * $oddMultiplier;
+            $betPayoutFinal = round($betPayout * $extra, 2);
 
             $this->userCoinHistoryRepository->create(
                 $bet['user_id'],

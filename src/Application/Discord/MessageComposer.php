@@ -17,7 +17,8 @@ class MessageComposer
         string $message,
         string $color = null,
         string $image = null,
-        string $file = null
+        string $file = null,
+        string $thumbnail = null
     ): MessageBuilder
     {
         $embed = new Embed($this->discord);
@@ -25,9 +26,14 @@ class MessageComposer
             ->setTitle($title)
             ->setDescription($message);
 
+        if ($thumbnail) {
+            $embed->setThumbnail($thumbnail);
+        }
+
         if ($image) {
             $embed->setImage($image);
         }
+
         if ($color) {
             $embed->setColor($color);
         }

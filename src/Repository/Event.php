@@ -46,7 +46,6 @@ class Event extends Repository
     public function all() : array
     {
         return $this->db->query("SELECT * FROM events");
-
     }
 
     public function getEventById(int $eventId) : array
@@ -273,7 +272,12 @@ class Event extends Repository
                 $betPayoutFinal,
                 'Event',
                 $eventId,
-                $ownExtra ? sprintf('Extra Lucky: %s', $extra) : null
+                json_encode([
+                    'betted' => $bet['amount'],
+                    'choice' => $bet['choice_key'],
+                    'odds' => $winnerChoiceKey === 'A' ? $oddsA : $oddsB,
+                    'extraLucky' => $ownExtra ? sprintf('Extra Lucky: %s', $extra) : null
+                ])
             );
 
             $winners[] = [

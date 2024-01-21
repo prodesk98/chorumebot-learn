@@ -66,10 +66,7 @@ class BetCommand extends Command
         }
 
         if ($this->eventBetsRepository->create($discordId, $eventId, $choiceKey, $coins)) {
-            /**
-             * @var Embed $embed
-             */
-            $embed = $this->discord->factory(Embed::class);
+            $embed = new Embed($this->discord);
             $embed
                 ->setTitle(sprintf('%s #%s', $event[0]['event_name'], $event[0]['event_id']))
                 ->setColor('#F5D920')

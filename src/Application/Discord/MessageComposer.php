@@ -12,7 +12,13 @@ class MessageComposer
     {
     }
 
-    public function embed(string $title, string $message, string $image = null, string $color = null, string $file = null): MessageBuilder
+    public function embed(
+        string $title,
+        string $message,
+        string $color = null,
+        string $image = null,
+        string $file = null
+    ): MessageBuilder
     {
         $embed = new Embed($this->discord);
         $embed

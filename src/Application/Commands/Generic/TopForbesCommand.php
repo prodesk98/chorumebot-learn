@@ -30,7 +30,7 @@ class TopForbesCommand extends Command
         /**
          * @var Embed $embed
          */
-        $embed = $this->discord->factory(Embed::class);
+        $embed = new Embed($this->discord);
         $embed
             ->setTitle(sprintf('TOP 10 FORBES'))
             ->setColor('#F5D920')

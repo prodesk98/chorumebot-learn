@@ -11,7 +11,6 @@ use Chorume\Helpers\RedisHelper;
 
 class CodeCommand extends Command
 {
-    private RedisHelper $redisHelper;
     private MessageComposer $messageComposer;
 
     public function __construct(
@@ -19,7 +18,6 @@ class CodeCommand extends Command
         private $config,
         private RedisClient $redis
     ) {
-        $this->redisHelper = new RedisHelper($redis);
         $this->messageComposer = new MessageComposer($this->discord);
     }
 

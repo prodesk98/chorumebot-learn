@@ -65,9 +65,6 @@ class ListCommand extends Command
                 );
             }
 
-            /**
-             * @var Embed $embed
-             */
             $embed = new Embed($this->discord);
             $embed
                 ->setTitle("ROLETAS")

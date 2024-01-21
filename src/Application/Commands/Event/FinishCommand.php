@@ -9,15 +9,19 @@ use Discord\Parts\Embed\Embed;
 use Chorume\Application\Commands\Command;
 use Chorume\Repository\Event;
 use Chorume\Repository\EventChoice;
+use Chorume\Application\Discord\MessageComposer;
 
 class FinishCommand extends Command
 {
+    private MessageComposer $messageComposer;
+
     public function __construct(
         private Discord $discord,
         private $config,
         private Event $eventRepository,
         private EventChoice $eventChoiceRepository
     ) {
+        $this->messageComposer = new MessageComposer($discord);
     }
 
     public function handle(Interaction $interaction): void
@@ -45,7 +49,10 @@ class FinishCommand extends Command
 
         if (count($bets) === 0) {
             $this->eventRepository->finishEvent($eventId);
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento encerrado não houveram apostas!'), true);
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento encerrado',
+                'Não houveram apostas neste evento!'
+            ), false);
             return;
         }
 
@@ -57,9 +64,6 @@ class FinishCommand extends Command
 
         $winnersImage = $this->config['images']['winners'][array_rand($this->config['images']['winners'])];
 
-        /**
-         * @var Embed $embed
-         */
         $embed = new Embed($this->discord);
         $embed
             ->setTitle(sprintf('EVENTO #%s ENCERRADO', $eventId))

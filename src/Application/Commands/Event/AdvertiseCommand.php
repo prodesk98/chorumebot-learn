@@ -40,10 +40,7 @@ class AdvertiseCommand extends Command
             sprintf('%s (x%s)', $event[0]['choices'][1]['choice_description'], number_format($eventOdds['oddsB'], 2))
         );
 
-        /**
-         * @var Embed $embed
-         */
-        $embed = $this->discord->factory(Embed::class);
+        $embed = new Embed($this->discord);
         $embed
             ->setTitle(sprintf('[#%s] %s', $event[0]['event_id'], $event[0]['event_name']))
             ->setColor('#F5D920')

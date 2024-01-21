@@ -64,9 +64,9 @@ class LearnCommand extends Command
         ) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MEU CÉREBRO ESTÁ FRITANDOOO...🥵🥵',
-                    'Calma ai senior, eu ainda estou aprendendo.',
-                    $this->config['images']['gonna_press']
+                    title: 'MEU CÉREBRO ESTÁ FRITANDOOO...🥵🥵',
+                    message: 'Calma ai senior, eu ainda estou aprendendo.',
+                    image: $this->config['images']['gonna_press']
                 ),
                 true
             );
@@ -76,9 +76,9 @@ class LearnCommand extends Command
         if (strlen($content) > $contentLimit) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MUITA COISA! EU FAÇO SENAI, NÃO HARVARD.',
-                    'Tu é escritor por acaso? Escreve menos na moralzinha!',
-                    $this->config['images']['typer']
+                    title: 'MUITA COISA! EU FAÇO SENAI, NÃO HARVARD.',
+                    message: 'Tu é escritor por acaso? Escreve menos na moralzinha!',
+                    image: $this->config['images']['typer']
                 ),
                 true
             );
@@ -91,9 +91,9 @@ class LearnCommand extends Command
             if (!$UpsertResult->success){
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
-                        'NÃO ENTENDI O SEU ENSINO',
-                        "circuitos fritando, memoria em colapso, estou explodindo...",
-                        $this->config['images']['gonna_press']
+                        title: 'NÃO ENTENDI O SEU ENSINO',
+                        message: "circuitos fritando, memoria em colapso, estou explodindo...",
+                        image: $this->config['images']['gonna_press']
                     )
                 );
                 return;
@@ -107,8 +107,8 @@ class LearnCommand extends Command
                 $this->messageComposer->embed(
                     'O SENAI ESTÁ RENDENDO',
                     $message,
-                    $this->config['images']['thinking'],
-                    '#1D80C3'
+                    '#1D80C3',
+                    $this->config['images']['thinking']
                 )
             );
         });

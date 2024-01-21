@@ -45,9 +45,9 @@ class PaintCommand extends Command
         ) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'HMMMM....',
-                    'Não confunda a pica de aço do mestre de obras com a obra de arte do mestre Picasso! Aguarde 1 minuto para fazer outra pergunta!',
-                    $this->config['images']['gonna_press']
+                    title: 'HMMMM....',
+                    message: 'Não confunda a pica de aço do mestre de obras com a obra de arte do mestre Picasso! Aguarde 1 minuto para fazer outra pergunta!',
+                    image: $this->config['images']['gonna_press']
                 ),
                 true
             );
@@ -62,9 +62,9 @@ class PaintCommand extends Command
 
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'ARTE NÃO É DE GRAÇA',
-                    $message,
-                    $this->config['images']['nomoney']
+                    title: 'ARTE NÃO É DE GRAÇA',
+                    message: $message,
+                    image: $this->config['images']['nomoney']
                 ),
                 true
             );
@@ -91,8 +91,8 @@ class PaintCommand extends Command
                     $this->messageComposer->embed(
                         'CONTEMPLE MINHA ARTE',
                         $message,
-                        $art->data[0]->url,
-                        '#1D80C3'
+                        '#1D80C3',
+                        $art->data[0]->url
                     )
                 );
 

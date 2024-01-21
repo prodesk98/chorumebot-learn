@@ -80,9 +80,9 @@ class FlyCommand extends Command
 
                 $interaction->respondWithMessage(
                     $this->messageComposer->embed(
-                        'MAH ÔÊÊ!',
-                        sprintf('Aguarde %s minutos para mandar mais aviõeszinhos... ôêê!', $this->cooldownTimer / 60),
-                        $this->config['images']['gonna_press']
+                        title: 'MAH ÔÊÊ!',
+                        message: sprintf('Aguarde %s minutos para mandar mais aviõeszinhos... ôêê!', $this->cooldownTimer / 60),
+                        image: $this->config['images']['gonna_press']
                     ),
                     true
                 );
@@ -105,8 +105,8 @@ class FlyCommand extends Command
                             'Foram **%s coins** em :airplane_small: aviõeszinhos hoje que não dava pra ver o céu oêê! Agora só amanhã rá rá ê hi hi!',
                             getenv('LITTLE_AIRPLANES_MAXIMUM_AMOUNT_DAY')
                         ),
-                        $this->config['images']['see_you_tomorrow'],
-                        '#FF0000'
+                        '#FF0000',
+                        $this->config['images']['see_you_tomorrow']
                     )
                 );
                 return;
@@ -127,9 +127,9 @@ class FlyCommand extends Command
                 $this->discord->getLogger()->info(sprintf('Little Airplanes started for %s members', count($members)));
 
                 $interaction->updateOriginalResponse($this->messageComposer->embed(
-                    'MAH ÔÔÊ!',
-                    'Olha só quero ver, quero ver quem vai pegar os aviõeszinhos... ôêê!',
-                    $this->config['images']['airplanes']
+                    title: 'MAH ÔÔÊ!',
+                    message: 'Olha só quero ver, quero ver quem vai pegar os aviõeszinhos... ôêê!',
+                    image: $this->config['images']['airplanes']
                 ));
 
                 // Little Airplanes Spinning Sound
@@ -192,9 +192,9 @@ class FlyCommand extends Command
                         $this->discord->getLogger()->info(sprintf('Little Airplanes no one won :('));
 
                         $interaction->updateOriginalResponse($this->messageComposer->embed(
-                            'MAH ÔÔÊ!',
-                            'Acho que o Roque esqueceu de fazer meus :airplane_small:aviõeszinhos... ôêê!',
-                            $this->config['images']['silvio_thats_ok'],
+                            title: 'MAH ÔÔÊ!',
+                            message: 'Acho que o Roque esqueceu de fazer meus :airplane_small:aviõeszinhos... ôêê!',
+                            image: $this->config['images']['silvio_thats_ok'],
                         ));
                         return;
                     }

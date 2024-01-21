@@ -48,7 +48,6 @@ class CoinsCommand extends Command
                     $this->messageComposer->embed(
                         'EXTRATO DE COINS',
                         'Não vai nascer dinheiro magicamente na sua conta, seu liso! Aguarde 1 minuto para ver seu extrato!',
-                        null,
                         '#FF0000'
                     )
                 );
@@ -98,8 +97,8 @@ class CoinsCommand extends Command
                 $this->messageComposer->embed(
                     'EXTRATO DE COINS',
                     $message,
-                    $image,
-                    '#F5D920'
+                    '#F5D920',
+                    $image
                 )
             );
         });

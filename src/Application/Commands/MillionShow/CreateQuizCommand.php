@@ -56,9 +56,9 @@ class CreateQuizCommand extends Command
             if (!$g->success){
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
-                        'NÃO CONSEGUI PENSAR EM ALGO',
-                        "Não foi possível criar um quiz!",
-                        $this->config['images']['gonna_press']
+                        title: 'NÃO CONSEGUI PENSAR EM ALGO',
+                        message: "Não foi possível criar um quiz!",
+                        image: $this->config['images']['gonna_press']
                     )
                 );
                 return;

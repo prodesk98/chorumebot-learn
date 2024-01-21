@@ -29,10 +29,7 @@ class TransferCommand extends Command
         $toDiscordId = $interaction->data->options['usuario']->value;
         $fromUser = $this->userRepository->getByDiscordId($fromDiscordId);
         $toUser = $this->userRepository->getByDiscordId($toDiscordId);
-        /**
-         * @var Embed $embed
-         */
-        $embed = $this->discord->factory(Embed::class);
+        $embed = new Embed($this->discord);
 
         $daysActiveAccount = (new \DateTime())->diff(new \DateTime($fromUser[0]['created_at']))->days;
 

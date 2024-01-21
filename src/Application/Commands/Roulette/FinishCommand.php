@@ -174,10 +174,7 @@ class FinishCommand extends Command
 
             $winnersImage = $this->config['images']['winners'][array_rand($this->config['images']['winners'])];
 
-            /**
-             * @var Embed $embed
-             */
-            $embed = $this->discord->factory(Embed::class);
+            $embed = new Embed($this->discord);
             $embed
                 ->setTitle(":moneybag: ROLETA ENCERRADA")
                 ->setColor('#00FF00')

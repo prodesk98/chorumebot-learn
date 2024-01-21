@@ -41,7 +41,7 @@ class BetCommand extends Command
         }
 
         if (empty($event)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf('O evento #% não existe! :crying_cat_face:', $eventId)), true);
+            $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf('O evento #%d não existe! :crying_cat_face:', $eventId)), true);
             return;
         }
 

@@ -27,6 +27,8 @@ class Event extends Repository
         self::PAID => 'Apostas pagas',
     ];
 
+    private int $eventExtraLuckyChance;
+
     public function __construct(
         $db,
         protected EventBet|null $eventBetRepository = null,
@@ -36,6 +38,7 @@ class Event extends Repository
         $this->eventBetRepository = $eventBetRepository ?? new EventBet($db);
         $this->eventChoiceRepository = $eventChoiceRepository ?? new EventChoice($db);
         $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);
+        $this->eventExtraLuckyChance = getenv('EVENT_EXTRA_LUCKY_CHANCE') * 100;
 
         parent::__construct($db);
     }
@@ -259,6 +262,8 @@ class Event extends Repository
                 continue;
             }
 
+            $extra = rand(0, 99) < $this->eventExtraLuckyChance ? $this->extraMultiplier() : 1;
+
             $betPayout = $winnerChoiceKey === 'A' ? round(($bet['amount'] * $oddsA), 2) : round($bet['amount'] * $oddsB, 2);
             $this->userCoinHistoryRepository->create($bet['user_id'], $betPayout, 'Event', $eventId);
 
@@ -266,10 +271,16 @@ class Event extends Repository
                 'discord_user_id' => $bet['discord_user_id'],
                 'discord_username' => $bet['discord_username'],
                 'choice_key' => $bet['choice_key'],
-                'earnings' => $betPayout,
+                'earnings' => $betPayout * $extra,
+                'extraLabel' => $extra > 1 ? sprintf(' (:rocket: %sx)', $extra) : false,
             ];
         }
 
         return $winners;
+    }
+
+    private function extraMultiplier(): float
+    {
+        return rand(15, 25) / 10;
     }
 }

@@ -52,7 +52,8 @@ class CreateQuizCommand extends Command
     {
         $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $theme, $amount) {
             $g = $this->generativeQuiz($theme, $amount);
-            if(!$g->success){
+
+            if (!$g->success){
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
                         'NÃO CONSEGUI PENSAR EM ALGO',
@@ -62,6 +63,7 @@ class CreateQuizCommand extends Command
                 );
                 return;
             }
+
             $quizId = $this->quizRepository->createEvent($theme, $amount, $g->truth, $g->question, $g->alternatives, $g->voice_url);
 
             if (!$quizId) {
@@ -92,7 +94,11 @@ class CreateQuizCommand extends Command
         try {
             $request = new Request('POST', sprintf("%s/million-show", getenv("LEARN_ENDPOINT")), $headers, json_encode($body));
             $response = $client->send($request);
-            return json_decode($response->getBody()->getContents());
+            $responseBody = $response->getBody()->getContents();
+
+            $this->discord->getLogger()->debug($responseBody);
+
+            return json_decode($responseBody);
         } catch (\Exception $e) {
             $this->discord->getLogger()->error($e->getMessage());
             return (object)["success" => false];

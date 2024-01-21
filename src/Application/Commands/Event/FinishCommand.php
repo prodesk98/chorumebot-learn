@@ -73,7 +73,7 @@ class FinishCommand extends Command
         foreach ($bets as $bet) {
             if ($bet['choice_key'] == $choiceKey) {
                 $winners .= sprintf("<@%s> \n", $bet['discord_user_id']);
-                $earnings .= sprintf("%s \n", $bet['earnings']);
+                $earnings .= sprintf("%s %s \n", $bet['earnings'], $bet['extraLabel']);
             }
         }
 

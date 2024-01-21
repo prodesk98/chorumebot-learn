@@ -15,7 +15,6 @@ use Predis\Client as RedisClient;
 
 class AskingCommand extends Command
 {
-
     private RedisHelper $redisHelper;
     private MessageComposer $messageComposer;
     private int $cooldownSeconds;
@@ -95,8 +94,7 @@ class AskingCommand extends Command
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
                         'NÃO ENTENDI A SUA PERGUNTA',
-                        "circuitos fritando, memoria em colapso, estou explodindo...",
-                        $this->config['images']['gonna_press']
+                        "circuitos fritando, memoria em colapso, estou explodindo..."
                     )
                 );
                 return;
@@ -147,7 +145,7 @@ class AskingCommand extends Command
             return json_decode($response->getBody()->getContents());
         } catch (\Exception $e) {
             $this->discord->getLogger()->error($e->getMessage());
-            return (object)["success" => false];
+            return (object) ["success" => false];
         }
     }
 

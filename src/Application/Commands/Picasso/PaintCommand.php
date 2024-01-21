@@ -119,7 +119,7 @@ class PaintCommand extends Command
         $body = [
             "model" => getenv('PICASSO_IMAGE_GENERATION_MODEL'),
             "prompt" => $prompt,
-            "n" => (int) getenv('PICASSO_IMAGE_NUMBERS'),
+            "n" => (int) getenv('PICASSO_IMAGE_QTY'),
         ];
 
         try {

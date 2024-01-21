@@ -266,9 +266,11 @@ class Event extends Repository
             $ownExtra = $extra > 1;
 
             $betPayout = $winnerChoiceKey === 'A' ? round(($bet['amount'] * $oddsA), 2) : round($bet['amount'] * $oddsB, 2);
+            $betPayoutFinal = $betPayout * $extra;
+
             $this->userCoinHistoryRepository->create(
                 $bet['user_id'],
-                $betPayout,
+                $betPayoutFinal,
                 'Event',
                 $eventId,
                 $ownExtra ? sprintf('Extra Lucky: %s', $extra) : null
@@ -278,7 +280,7 @@ class Event extends Repository
                 'discord_user_id' => $bet['discord_user_id'],
                 'discord_username' => $bet['discord_username'],
                 'choice_key' => $bet['choice_key'],
-                'earnings' => $betPayout * $extra,
+                'earnings' => $betPayoutFinal,
                 'extraLabel' => $ownExtra ? sprintf(' (:rocket: %sx)', $extra) : false,
             ];
         }

@@ -9,15 +9,12 @@ use Discord\Builders\Components\ActionRow;
 use Discord\Builders\Components\Button;
 use Discord\Parts\Embed\Embed;
 use Discord\Parts\Interactions\Interaction;
+use Chorume\Application\Commands\Roulette\Entities\GameData;
+use Chorume\Application\Commands\Roulette\Entities\Player;
 use Chorume\Application\Commands\Roulette\FinishCommand;
-use Chorume\Application\Commands\Roulette\GameData;
-use Chorume\Application\Commands\Roulette\Player;
 use Chorume\Repository\Roulette;
 use Chorume\Repository\RouletteBet;
 use Chorume\Repository\User;
-use Discord\Builders\Components\Option;
-use Discord\Builders\Components\StringSelect;
-use Discord\Builders\Components\TextInput;
 
 class RouletteBuilder
 {
@@ -56,6 +53,7 @@ class RouletteBuilder
                 MessageBuilder::new()->setContent('Roleta não existe!'),
                 true
             );
+
             return;
         }
 
@@ -64,6 +62,7 @@ class RouletteBuilder
                 MessageBuilder::new()->setContent('Roleta precisa estar aberta para apostar!'),
                 true
             );
+
             return;
         }
 
@@ -79,7 +78,9 @@ class RouletteBuilder
         $buttonRed = Button::new(Button::STYLE_DANGER)
             ->setLabel("R +{$amountBet}")
             ->setListener(
-                function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
+                function (Interaction $interactionUser)
+                use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData)
+                {
                     $fromDiscordId = $interactionUser->member->user->id;
                     $userDiscord = $interactionUser->member->user;
 
@@ -101,7 +102,9 @@ class RouletteBuilder
         $buttonGreen = Button::new(Button::STYLE_SUCCESS)
             ->setLabel("G +{$amountBet}")
             ->setListener(
-                function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
+                function (Interaction $interactionUser)
+                use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData)
+                {
                     $fromDiscordId = $interactionUser->member->user->id;
                     $userDiscord = $interactionUser->member->user;
 
@@ -123,7 +126,9 @@ class RouletteBuilder
         $buttonBlack = Button::new(Button::STYLE_SECONDARY)
             ->setLabel("BL +{$amountBet}")
             ->setListener(
-                function (Interaction $interactionUser) use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData) {
+                function (Interaction $interactionUser)
+                use ($interaction, $rouletteId, $roulette, $amountBet, &$gameData)
+                {
                     $fromDiscordId = $interactionUser->member->user->id;
                     $userDiscord = $interactionUser->member->user;
 
@@ -145,7 +150,8 @@ class RouletteBuilder
         $buttonSpin = Button::new(Button::STYLE_PRIMARY)
             ->setLabel("Girar")
             ->setListener(
-                function (Interaction $interactionUser) use ($interaction, $rouletteId, &$isSpinning) {
+                function (Interaction $interactionUser) use ($rouletteId)
+                {
                     $roulette = $this->rouletteRepository->getRouletteById($rouletteId);
                     $status = (int) $roulette[0]['status'];
 
@@ -160,6 +166,7 @@ class RouletteBuilder
                             MessageBuilder::new()->setContent($message),
                             true
                         );
+
                         return;
                     }
 
@@ -203,6 +210,7 @@ class RouletteBuilder
                 ),
                 true
             );
+
             return;
         }
 
@@ -213,6 +221,7 @@ class RouletteBuilder
                 ),
                 true
             );
+
             return;
         }
 
@@ -226,6 +235,7 @@ class RouletteBuilder
                 ),
                 true
             );
+
             return;
         }
 
@@ -241,7 +251,10 @@ class RouletteBuilder
         $playerFound = false;
 
         foreach ($gameData->jogadores as &$existingPlayer) {
-            if ((int) $existingPlayer->user === (int) $userId && (int) $existingPlayer->choice === (int) $choice) {
+            if (
+                (int) $existingPlayer->user === (int) $userId
+                && (int) $existingPlayer->choice === (int) $choice
+            ) {
                 $existingPlayer->bet = $existingPlayer->bet + $amountBet;
                 $playerFound = true;
                 break;
@@ -283,7 +296,12 @@ class RouletteBuilder
         $embed = new Embed($this->discord);
         $embed->setTitle(":moneybag: APOSTEM NA ROLETA")
             ->setColor('#5266ED')
-            ->setDescription(sprintf("**Roleta:** [#%s] %s\n**Total:** %s", $rouletteId, $roulette[0]['description'], $gameData->AmountTotal))
+            ->setDescription(sprintf(
+                "**Roleta:** [#%s] %s\n**Total:** %s",
+                $rouletteId,
+                $roulette[0]['description'],
+                $gameData->AmountTotal
+            ))
             ->setFooter("Últimos giros:\n" . $this->buildLastRoulettesChoices());
 
         $embed->addFieldValues('🟥 RED 2x', '', true)
@@ -323,9 +341,9 @@ class RouletteBuilder
 
         $choices = array_map(function ($arr) {
             return match ($arr['choice']) {
+                Roulette::RED => "🟥",
                 Roulette::GREEN => "🟩",
                 Roulette::BLACK => "⬛",
-                Roulette::RED => "🟥",
                 null => ""
             };
         }, $lastRoulettes);

@@ -96,7 +96,7 @@ class CoinsCommand extends Command
                 $this->messageComposer->embed(
                     title: 'Saldo',
                     message: $message,
-                    color: $currentCoins === 0 ? '#FF0000' : '#F5D920',
+                    color: $currentCoins === 0 ? '#FF0000' : '#00FF00',
                     thumbnail: $image
                 )
             );

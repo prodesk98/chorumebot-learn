@@ -18,7 +18,8 @@ class MessageComposer
         string $color = null,
         string $image = null,
         string $file = null,
-        string $thumbnail = null
+        string $thumbnail = null,
+        array $fields = []
     ): MessageBuilder
     {
         $embed = new Embed($this->discord);
@@ -36,6 +37,12 @@ class MessageComposer
 
         if ($color) {
             $embed->setColor($color);
+        }
+
+        if (count($fields) > 0) {
+            foreach ($fields as $field) {
+                $embed->addField($field);
+            }
         }
 
         $messageBuilded = MessageBuilder::new()->addEmbed($embed);

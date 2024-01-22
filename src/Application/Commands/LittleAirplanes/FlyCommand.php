@@ -199,16 +199,6 @@ class FlyCommand extends Command
                         return;
                     }
 
-                    /**
-                     * @var Embed $embed
-                     */
-                    $embed = $this->discord->factory(Embed::class);
-                    $embed
-                        ->setTitle('MAH ÔÔÊ!')
-                        ->setColor('#8FCE00')
-                        ->setDescription('Os :airplane_small:aviõeszinhos voaram pelo auditório e caíram em cima de:')
-                        ->setImage($this->config['images']['silvio_cheers']);
-
                     $airports = '';
                     $amount = '';
 
@@ -223,13 +213,20 @@ class FlyCommand extends Command
                         );
                     }
 
-                    $embed
-                        ->addField(['name' => 'Nome', 'value' => $airports, 'inline' => 'true'])
-                        ->addField(['name' => 'Valor (C$)', 'value' => $amount, 'inline' => 'true']);
-
                     $this->discord->getLogger()->info(sprintf('Little Airplanes finished with %s winners', count($airplanes)));
 
-                    $interaction->updateOriginalResponse(MessageBuilder::new()->addEmbed($embed));
+                    $interaction->updateOriginalResponse(
+                        $this->messageComposer->embed(
+                            title: 'MAH ÔÔÊ!',
+                            message: 'Os :airplane_small:aviõeszinhos voaram pelo auditório e caíram em cima de:',
+                            color: '#8FCE00',
+                            image: $this->config['images']['silvio_cheers'],
+                            fields: [
+                                ['name' => 'Nome', 'value' => $airports, 'inline' => 'true'],
+                                ['name' => 'Valor (C$)', 'value' => $amount, 'inline' => 'true']
+                            ]
+                        )
+                    );
                 });
 
                 return;

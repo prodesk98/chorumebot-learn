@@ -128,7 +128,7 @@ class TransferCommand extends Command
         $interaction->respondWithMessage(
             $this->messageComposer->embed(
                 'Trasferência realizada',
-                sprintf("Valor: **%s** coins\nDestinatário: <@%s>!", $coins, $toDiscordId),
+                sprintf("Valor: **%s** coins\nDestinatário: <@%s>", $coins, $toDiscordId),
             ),
             true
         );

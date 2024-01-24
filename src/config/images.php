@@ -18,7 +18,8 @@ return [
             'LIBERTADORES' => 'https://chorume.tech/imgs/libertadores.gif?v0.0.1',
         ],
         'place_bet' => 'https://chorume.tech/imgs/placebet.gif?v0.0.1',
-        'top_betters' => 'https://chorume.tech/imgs/forbes_chorume.png?v0.0.2',
+        'top_forbes' => 'https://chorume.tech/imgs/forbes_chorume.png?v0.0.2',
+        'top_forbes_rectangular' => 'https://chorume.tech/imgs/forbes_chorume_rectangular.png?v0.0.1',
         'master' => 'https://chorume.tech/imgs/master.gif?v0.0.1',
         'typer' => 'https://chorume.tech/imgs/typer.gif?v0.0.1',
         'gonna_press' => 'https://chorume.tech/imgs/gonna-press.gif?v0.0.1',
@@ -48,5 +49,6 @@ return [
         'silvio_cheers' => 'https://chorume.tech/imgs/silvio_cheers.gif?v0.0.1',
         'silvio_thats_ok' => 'https://chorume.tech/imgs/silvio_thats_ok.gif?v0.0.1',
         'see_you_tomorrow' => 'https://chorume.tech/imgs/see_you_tomorrow.gif?v0.0.1',
+        'steve_no' => 'https://chorume.tech/imgs/steve_no.gif?v0.0.1',
     ],
 ];

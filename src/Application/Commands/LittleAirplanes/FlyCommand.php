@@ -80,9 +80,9 @@ class FlyCommand extends Command
 
                 $interaction->respondWithMessage(
                     $this->messageComposer->embed(
-                        'MAH ÔÊÊ!',
-                        sprintf('Aguarde %s minutos para mandar mais aviõeszinhos... ôêê!', $this->cooldownTimer / 60),
-                        $this->config['images']['gonna_press']
+                        title: 'MAH ÔÊÊ!',
+                        message: sprintf('Aguarde %s minutos para mandar mais aviõeszinhos... ôêê!', $this->cooldownTimer / 60),
+                        image: $this->config['images']['gonna_press']
                     ),
                     true
                 );
@@ -105,8 +105,8 @@ class FlyCommand extends Command
                             'Foram **%s coins** em :airplane_small: aviõeszinhos hoje que não dava pra ver o céu oêê! Agora só amanhã rá rá ê hi hi!',
                             getenv('LITTLE_AIRPLANES_MAXIMUM_AMOUNT_DAY')
                         ),
-                        $this->config['images']['see_you_tomorrow'],
-                        '#FF0000'
+                        '#FF0000',
+                        $this->config['images']['see_you_tomorrow']
                     )
                 );
                 return;
@@ -127,9 +127,9 @@ class FlyCommand extends Command
                 $this->discord->getLogger()->info(sprintf('Little Airplanes started for %s members', count($members)));
 
                 $interaction->updateOriginalResponse($this->messageComposer->embed(
-                    'MAH ÔÔÊ!',
-                    'Olha só quero ver, quero ver quem vai pegar os aviõeszinhos... ôêê!',
-                    $this->config['images']['airplanes']
+                    title: 'MAH ÔÔÊ!',
+                    message: 'Olha só quero ver, quero ver quem vai pegar os aviõeszinhos... ôêê!',
+                    image: $this->config['images']['airplanes']
                 ));
 
                 // Little Airplanes Spinning Sound
@@ -192,22 +192,12 @@ class FlyCommand extends Command
                         $this->discord->getLogger()->info(sprintf('Little Airplanes no one won :('));
 
                         $interaction->updateOriginalResponse($this->messageComposer->embed(
-                            'MAH ÔÔÊ!',
-                            'Acho que o Roque esqueceu de fazer meus :airplane_small:aviõeszinhos... ôêê!',
-                            $this->config['images']['silvio_thats_ok'],
+                            title: 'MAH ÔÔÊ!',
+                            message: 'Acho que o Roque esqueceu de fazer meus :airplane_small:aviõeszinhos... ôêê!',
+                            image: $this->config['images']['silvio_thats_ok'],
                         ));
                         return;
                     }
-
-                    /**
-                     * @var Embed $embed
-                     */
-                    $embed = $this->discord->factory(Embed::class);
-                    $embed
-                        ->setTitle('MAH ÔÔÊ!')
-                        ->setColor('#8FCE00')
-                        ->setDescription('Os :airplane_small:aviõeszinhos voaram pelo auditório e caíram em cima de:')
-                        ->setImage($this->config['images']['silvio_cheers']);
 
                     $airports = '';
                     $amount = '';
@@ -223,13 +213,20 @@ class FlyCommand extends Command
                         );
                     }
 
-                    $embed
-                        ->addField(['name' => 'Nome', 'value' => $airports, 'inline' => 'true'])
-                        ->addField(['name' => 'Valor (C$)', 'value' => $amount, 'inline' => 'true']);
-
                     $this->discord->getLogger()->info(sprintf('Little Airplanes finished with %s winners', count($airplanes)));
 
-                    $interaction->updateOriginalResponse(MessageBuilder::new()->addEmbed($embed));
+                    $interaction->updateOriginalResponse(
+                        $this->messageComposer->embed(
+                            title: 'MAH ÔÔÊ!',
+                            message: 'Os :airplane_small:aviõeszinhos voaram pelo auditório e caíram em cima de:',
+                            color: '#8FCE00',
+                            image: $this->config['images']['silvio_cheers'],
+                            fields: [
+                                ['name' => 'Nome', 'value' => $airports, 'inline' => 'true'],
+                                ['name' => 'Valor (C$)', 'value' => $amount, 'inline' => 'true']
+                            ]
+                        )
+                    );
                 });
 
                 return;

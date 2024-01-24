@@ -8,11 +8,14 @@ use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Parts\Embed\Embed;
 use Chorume\Application\Commands\Command;
+use Chorume\Application\Discord\MessageComposer;
 use Chorume\Repository\User;
 use Chorume\Repository\UserCoinHistory;
 
 class TopForbesCommand extends Command
 {
+    private MessageComposer $messageComposer;
+
     public function __construct(
         private Discord $discord,
         private $config,
@@ -20,35 +23,31 @@ class TopForbesCommand extends Command
         private User $userRepository,
         private UserCoinHistory $userCoinHistoryRepository
     ) {
+        $this->messageComposer = new MessageComposer($this->discord);
     }
 
     public function handle(Interaction $interaction): void
     {
         $top10list = $this->userCoinHistoryRepository->listTop10();
-        $topBettersImage = $this->config['images']['top_betters'];
-
-        /**
-         * @var Embed $embed
-         */
-        $embed = $this->discord->factory(Embed::class);
-        $embed
-            ->setTitle(sprintf('TOP 10 FORBES'))
-            ->setColor('#F5D920')
-            ->setDescription('')
-            ->setImage($topBettersImage);
+        $topBettersImage = $this->config['images']['top_forbes_rectangular'];
 
         $users = '';
         $acc = '';
 
         foreach ($top10list as $bet) {
-            $users .= sprintf("<@%s> \n", $bet['discord_user_id']);
+            $users .= sprintf("<@%s>\n", $bet['discord_user_id']);
             $acc .= sprintf("%s \n", $bet['total_coins']);
         }
 
-        $embed
-            ->addField(['name' => 'Usuário', 'value' => $users, 'inline' => 'true'])
-            ->addField(['name' => 'Acumulado', 'value' => $acc, 'inline' => 'true']);
-
-        $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed));
+        $interaction->respondWithMessage($this->messageComposer->embed(
+            title: 'TOP 10 FORBES',
+            message: '',
+            color: '#F5D920',
+            image: $topBettersImage,
+            fields: [
+                ['name' => 'Usuário', 'value' => $users, 'inline' => true],
+                ['name' => 'Acumulado', 'value' => $acc, 'inline' => true],
+            ]
+        ), true);
     }
 }

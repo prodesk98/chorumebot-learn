@@ -49,9 +49,9 @@ class AskCommand extends Command
         ) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MESTRE ODEIA REPETIÇÕES',
-                    'Muito mais devagar aí cnpjoto, calabreso! Aguarde 1 minuto para fazer outra pergunta!',
-                    $this->config['images']['gonna_press']
+                    title: 'MESTRE ODEIA REPETIÇÕES',
+                    message: 'Muito mais devagar aí cnpjoto, calabreso! Aguarde 1 minuto para fazer outra pergunta!',
+                    image: $this->config['images']['gonna_press']
                 ),
                 true
             );
@@ -72,9 +72,9 @@ class AskCommand extends Command
 
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MESTRE NÃO É OTÁRIO',
-                    $message,
-                    $this->config['images']['nomoney']
+                    title: 'MESTRE NÃO É OTÁRIO',
+                    message: $message,
+                    image: $this->config['images']['nomoney']
                 ),
                 true
             );
@@ -84,9 +84,9 @@ class AskCommand extends Command
         if (strlen($question) > $questionLimit) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MESTRE FICOU PUTO',
-                    'Tu é escritor por acaso? Escreve menos na moralzinha!',
-                    $this->config['images']['typer']
+                    title: 'MESTRE FICOU PUTO',
+                    message: 'Tu é escritor por acaso? Escreve menos na moralzinha!',
+                    image: $this->config['images']['typer']
                 ),
                 true
             );
@@ -95,39 +95,45 @@ class AskCommand extends Command
 
         try {
             if ($boost) {
-                $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction, $question, $askCost, $questionLimit, $boostValue) {
-                    $data = $this->requestQuestion($question, $questionLimit, true);
+                $interaction->acknowledgeWithResponse(true)->then(
+                    function () use ($interaction, $question, $askCost, $questionLimit, $boostValue) {
+                        $data = $this->requestQuestion($question, $questionLimit, true);
 
-                    $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
-                    $message .= $data->choices[0]->message->content;
+                        $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
+                        $message .= $data->choices[0]->message->content;
 
-                    if ($data->choices[0]->finish_reason === 'length') {
-                        $message .= '... e bla bla bla.';
+                        if ($data->choices[0]->finish_reason === 'length') {
+                            $message .= '... e bla bla bla.';
+                        }
+
+                        $message .= sprintf("\n\n**Custo:** %s coins", $askCost);
+
+                        $interaction->user->sendMessage(
+                            $this->messageComposer->embed(
+                                'SABEDORIA DO MESTRE',
+                                $message,
+                                '#1D80C3'
+                            )
+                        );
+
+                        $interaction->updateOriginalResponse(
+                            $this->messageComposer->embed(
+                                'SABEDORIA DO MESTRE',
+                                "Respostas com **boost** vão para DM. Cheque sua DM, e a resposta está lá!",
+                                '#1D80C3'
+                            )
+                        );
+
+                        $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
+                        $this->userCoinHistoryRepository->create(
+                            $user[0]['id'],
+                            -$askCost,
+                            'Master',
+                            null,
+                            "Boost: $boostValue"
+                        );
                     }
-
-                    $message .= sprintf("\n\n**Custo:** %s coins", $askCost);
-
-                    $interaction->user->sendMessage(
-                        $this->messageComposer->embed(
-                            'SABEDORIA DO MESTRE',
-                            $message,
-                            null,
-                            '#1D80C3'
-                        )
-                    );
-
-                    $interaction->updateOriginalResponse(
-                        $this->messageComposer->embed(
-                            'SABEDORIA DO MESTRE',
-                            "Respostas com **boost** vão para DM. Cheque sua DM, e a resposta está lá!",
-                            null,
-                            '#1D80C3'
-                        )
-                    );
-
-                    $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
-                    $this->userCoinHistoryRepository->create($user[0]['id'], -$askCost, 'Master', null, "Boost: $boostValue");
-                });
+                );
 
                 return;
             }
@@ -148,7 +154,6 @@ class AskCommand extends Command
                     $this->messageComposer->embed(
                         'SABEDORIA DO MESTRE',
                         $message,
-                        null,
                         '#1D80C3'
                     )
                 );
@@ -162,11 +167,10 @@ class AskCommand extends Command
 
                     $interaction->updateOriginalResponse(
                         $this->messageComposer->embed(
-                            'SABEDORIA DO MESTRE',
-                            $message,
-                            null,
-                            '#1D80C3',
-                            $audioFilename
+                            title: 'SABEDORIA DO MESTRE',
+                            message: $message,
+                            color: '#1D80C3',
+                            file: $audioFilename
                         )
                     );
                 }
@@ -204,7 +208,7 @@ class AskCommand extends Command
         ];
 
         try {
-            $request = new Request('POST', 'https://api.elevenlabs.io/v1/text-to-speech/SXhqBBsJYJNySHJXyoDs', $headers, json_encode($body));
+            $request = new Request('POST', 'https://api.elevenlabs.io/v1/text-to-speech/' . getenv('MASTER_VOICE_ID'), $headers, json_encode($body));
             $response = $client->send($request);
             $data = $response->getBody()->getContents();
             $filename = sprintf("%s/temp_audio/%s.mp3", realpath(__DIR__ . '/../../../../'), date('d-m-Y_H-i-s-m-u'));

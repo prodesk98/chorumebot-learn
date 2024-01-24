@@ -15,7 +15,6 @@ use Predis\Client as RedisClient;
 
 class AskingCommand extends Command
 {
-
     private RedisHelper $redisHelper;
     private MessageComposer $messageComposer;
     private int $cooldownSeconds;
@@ -48,9 +47,9 @@ class AskingCommand extends Command
         ) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MEU CÉREBRO ESTÁ FRITANDOOO...🥵🥵',
-                    'Calma aí calabreso, você está perguntando demais... dá uma segurada aí.',
-                    $this->config['images']['gonna_press']
+                    title: 'MEU CÉREBRO ESTÁ FRITANDOOO...🥵🥵',
+                    message: 'Calma aí calabreso, você está perguntando demais... dá uma segurada aí.',
+                    image: $this->config['images']['gonna_press']
                 ),
                 true
             );
@@ -65,9 +64,9 @@ class AskingCommand extends Command
 
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'EU TAMBÉM PAGO BOLETOS',
-                    $message,
-                    $this->config['images']['nomoney']
+                    title: 'EU TAMBÉM PAGO BOLETOS',
+                    message: $message,
+                    image: $this->config['images']['nomoney']
                 ),
                 true
             );
@@ -77,9 +76,9 @@ class AskingCommand extends Command
         if (strlen($question) > 50) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MUITA COISA! EU FAÇO SENAI, NÃO HARVARD.',
-                    'Tu é escritor por acaso? Escreve menos na moralzinha!',
-                    $this->config['images']['typer']
+                    title: 'MUITA COISA! EU FAÇO SENAI, NÃO HARVARD.',
+                    message: 'Tu é escritor por acaso? Escreve menos na moralzinha!',
+                    image: $this->config['images']['typer']
                 ),
                 true
             );
@@ -95,8 +94,7 @@ class AskingCommand extends Command
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
                         'NÃO ENTENDI A SUA PERGUNTA',
-                        "circuitos fritando, memoria em colapso, estou explodindo...",
-                        $this->config['images']['gonna_press']
+                        "circuitos fritando, memoria em colapso, estou explodindo..."
                     )
                 );
                 return;
@@ -114,8 +112,7 @@ class AskingCommand extends Command
                 $this->messageComposer->embed(
                     'RECRUTA RESPONDE',
                     $message,
-                    null,
-                    '#1D80C3',
+                    '#1D80C3'
                 )
             );
 
@@ -147,7 +144,7 @@ class AskingCommand extends Command
             return json_decode($response->getBody()->getContents());
         } catch (\Exception $e) {
             $this->discord->getLogger()->error($e->getMessage());
-            return (object)["success" => false];
+            return (object) ["success" => false];
         }
     }
 

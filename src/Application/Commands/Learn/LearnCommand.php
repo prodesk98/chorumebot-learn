@@ -38,7 +38,6 @@ class LearnCommand extends Command
     {
         $content = $interaction->data->options['conteúdo']->value;
         $contentLimit = getenv("LEARN_CONTENT_LIMIT", 4000);
-        $learnCost = getenv("LEARN_COINS_COST", 20);
 
         if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
             $this->discord->getLogger()->info(sprintf(
@@ -65,26 +64,9 @@ class LearnCommand extends Command
         ) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MEU CÉREBRO ESTÁ FRITANDOOO...🥵🥵',
-                    'Calma ai senior, eu ainda estou aprendendo.',
-                    $this->config['images']['gonna_press']
-                ),
-                true
-            );
-            return;
-        }
-
-        if (!$this->userCoinHistoryRepository->hasAvailableCoins($interaction->member->user->id, $learnCost)) {
-            $message = sprintf(
-                "Tu não tem dinheiro pra pagar meu ensino, vai trabalhar!\n\npreciso de **%s coins** para aprender isso!",
-                $learnCost
-            );
-
-            $interaction->respondWithMessage(
-                $this->messageComposer->embed(
-                    'EU TAMBÉM PAGO BOLETOS',
-                    $message,
-                    $this->config['images']['nomoney']
+                    title: 'MEU CÉREBRO ESTÁ FRITANDOOO...🥵🥵',
+                    message: 'Calma ai senior, eu ainda estou aprendendo.',
+                    image: $this->config['images']['gonna_press']
                 ),
                 true
             );
@@ -94,45 +76,41 @@ class LearnCommand extends Command
         if (strlen($content) > $contentLimit) {
             $interaction->respondWithMessage(
                 $this->messageComposer->embed(
-                    'MUITA COISA! EU FAÇO SENAI, NÃO HARVARD.',
-                    'Tu é escritor por acaso? Escreve menos na moralzinha!',
-                    $this->config['images']['typer']
+                    title: 'MUITA COISA! EU FAÇO SENAI, NÃO HARVARD.',
+                    message: 'Tu é escritor por acaso? Escreve menos na moralzinha!',
+                    image: $this->config['images']['typer']
                 ),
                 true
             );
             return;
         }
 
-        $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction, $content, $learnCost) {
-            $UpsertResult = $this->upsert($content, $interaction->member->user->global_name);
+        $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction, $content) {
+            $UpsertResult = $this->upsert($content, $interaction->member->username);
 
             if (!$UpsertResult->success){
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
-                        'NÃO ENTENDI O SEU ENSINO',
-                        "circuitos fritando, memoria em colapso, estou explodindo...",
-                        $this->config['images']['gonna_press']
+                        title: 'NÃO ENTENDI O SEU ENSINO',
+                        message: "circuitos fritando, memoria em colapso, estou explodindo...",
+                        image: $this->config['images']['gonna_press']
                     )
                 );
                 return;
             }
 
             // retorno
-            $message = sprintf("🧠Estou aprendendo rápido...\n\n**Palavras:** %s\n**Custo:** %s coins",
-                sizeof(preg_split("/\s+/", $content)), $learnCost);
+            $message = sprintf("🧠 Estou aprendendo rápido...\n\n**Palavras:** %s",
+                sizeof(preg_split("/\s+/", $content)));
 
             $interaction->updateOriginalResponse(
                 $this->messageComposer->embed(
                     'O SENAI ESTÁ RENDENDO',
                     $message,
-                    $this->config['images']['thinking'],
-                    '#1D80C3'
+                    '#1D80C3',
+                    $this->config['images']['thinking']
                 )
             );
-
-            // registra o débito
-            $user = $this->userRepository->getByDiscordId($interaction->member->user->id);
-            $this->userCoinHistoryRepository->create($user[0]['id'], -$learnCost, 'Learn');
         });
     }
 

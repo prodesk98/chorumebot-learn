@@ -12,7 +12,7 @@ return
         'production' => [
             'adapter' => 'mysql',
             'host' => '127.0.0.1',
-            'name' => 'chorume_coins',
+            'name' => 'chorumebot',
             'user' => 'root',
             'pass' => '...',
             'port' => '3306',
@@ -21,7 +21,7 @@ return
         'development' => [
             'adapter' => 'mysql',
             'host' => '127.0.0.1',
-            'name' => 'chorume_coins',
+            'name' => 'chorumebot',
             'user' => 'root',
             'pass' => 'root',
             'port' => '3306',
@@ -30,7 +30,7 @@ return
         'testing' => [
             'adapter' => 'mysql',
             'host' => '127.0.0.1',
-            'name' => 'chorume_coins',
+            'name' => 'chorumebot',
             'user' => 'root',
             'pass' => 'root',
             'port' => '3306',

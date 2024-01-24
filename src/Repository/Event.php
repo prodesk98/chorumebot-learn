@@ -27,6 +27,8 @@ class Event extends Repository
         self::PAID => 'Apostas pagas',
     ];
 
+    private int $eventExtraLuckyChance;
+
     public function __construct(
         $db,
         protected EventBet|null $eventBetRepository = null,
@@ -36,6 +38,7 @@ class Event extends Repository
         $this->eventBetRepository = $eventBetRepository ?? new EventBet($db);
         $this->eventChoiceRepository = $eventChoiceRepository ?? new EventChoice($db);
         $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);
+        $this->eventExtraLuckyChance = getenv('EVENT_EXTRA_LUCKY_CHANCE') * 100;
 
         parent::__construct($db);
     }
@@ -43,7 +46,6 @@ class Event extends Repository
     public function all() : array
     {
         return $this->db->query("SELECT * FROM events");
-
     }
 
     public function getEventById(int $eventId) : array
@@ -259,17 +261,40 @@ class Event extends Repository
                 continue;
             }
 
-            $betPayout = $winnerChoiceKey === 'A' ? round(($bet['amount'] * $oddsA), 2) : round($bet['amount'] * $oddsB, 2);
-            $this->userCoinHistoryRepository->create($bet['user_id'], $betPayout, 'Event', $eventId);
+            $extra = rand(0, 99) < $this->eventExtraLuckyChance ? $this->extraMultiplier() : 1;
+            $ownExtra = $extra > 1;
+
+            $oddMultiplier = $winnerChoiceKey === 'A' ? round($oddsA, 2) : round($oddsB, 2);
+            $betPayout = $bet['amount'] * $oddMultiplier;
+            $betPayoutFinal = round($betPayout * $extra, 2);
+
+            $this->userCoinHistoryRepository->create(
+                $bet['user_id'],
+                $betPayoutFinal,
+                'Event',
+                $eventId,
+                json_encode([
+                    'betted' => $bet['amount'],
+                    'choice' => $bet['choice_key'],
+                    'odds' => $winnerChoiceKey === 'A' ? $oddsA : $oddsB,
+                    'extraLucky' => $ownExtra ? sprintf('Extra Lucky: %s', $extra) : null
+                ])
+            );
 
             $winners[] = [
                 'discord_user_id' => $bet['discord_user_id'],
                 'discord_username' => $bet['discord_username'],
                 'choice_key' => $bet['choice_key'],
-                'earnings' => $betPayout,
+                'earnings' => $betPayoutFinal,
+                'extraLabel' => $ownExtra ? sprintf(' (:rocket: %sx)', $extra) : false,
             ];
         }
 
         return $winners;
+    }
+
+    private function extraMultiplier(): float
+    {
+        return rand(15, 25) / 10;
     }
 }

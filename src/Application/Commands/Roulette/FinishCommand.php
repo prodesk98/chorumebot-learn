@@ -144,7 +144,9 @@ class FinishCommand extends Command
         $loop->addTimer(8, function () use ($interaction, $roulette) {
             $rouletteId = $roulette[0]['id'];
             $followUpMessageId = $this->redis->get("roulette:{$rouletteId}:lastfollowup");
-            $winnerNumber = rand(0, 14);
+            // $winnerNumber = rand(0, 14);
+            $numbers = [0,1,2,3,4,5,6,7,8,9,19,11,12,13,14];
+            $winnerNumber = array_rand($numbers);
             $winnerResult = null;
             $choice = null;
 
@@ -174,10 +176,7 @@ class FinishCommand extends Command
 
             $winnersImage = $this->config['images']['winners'][array_rand($this->config['images']['winners'])];
 
-            /**
-             * @var Embed $embed
-             */
-            $embed = $this->discord->factory(Embed::class);
+            $embed = new Embed($this->discord);
             $embed
                 ->setTitle(":moneybag: ROLETA ENCERRADA")
                 ->setColor('#00FF00')

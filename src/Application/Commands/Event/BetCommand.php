@@ -41,7 +41,7 @@ class BetCommand extends Command
         }
 
         if (empty($event)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf('O evento #% não existe! :crying_cat_face:', $eventId)), true);
+            $interaction->respondWithMessage(MessageBuilder::new()->setContent(sprintf('O evento #%d não existe! :crying_cat_face:', $eventId)), true);
             return;
         }
 
@@ -66,10 +66,7 @@ class BetCommand extends Command
         }
 
         if ($this->eventBetsRepository->create($discordId, $eventId, $choiceKey, $coins)) {
-            /**
-             * @var Embed $embed
-             */
-            $embed = $this->discord->factory(Embed::class);
+            $embed = new Embed($this->discord);
             $embed
                 ->setTitle(sprintf('%s #%s', $event[0]['event_name'], $event[0]['event_id']))
                 ->setColor('#F5D920')

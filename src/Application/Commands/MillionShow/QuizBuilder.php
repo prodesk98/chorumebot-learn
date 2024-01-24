@@ -18,7 +18,6 @@ use Predis\Client as RedisClient;
 
 class  QuizBuilder
 {
-
     function __construct(
         private Discord $discord,
         private $config,
@@ -32,8 +31,7 @@ class  QuizBuilder
 
     public function build(Interaction $interaction, int $quizId): void
     {
-        $quizBetRow = ActionRow::new();
-
+        $quizBetActionRow = ActionRow::new();
         $quiz = $this->quizRepository->getQuizById($quizId);
 
         if (empty($quiz)) {
@@ -41,10 +39,11 @@ class  QuizBuilder
                 MessageBuilder::new()->setContent('Quiz não existe!'),
                 true
             );
+
             return;
         }
 
-        $quiz = (object)$quiz[0];
+        $quiz = (object) $quiz[0];
 
         $amountBet = (int) $quiz->amount;
         $status = (int) $quiz->status;
@@ -54,6 +53,7 @@ class  QuizBuilder
                 MessageBuilder::new()->setContent('Quiz precisa estar aberta para response!'),
                 true
             );
+
             return;
         }
 
@@ -154,26 +154,28 @@ class  QuizBuilder
                 $this->discord
             );
 
-        $quizBetRow->addComponent($buttonA);
-        $quizBetRow->addComponent($buttonB);
-        $quizBetRow->addComponent($buttonC);
-        $quizBetRow->addComponent($buttonD);
+        $quizBetActionRow->addComponent($buttonA);
+        $quizBetActionRow->addComponent($buttonB);
+        $quizBetActionRow->addComponent($buttonC);
+        $quizBetActionRow->addComponent($buttonD);
 
         $embed = $this->buildEmbedForQuiz($quiz, $gameData);
 
         $builder = new MessageBuilder();
         $builder->addEmbed($embed);
-        $builder->addComponent($quizBetRow);
+        $builder->addComponent($quizBetActionRow);
         $interaction->updateOriginalResponse($builder);
 
         if ($quiz->voice_url !== null) {
             $channel = $this->discord->getChannel($interaction->channel_id);
             $voice = $this->discord->getVoiceClient($channel->guild_id);
+
             if ($channel->isVoiceBased()) {
                 $audio = $this->voiceDownload($quiz->voice_url);
+
                 if ($audio !== null) {
                     if ($voice) {
-                        $this->discord->getLogger()->info('Voice client already exists, playing roulette spin audio...');
+                        $this->discord->getLogger()->info('Voice client already exists, playing Million Show audio...');
                         try {
                             $voice->playFile($audio);
                         } catch (FileNotFoundException $e) {
@@ -181,7 +183,7 @@ class  QuizBuilder
                         }
                     } else {
                         $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($quiz, $interaction, $audio) {
-                            $this->discord->getLogger()->info('Playing Little Airplanes audio...');
+                            $this->discord->getLogger()->info('Playing Million Show audio...');
                             $voice->playFile($audio);
                         });
                     }
@@ -195,22 +197,6 @@ class  QuizBuilder
         QuizGameData &$gameData
     ): Embed
     {
-        /*$playersA = array_filter($gameData->players, function ($player) {
-            return $player->choice == Quiz::A;
-        });
-
-        $playersB = array_filter($gameData->players, function ($player) {
-            return $player->choice == Quiz::B;
-        });
-
-        $playersC = array_filter($gameData->players, function ($player) {
-            return $player->choice == Quiz::C;
-        });
-
-        $playersD = array_filter($gameData->players, function ($player) {
-            return $player->choice == Quiz::D;
-        });*/
-
         $embed = new Embed($this->discord);
         $embed->setTitle($quiz->question)
             ->setColor('#F2B90C')

@@ -46,10 +46,10 @@ class CoinsCommand extends Command
             ) {
                 $interaction->updateOriginalResponse(
                     $this->messageComposer->embed(
-                        'EXTRATO DE COINS',
-                        'Não vai nascer dinheiro magicamente na sua conta, seu liso! Aguarde 1 minuto para ver seu extrato!',
-                        null,
-                        '#FF0000'
+                        title: 'Suas coins',
+                        message: 'Não vai brotar dinheiro do nada! Aguarde 1 min para ver seu extrato!',
+                        color: '#FF0000',
+                        thumbnail: $this->config['images']['steve_no']
                     )
                 );
                 return;
@@ -63,10 +63,16 @@ class CoinsCommand extends Command
                     $interaction->member->user->id,
                     $interaction->member->user->username
                 )) {
-                    $interaction->updateOriginalResponse(MessageBuilder::new()->setContent(sprintf(
-                        'Você acabou de receber suas **%s** coins iniciais! Aposte com sabedoria :man_mage:',
-                        100
-                    )));
+                    $interaction->updateOriginalResponse(
+                        $this->messageComposer->embed(
+                            title: 'Bem vindo',
+                            message: 'Você recebeu **100** coins iniciais! Aposte sabiamente :man_mage:',
+                            color: '#F5D920',
+                            thumbnail: $this->config['images']['one_coin']
+                        )
+                    );
+
+                    return;
                 }
             }
 
@@ -79,27 +85,19 @@ class CoinsCommand extends Command
                 $currentCoins += $dailyCoins;
                 $this->userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
 
-                $message .= "Você recebeu suas **%s** coins diárias! :money_mouth:\n\n";
+                $message .= "**+%s diárias**\n";
                 $message = sprintf($message, $dailyCoins);
             }
 
-            if ($currentCoins <= 0) {
-                $message .= sprintf('Você não possui nenhuma coin, seu liso! :money_with_wings:', $currentCoins);
-                $image = $this->config['images']['nomoney'];
-            } elseif ($currentCoins > 1000) {
-                $message .= sprintf('Você possui **%s** coins!! Tá faturando hein! :moneybag: :partying_face:', $currentCoins);
-                $image = $this->config['images']['many_coins'];
-            } else {
-                $message .= sprintf('Você possui **%s** coins! :coin:', $currentCoins);
-                $image = $this->config['images']['one_coin'];
-            }
+            $message .= sprintf('**%s** coins', $currentCoins);
+            $image = $this->config['images']['one_coin'];
 
             $interaction->updateOriginalResponse(
                 $this->messageComposer->embed(
-                    'EXTRATO DE COINS',
-                    $message,
-                    $image,
-                    '#F5D920'
+                    title: 'Saldo',
+                    message: $message,
+                    color: $currentCoins === 0 ? '#FF0000' : '#00FF00',
+                    thumbnail: $image
                 )
             );
         });

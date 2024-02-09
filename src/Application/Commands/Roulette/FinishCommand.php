@@ -145,7 +145,7 @@ class FinishCommand extends Command
             $rouletteId = $roulette[0]['id'];
             $followUpMessageId = $this->redis->get("roulette:{$rouletteId}:lastfollowup");
             // $winnerNumber = rand(0, 14);
-            $numbers = [0,1,2,3,4,5,6,7,8,9,19,11,12,13,14];
+            $numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 19, 11, 12, 13, 14];
             $winnerNumber = array_rand($numbers);
             $winnerResult = null;
             $choice = null;

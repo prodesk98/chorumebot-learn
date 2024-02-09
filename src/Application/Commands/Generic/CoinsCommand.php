@@ -36,70 +36,76 @@ class CoinsCommand extends Command
 
     public function handle(Interaction $interaction): void
     {
-        $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction) {
-            if (
-                !$this->redisHelper->cooldown(
-                    'cooldown:generic:coins:' . $interaction->member->user->id,
-                    $this->cooldownSeconds,
-                    $this->cooldownTimes
-                )
-            ) {
-                $interaction->updateOriginalResponse(
-                    $this->messageComposer->embed(
-                        title: 'Suas coins',
-                        message: 'Não vai brotar dinheiro do nada! Aguarde 1 min para ver seu extrato!',
-                        color: '#FF0000',
-                        thumbnail: $this->config['images']['steve_no']
-                    )
-                );
-                return;
-            }
+        $loop = $this->discord->getLoop();
+        $loop->addTimer(0.1, function () use ($interaction) {
+            $interaction->acknowledgeWithResponse(true)->then(function () use ($interaction) {
+                $loop = $this->discord->getLoop();
+                $loop->addTimer(0.2, function () use ($interaction) {
+                    if (
+                        !$this->redisHelper->cooldown(
+                            'cooldown:generic:coins:' . $interaction->member->user->id,
+                            $this->cooldownSeconds,
+                            $this->cooldownTimes
+                        )
+                    ) {
+                        $interaction->updateOriginalResponse(
+                            $this->messageComposer->embed(
+                                title: 'Suas coins',
+                                message: 'Não vai brotar dinheiro do nada! Aguarde 1 min para ver seu extrato!',
+                                color: '#FF0000',
+                                thumbnail: $this->config['images']['steve_no']
+                            )
+                        );
+                        return;
+                    }
 
-            $discordId = $interaction->member->user->id;
-            $user = $this->userRepository->getByDiscordId($discordId);
+                    $discordId = $interaction->member->user->id;
+                    $user = $this->userRepository->getByDiscordId($discordId);
 
-            if (empty($user)) {
-                if ($this->userRepository->giveInitialCoins(
-                    $interaction->member->user->id,
-                    $interaction->member->user->username
-                )) {
+                    if (empty($user)) {
+                        if ($this->userRepository->giveInitialCoins(
+                            $interaction->member->user->id,
+                            $interaction->member->user->username
+                        )) {
+                            $interaction->updateOriginalResponse(
+                                $this->messageComposer->embed(
+                                    title: 'Bem vindo',
+                                    message: 'Você recebeu **100** coins iniciais! Aposte sabiamente :man_mage:',
+                                    color: '#F5D920',
+                                    thumbnail: $this->config['images']['one_coin']
+                                )
+                            );
+
+                            return;
+                        }
+                    }
+
+                    $coinsQuery = $this->userRepository->getCurrentCoins($interaction->member->user->id);
+                    $currentCoins = $coinsQuery[0]['total'];
+                    $dailyCoins = 100;
+                    $message = '';
+
+                    if ($this->userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
+                        $currentCoins += $dailyCoins;
+                        $this->userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
+
+                        $message .= "**+%s diárias**\n";
+                        $message = sprintf($message, $dailyCoins);
+                    }
+
+                    $message .= sprintf('**%s** coins', $currentCoins);
+                    $image = $this->config['images']['one_coin'];
+
                     $interaction->updateOriginalResponse(
                         $this->messageComposer->embed(
-                            title: 'Bem vindo',
-                            message: 'Você recebeu **100** coins iniciais! Aposte sabiamente :man_mage:',
-                            color: '#F5D920',
-                            thumbnail: $this->config['images']['one_coin']
+                            title: 'Saldo',
+                            message: $message,
+                            color: $currentCoins === 0 ? '#FF0000' : '#00FF00',
+                            thumbnail: $image
                         )
                     );
-
-                    return;
-                }
-            }
-
-            $coinsQuery = $this->userRepository->getCurrentCoins($interaction->member->user->id);
-            $currentCoins = $coinsQuery[0]['total'];
-            $dailyCoins = 100;
-            $message = '';
-
-            if ($this->userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
-                $currentCoins += $dailyCoins;
-                $this->userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
-
-                $message .= "**+%s diárias**\n";
-                $message = sprintf($message, $dailyCoins);
-            }
-
-            $message .= sprintf('**%s** coins', $currentCoins);
-            $image = $this->config['images']['one_coin'];
-
-            $interaction->updateOriginalResponse(
-                $this->messageComposer->embed(
-                    title: 'Saldo',
-                    message: $message,
-                    color: $currentCoins === 0 ? '#FF0000' : '#00FF00',
-                    thumbnail: $image
-                )
-            );
+                });
+            });
         });
     }
 }

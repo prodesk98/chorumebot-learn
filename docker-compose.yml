@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   mysql:
-    container_name: dbot-mysql
+    container_name: chorumebot-mysql
     image: mysql:8.1.0
     ports:
       - "3306:3306"
@@ -16,7 +16,7 @@ services:
       - ./docker/confs/mysql/my.cnf:/etc/mysql/my.cnf
 
   pma:
-    container_name: dbot-pma
+    container_name: chorumebot-pma
     image: phpmyadmin
     ports:
       - "8081:80"
@@ -26,7 +26,7 @@ services:
       - UPLOAD_LIMIT=2048M
 
   redis:
-    container_name: dbot-redis
+    container_name: chorumebot-redis
     image: redis:7.2.0-alpine
     ports:
       - "6379:6379"
@@ -35,7 +35,7 @@ services:
       - app_redis:/data
 
   mpit:
-    container_name: dbot-mailpit
+    container_name: chorumebot-mailpit
     image: axllent/mailpit
     ports:
       - "8025:8025"

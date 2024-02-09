@@ -43,12 +43,12 @@ class Event extends Repository
         parent::__construct($db);
     }
 
-    public function all() : array
+    public function all(): array
     {
         return $this->db->query("SELECT * FROM events");
     }
 
-    public function getEventById(int $eventId) : array
+    public function getEventById(int $eventId): array
     {
         return $this->db->query(
             "SELECT * FROM events WHERE id = :event_id",
@@ -58,7 +58,7 @@ class Event extends Repository
         );
     }
 
-    public function create(string $eventName, string $optionA, string $optionB) : bool
+    public function create(string $eventName, string $optionA, string $optionB): bool
     {
         $this->db->beginTransaction();
 
@@ -95,7 +95,7 @@ class Event extends Repository
         return $createEvent;
     }
 
-    public function closeEvent(int $eventId) : bool
+    public function closeEvent(int $eventId): bool
     {
         return $this->db->query(
             'UPDATE events SET status = :status WHERE id = :event_id',
@@ -106,7 +106,7 @@ class Event extends Repository
         );
     }
 
-    public function finishEvent(int $eventId) : bool
+    public function finishEvent(int $eventId): bool
     {
         return $this->db->query(
             'UPDATE events SET status = :status WHERE id = :event_id',
@@ -117,7 +117,7 @@ class Event extends Repository
         );
     }
 
-    public function canBet(int $eventId) : bool
+    public function canBet(int $eventId): bool
     {
         $result = $this->db->query(
             "SELECT * FROM events WHERE id = :event_id AND status NOT IN (:status_closed, :status_paid)",
@@ -131,7 +131,7 @@ class Event extends Repository
         return empty($result);
     }
 
-    public function listEventsChoicesByStatus(array $status) : array
+    public function listEventsChoicesByStatus(array $status): array
     {
         $statusKeys = implode(',', array_map(fn ($item) => ":{$item}", array_keys($status)));
 
@@ -150,7 +150,7 @@ class Event extends Repository
         );
     }
 
-    public function getEventDataById(int $eventId) : array
+    public function getEventDataById(int $eventId): array
     {
         return $this->db->query(
             "SELECT
@@ -169,22 +169,22 @@ class Event extends Repository
         );
     }
 
-    public function listEventsOpen() : array
+    public function listEventsOpen(): array
     {
         return $this->normalizeEventChoices($this->listEventsChoicesByStatus(['status_open' => self::OPEN]));
     }
 
-    public function listEventsClosed() : array
+    public function listEventsClosed(): array
     {
         return $this->normalizeEventChoices($this->listEventsChoicesByStatus(['status_closed' => self::CLOSED]));
     }
 
-    public function listEventById(int $eventId) : array
+    public function listEventById(int $eventId): array
     {
         return $this->normalizeEventChoices($this->getEventDataById($eventId));
     }
 
-    public function normalizeEventChoices(array $eventChoices) : array
+    public function normalizeEventChoices(array $eventChoices): array
     {
         return array_reduce($eventChoices, function ($acc, $item) {
             if (($subItem = array_search($item['event_name'], array_column($acc, 'event_name'))) === false) {
@@ -212,7 +212,7 @@ class Event extends Repository
         }, []);
     }
 
-    public function updateEventWithWinner(int $choiceId, int $eventId) : bool
+    public function updateEventWithWinner(int $choiceId, int $eventId): bool
     {
         return $this->db->query(
             'UPDATE events SET status = :status, winner_choice_id = :winner_choice_id WHERE id = :event_id',
@@ -224,22 +224,45 @@ class Event extends Repository
         );
     }
 
-    public function calculateOdds(int $eventId) : array
+    private function smoothProbability($amount)
+    {
+        $base = 10;
+        return log($amount + 1, $base);
+    }
+
+    public function calculateOdds(int $eventId): array
     {
         $bets = $this->eventBetRepository->getBetsByEventId($eventId);
-        $totalBetsA = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'A' ? $acc += $item['amount'] : $acc, 0);
-        $totalBetsB = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'B' ? $acc += $item['amount'] : $acc, 0);
 
-        $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1 : 1;
-        $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1 : 1;
+        $totalBetsArrayBase = [
+            'total' => 0,
+            'count' => 0
+        ];
+        $totalBetsA = array_reduce($bets, function ($acc, $item) {
+            $acc['total'] += $item['choice_key'] === 'A' ? $this->smoothProbability($item['amount']) : 0;
+            $acc['count'] += 1;
+
+            return $acc;
+        }, $totalBetsArrayBase);
+        $totalBetsB = array_reduce($bets, function ($acc, $item) {
+            $acc['total'] += $item['choice_key'] === 'B' ? $this->smoothProbability($item['amount']) : 0;
+            $acc['count'] += 1;
+
+            return $acc;
+        }, $totalBetsArrayBase);
+
+        $oddsA = $totalBetsA['total'] !== 0 ? ($totalBetsB['total'] / $totalBetsA['total']) + 1 : 1;
+        $oddsB = $totalBetsB['total'] !== 0 ? ($totalBetsA['total'] / $totalBetsB['total']) + 1 : 1;
 
         return [
             'oddsA' => $oddsA,
             'oddsB' => $oddsB,
+            'totalBetsA' => $totalBetsA['total'],
+            'totalBetsB' => $totalBetsB['total'],
         ];
     }
 
-    public function payoutEvent(int $eventId, string $winnerChoiceKey) : array
+    public function payoutEvent(int $eventId, string $winnerChoiceKey): array
     {
         $winners = [];
         $bets = $this->eventBetRepository->getBetsByEventId($eventId);

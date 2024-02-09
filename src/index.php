@@ -47,7 +47,6 @@ use Chorume\Application\Commands\Roulette\FinishCommand as RouletteFinishCommand
 use Chorume\Application\Commands\Roulette\ListCommand as RouletteListCommand;
 use Chorume\Application\Commands\Test\TestCommand;
 use Chorume\Application\Events\MessageCreate;
-use Phinx\Db\Plan\Intent;
 
 $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
 $dotenv->load();
@@ -93,7 +92,12 @@ $logger->pushHandler(new StreamHandler('php://stdout', Level::fromName(getenv('L
 $discord = new Discord([
     'token' => getenv('TOKEN'),
     'logger' => $logger,
-    'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES | Intents::GUILD_MESSAGES | Intents::MESSAGE_CONTENT,
+    'intents' =>
+        Intents::getDefaultIntents() |
+        Intents::GUILD_MEMBERS |
+        Intents::GUILD_PRESENCES |
+        Intents::GUILD_MESSAGES |
+        Intents::MESSAGE_CONTENT,
     'socket_options' => [
         'dns' => '8.8.8.8',
     ],
@@ -108,31 +112,6 @@ $eventBetsRepository = new EventBet($db);
 $rouletteRepository = new Roulette($db);
 $rouletteBetRepository = new RouletteBet($db);
 $talkRepository = new Talk($db);
-
-$messageCreateEvent = new MessageCreate($discord, $config, $redis, $talkRepository);
-$testCommand = new TestCommand($discord, $config, $redis);
-$codeCommand = new CodeCommand($discord, $config, $redis);
-$coinsCommand = new CoinsCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$askCommand = new AskCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$leanCommand = new LearnCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$askingCommand = new AskingCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$millionshowCreateCommand = new CreateQuizCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository, $quizRepository);
-$paintCommand = new PaintCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$flyCommand = new FlyCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$topForbesCommand = new TopForbesCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$transferCommand = new TransferCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository);
-$eventAdvertiseCommand = new AdvertiseCommand($discord, $config, $eventRepository, $eventChoiceRepository);
-$eventBetCommand = new BetCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository);
-$eventCreateCommand = new CreateCommand($discord, $config, $eventRepository);
-$eventCloseCommand = new CloseCommand($discord, $config, $eventRepository, $eventChoiceRepository);
-$eventFinishCommand = new FinishCommand($discord, $config, $eventRepository, $eventChoiceRepository);
-$eventListCommand = new ListCommand($discord, $config, $eventRepository, $eventChoiceRepository);
-$rouletteCreateCommand = new RouletteCreateCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository);
-$rouletteListCommand = new RouletteListCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository);
-$rouletteCloseCommand = new RouletteCloseCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository);
-$rouletteFinishCommand = new RouletteFinishCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository);
-$rouletteExposeCommand = new RouletteExposeCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository);
-
 
 $discord->on('init', function (Discord $discord) use ($talkRepository, $redis) {
     // Initialize application commands
@@ -156,27 +135,27 @@ $discord->on('init', function (Discord $discord) use ($talkRepository, $redis) {
     echo "         Started at: $botStartedAt                " . PHP_EOL;
 });
 
-$discord->on(DiscordEvent::MESSAGE_CREATE, $messageCreateEvent);
-$discord->listenCommand('test', $testCommand);
-$discord->listenCommand('codigo', $codeCommand);
-$discord->listenCommand('coins', $coinsCommand);
-$discord->listenCommand('mestre', $askCommand);
-$discord->listenCommand('ensinar', $leanCommand);
-$discord->listenCommand('perguntar', $askingCommand);
-$discord->listenCommand('picasso', $paintCommand);
-$discord->listenCommand('avioeszinhos', $flyCommand);
-$discord->listenCommand('transferir', $transferCommand);
-$discord->listenCommand(['quiz', 'criar'], $millionshowCreateCommand);
-$discord->listenCommand(['top', 'forbes'], $topForbesCommand);
-$discord->listenCommand(['evento', 'anunciar'], $eventAdvertiseCommand);
-$discord->listenCommand(['aposta', 'entrar'], $eventBetCommand);
-$discord->listenCommand(['evento', 'criar'], $eventCreateCommand);
-$discord->listenCommand(['evento', 'fechar'], $eventCloseCommand);
-$discord->listenCommand(['evento', 'encerrar'], $eventFinishCommand);
-$discord->listenCommand(['evento', 'listar'], $eventListCommand);
-$discord->listenCommand(['roleta', 'criar'], $rouletteCreateCommand);
-$discord->listenCommand(['roleta', 'listar'], $rouletteListCommand);
-$discord->listenCommand(['roleta', 'fechar'], $rouletteCloseCommand);
-$discord->listenCommand(['roleta', 'girar'], $rouletteFinishCommand);
-$discord->listenCommand(['roleta', 'apostar'], $rouletteExposeCommand);
+$discord->on(DiscordEvent::MESSAGE_CREATE, new MessageCreate($discord, $config, $redis, $talkRepository));
+$discord->listenCommand('test', new TestCommand($discord, $config, $redis));
+$discord->listenCommand('codigo', new CodeCommand($discord, $config, $redis));
+$discord->listenCommand('coins', new CoinsCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
+$discord->listenCommand('mestre', new AskCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
+$discord->listenCommand('ensinar', new LearnCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
+$discord->listenCommand('perguntar', new AskingCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
+$discord->listenCommand('picasso', new PaintCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
+$discord->listenCommand('avioeszinhos', new FlyCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
+$discord->listenCommand('transferir', new TransferCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
+$discord->listenCommand(['top', 'forbes'], new TopForbesCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
+$discord->listenCommand(['quiz', 'criar'], new CreateQuizCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository, $quizRepository));
+$discord->listenCommand(['evento', 'anunciar'], new AdvertiseCommand($discord, $config, $eventRepository, $eventChoiceRepository));
+$discord->listenCommand(['aposta', 'entrar'], new BetCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository));
+$discord->listenCommand(['evento', 'criar'], new CreateCommand($discord, $config, $eventRepository));
+$discord->listenCommand(['evento', 'fechar'], new CloseCommand($discord, $config, $eventRepository, $eventChoiceRepository));
+$discord->listenCommand(['evento', 'encerrar'], new FinishCommand($discord, $config, $eventRepository, $eventChoiceRepository));
+$discord->listenCommand(['evento', 'listar'], new ListCommand($discord, $config, $eventRepository, $eventChoiceRepository));
+$discord->listenCommand(['roleta', 'criar'], new RouletteCreateCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository));
+$discord->listenCommand(['roleta', 'listar'], new RouletteListCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository));
+$discord->listenCommand(['roleta', 'fechar'], new RouletteCloseCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository));
+$discord->listenCommand(['roleta', 'girar'], new RouletteFinishCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository));
+$discord->listenCommand(['roleta', 'apostar'], new RouletteExposeCommand($discord, $config, $redis, $userRepository, $rouletteRepository, $rouletteBetRepository));
 $discord->run();

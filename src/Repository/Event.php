@@ -192,7 +192,7 @@ class Event extends Repository
     public function normalizeEventChoices(array $eventChoices): array
     {
         return array_reduce($eventChoices, function ($acc, $item) {
-            if (($subItem = array_search($item['event_name'], array_column($acc, 'event_name'))) === false) {
+            if (($subItem = array_search($item['event_id'], array_column($acc, 'event_id'))) === false) {
                 $acc[] = [
                     'event_id' => $item['event_id'],
                     'event_name' => $item['event_name'],
@@ -260,10 +260,10 @@ class Event extends Repository
         $oddsB = $totalBetsB['total'] !== 0 ? ($totalBetsA['total'] / $totalBetsB['total']) + 1 : 1;
 
         return [
-            'oddsA' => $oddsA,
-            'oddsB' => $oddsB,
-            'totalBetsA' => $totalBetsA['total'],
-            'totalBetsB' => $totalBetsB['total'],
+            'odds_a' => $oddsA,
+            'odds_b' => $oddsB,
+            'total_bets_a' => $totalBetsA['total'],
+            'total_bets_b' => $totalBetsB['total'],
         ];
     }
 
@@ -315,17 +315,8 @@ class Event extends Repository
         $winners = [];
         $bets = $this->eventBetRepository->getBetsByEventId($eventId);
         $choiceId = $this->eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $winnerChoiceKey);
-        $totalBetsA = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'A' ? $acc += $item['amount'] : $acc, 0);
-        $totalBetsB = array_reduce($bets, fn ($acc, $item) => $item['choice_key'] === 'B' ? $acc += $item['amount'] : $acc, 0);
-
-        if ($totalBetsA === 0 && $totalBetsB === 0) {
-            return [];
-        }
-
+        $odds = $this->calculateOdds($eventId);
         $this->updateEventWithWinner($choiceId[0]['id'], $eventId);
-
-        $oddsA = $totalBetsA !== 0 ? ($totalBetsB / $totalBetsA) + 1 : 1;
-        $oddsB = $totalBetsB !== 0 ? ($totalBetsA / $totalBetsB) + 1 : 1;
 
         foreach ($bets as $bet) {
             if ($bet['choice_key'] !== $winnerChoiceKey) {
@@ -335,7 +326,7 @@ class Event extends Repository
             $extra = rand(0, 99) < $this->eventExtraLuckyChance ? $this->extraMultiplier() : 1;
             $ownExtra = $extra > 1;
 
-            $oddMultiplier = $winnerChoiceKey === 'A' ? round($oddsA, 2) : round($oddsB, 2);
+            $oddMultiplier = $winnerChoiceKey === 'A' ? round($odds['odds_a'], 2) : round($odds['odds_b'], 2);
             $betPayout = $bet['amount'] * $oddMultiplier;
             $betPayoutFinal = round($betPayout * $extra, 2);
 
@@ -347,7 +338,7 @@ class Event extends Repository
                 json_encode([
                     'betted' => $bet['amount'],
                     'choice' => $bet['choice_key'],
-                    'odds' => $winnerChoiceKey === 'A' ? $oddsA : $oddsB,
+                    'odds' => $winnerChoiceKey === 'A' ? round($odds['odds_a'], 2) : round($odds['odds_b'], 2),
                     'extraLucky' => $ownExtra ? sprintf('Extra Lucky: %s', $extra) : null
                 ])
             );

@@ -35,8 +35,16 @@ class ListCommand extends Command
         $currentPage = 1;
 
         if (empty($events)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Não há eventos abertos!'), true);
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Eventos',
+                'Nenhum evento encontrado'
+            ), true);
+            return;
         }
+
+        usort($events, function ($a, $b) {
+            return $a['event_id'] < $b['event_id'];
+        });
 
         $eventActionRow = ActionRow::new();
 
@@ -46,9 +54,6 @@ class ListCommand extends Command
                 function () use ($interaction, $events, $totalEvents, &$currentPage)
                 {
                     $previousPage = $currentPage - 1;
-
-                    var_dump('## ANTERIOR ##', $previousPage);
-                    var_dump('## TOTAL ##', $totalEvents);
 
                     if ($previousPage === 0) {
                         $interaction->acknowledge();
@@ -68,9 +73,6 @@ class ListCommand extends Command
                 function () use ($interaction, $events, $totalEvents, &$currentPage)
                 {
                     $nextPage = $currentPage + 1;
-
-                    var_dump('## PROXIMO ##', $nextPage);
-                    var_dump('## TOTAL ##', $totalEvents);
 
                     if ($nextPage > $totalEvents) {
                         $interaction->acknowledge();
@@ -97,22 +99,19 @@ class ListCommand extends Command
 
     public function buildEmbedMessage($events, $currentPage, $totalEvents): Embed
     {
-        var_dump('## CURRENT PAGE ##', $currentPage);
-        var_dump('## TOTAL EVENTS ##', $totalEvents);
-
         $event = $events[$currentPage - 1];
         $eventOdds = $this->eventRepository->calculateOdds($event['event_id']);
         $eventsDescription = sprintf(
             "**%s** \n **Status: %s** \n\n **A**: %s \n **B**: %s",
             strtoupper($event['event_name']),
             $this->eventRepository::LABEL_LONG[(int) $event['event_status']],
-            sprintf('%s (x%s)', $event['choices'][0]['choice_description'], number_format($eventOdds['oddsA'], 2)),
-            sprintf('%s (x%s)', $event['choices'][1]['choice_description'], number_format($eventOdds['oddsB'], 2))
+            sprintf('%s (x%s)', $event['choices'][0]['choice_description'], number_format($eventOdds['odds_a'], 2)),
+            sprintf('%s (x%s)', $event['choices'][1]['choice_description'], number_format($eventOdds['odds_b'], 2))
         );
 
         $messageEmbed = new Embed($this->discord);
         $messageEmbed
-            ->setTitle(sprintf('EVENTO **#%s**', $event['event_id']))
+            ->setTitle(sprintf('Evento **#%s**', $event['event_id']))
             ->setDescription($eventsDescription)
             ->setColor('#F5D920')
             ->setThumbnail($this->config['images']['event'])

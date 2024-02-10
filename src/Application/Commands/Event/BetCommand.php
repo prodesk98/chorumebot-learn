@@ -25,9 +25,9 @@ class BetCommand extends Command
     public function handle(Interaction $interaction): void
     {
         $discordId = $interaction->member->user->id;
-        $eventId = $interaction->data->options['entrar']->options['evento']->value;
-        $choiceKey = $interaction->data->options['entrar']->options['opcao']->value;
-        $coins = $interaction->data->options['entrar']->options['coins']->value;
+        $eventId = $interaction->data->options['evento']->value;
+        $choiceKey = $interaction->data->options['opcao']->value;
+        $coins = $interaction->data->options['coins']->value;
         $event = $this->eventRepository->listEventById($eventId);
 
         if (!$discordId) {

@@ -148,7 +148,7 @@ $discord->listenCommand('transferir', new TransferCommand($discord, $config, $re
 $discord->listenCommand(['top', 'forbes'], new TopForbesCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
 $discord->listenCommand(['quiz', 'criar'], new CreateQuizCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository, $quizRepository));
 $discord->listenCommand(['evento', 'anunciar'], new AdvertiseCommand($discord, $config, $eventRepository, $eventChoiceRepository));
-$discord->listenCommand(['aposta', 'entrar'], new BetCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository));
+$discord->listenCommand('apostar', new BetCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository));
 $discord->listenCommand(['evento', 'criar'], new CreateCommand($discord, $config, $eventRepository));
 $discord->listenCommand(['evento', 'fechar'], new CloseCommand($discord, $config, $eventRepository, $eventChoiceRepository));
 $discord->listenCommand(['evento', 'encerrar'], new FinishCommand($discord, $config, $eventRepository, $eventChoiceRepository));

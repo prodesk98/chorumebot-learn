@@ -36,8 +36,8 @@ class AdvertiseCommand extends Command
         $eventsDescription = sprintf(
             "**Status do Evento:** %s \n **A**: %s \n **B**: %s \n \n",
             $this->eventRepository::LABEL[$event[0]['event_status']],
-            sprintf('%s (x%s)', $event[0]['choices'][0]['choice_description'], number_format($eventOdds['oddsA'], 2)),
-            sprintf('%s (x%s)', $event[0]['choices'][1]['choice_description'], number_format($eventOdds['oddsB'], 2))
+            sprintf('%s (x%s)', $event[0]['choices'][0]['choice_description'], number_format($eventOdds['odds_a'], 2)),
+            sprintf('%s (x%s)', $event[0]['choices'][1]['choice_description'], number_format($eventOdds['odds_b'], 2))
         );
 
         $embed = new Embed($this->discord);

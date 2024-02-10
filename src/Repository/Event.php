@@ -12,12 +12,14 @@ class Event extends Repository
     public const CLOSED = 2;
     public const CANCELED = 3;
     public const PAID = 4;
+    public const DRAW = 5;
 
     public const LABEL = [
         self::OPEN => 'Aberto',
         self::CLOSED => 'Fechado',
         self::CANCELED => 'Cancelado',
         self::PAID => 'Pago',
+        self::DRAW => 'Empate',
     ];
 
     public const LABEL_LONG = [
@@ -25,6 +27,7 @@ class Event extends Repository
         self::CLOSED => 'Fechado para apostas',
         self::CANCELED => 'Cancelado',
         self::PAID => 'Apostas pagas',
+        self::DRAW => 'Empate, não houve vencedor',
     ];
 
     private int $eventExtraLuckyChance;
@@ -120,11 +123,13 @@ class Event extends Repository
     public function canBet(int $eventId): bool
     {
         $result = $this->db->query(
-            "SELECT * FROM events WHERE id = :event_id AND status NOT IN (:status_closed, :status_paid)",
+            "SELECT * FROM events WHERE id = :event_id AND status NOT IN (:status_closed, :status_canceled, :status_paid, :status_draw)",
             [
                 'event_id' => $eventId,
                 'status_closed' => self::CLOSED,
+                'status_canceled' => self::CANCELED,
                 'status_paid' => self::PAID,
+                'status_draw' => self::DRAW,
             ]
         );
 
@@ -217,7 +222,7 @@ class Event extends Repository
         return $this->db->query(
             'UPDATE events SET status = :status, winner_choice_id = :winner_choice_id WHERE id = :event_id',
             [
-                'status' => self::PAID,
+                'status' => self::DRAW,
                 'winner_choice_id' => $choiceId,
                 'event_id' => $eventId,
             ]
@@ -260,6 +265,49 @@ class Event extends Repository
             'totalBetsA' => $totalBetsA['total'],
             'totalBetsB' => $totalBetsB['total'],
         ];
+    }
+
+    public function drawEvent(int $eventId): bool
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $bets = $this->eventBetRepository->getBetsByEventId($eventId);
+
+            foreach ($bets as $bet) {
+                $rollbackBet = $this->userCoinHistoryRepository->create(
+                    $bet['user_id'],
+                    $bet['amount'],
+                    'EventBet',
+                    $eventId,
+                    json_encode([
+                        'status' => 'Draw'
+                    ])
+                );
+
+                if (!$rollbackBet) {
+                    throw new \Exception('Error rolling back bet');
+                }
+            }
+
+            $updateEvent = $this->db->query(
+                'UPDATE events SET status = :status WHERE id = :event_id',
+                [
+                    'status' => self::DRAW,
+                    'event_id' => $eventId,
+                ]
+            );
+
+            if (!$updateEvent) {
+                throw new \Exception('Error updating event');
+            }
+
+            $this->db->commit();
+
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     public function payoutEvent(int $eventId, string $winnerChoiceKey): array

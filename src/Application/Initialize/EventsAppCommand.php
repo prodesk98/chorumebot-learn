@@ -81,6 +81,10 @@ return [
                         [
                             'name' => 'B',
                             'value' => 'B'
+                        ],
+                        [
+                            'name' => 'Empate',
+                            'value' => 'Empate'
                         ]
                     ]
                 ],

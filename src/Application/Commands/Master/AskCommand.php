@@ -97,7 +97,7 @@ class AskCommand extends Command
             if ($boost) {
                 $interaction->acknowledgeWithResponse(true)->then(
                     function () use ($interaction, $question, $askCost, $questionLimit, $boostValue) {
-                        $data = $this->requestQuestion($question, $questionLimit, true);
+                        $data = $this->makeQuestion($question, $questionLimit, true);
 
                         $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
                         $message .= $data->choices[0]->message->content;
@@ -139,7 +139,7 @@ class AskCommand extends Command
             }
 
             $interaction->acknowledgeWithResponse()->then(function () use ($interaction, $question, $askCost, $boost) {
-                $questionData = $this->requestQuestion($question, getenv('MASTER_DEFAULT_TOKENS_AMOUNT_RESPONSE'));
+                $questionData = $this->makeQuestion($question, getenv('MASTER_DEFAULT_TOKENS_AMOUNT_RESPONSE'));
 
                 $message = "**Pergunta:**\n$question\n\n**Resposta:**\n";
                 $message .= $questionData->choices[0]->message->content;
@@ -223,7 +223,7 @@ class AskCommand extends Command
         }
     }
 
-    private function requestQuestion(string $question, int $tokens, bool $boost = false)
+    private function makeQuestion(string $question, int $tokens, bool $boost = false)
     {
         $client = new HttpClient([
             'exceptions' => true,

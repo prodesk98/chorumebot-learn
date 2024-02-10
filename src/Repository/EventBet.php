@@ -22,37 +22,64 @@ class EventBet extends Repository
         parent::__construct($db);
     }
 
-    public function all() : array
+    public function all(): array
     {
         return $this->db->query("SELECT * FROM events_bets");
     }
 
-    public function create(int $discordId, int $eventId, string $choiceKey, float $amount) : bool
+    public function create(int $discordId, int $eventId, string $choiceKey, float $amount): bool
     {
-        $user = $this->userRepository->getByDiscordId($discordId);
-        $choiceId = $this->eventChoiceRepository->getByEventIdAndChoice($eventId, $choiceKey);
-        $userId = $user[0]['id'];
+        try {
+            $eventRepository = new Event($this->db);
+            $user = $this->userRepository->getByDiscordId($discordId);
+            $choiceId = $this->eventChoiceRepository->getByEventIdAndChoice($eventId, $choiceKey);
+            $odds = $eventRepository->calculateOdds($eventId);
+            $userId = $user[0]['id'];
 
-        $this->db->beginTransaction();
+            $this->db->beginTransaction();
 
-        $createEvent = $this->db->query(
-            'INSERT INTO events_bets (user_id, event_id, choice_id, amount) VALUES (:user_id, :event_id, :choice_id, :amount)',
-            [
-                'user_id' => $userId,
-                'event_id' => $eventId,
-                'choice_id' => $choiceId[0]['id'],
-                'amount' => $amount,
-            ]
-        );
+            $createEvent = $this->db->query(
+                'INSERT INTO events_bets (user_id, event_id, choice_id, amount) VALUES (:user_id, :event_id, :choice_id, :amount)',
+                [
+                    'user_id' => $userId,
+                    'event_id' => $eventId,
+                    'choice_id' => $choiceId[0]['id'],
+                    'amount' => $amount,
+                ]
+            );
 
-        $createUserBetHistory = $this->userCoinHistoryRepository->create($userId, -$amount, 'Bet', $eventId);
+            if (!$createEvent) {
+                throw new \Exception('Error creating event bet');
+            }
 
-        $this->db->commit();
+            $description = [
+                'betted' => $amount,
+                'choice' => $choiceKey,
+                'odds' => $choiceKey === 'A' ? $odds['odds_a'] : $odds['odds_b'],
+            ];
 
-        return $createEvent && $createUserBetHistory;
+            $createUserBetHistory = $this->userCoinHistoryRepository->create(
+                $userId,
+                -$amount,
+                'EventBet',
+                $eventId,
+                json_encode($description)
+            );
+
+            if (!$createUserBetHistory) {
+                throw new \Exception('Error creating user bet history');
+            }
+
+            $this->db->commit();
+
+            return true;
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
     }
 
-    public function getOpenBetsByDiscordIdAndEvent(int $discordId, int $eventId) : array
+    public function getOpenBetsByDiscordIdAndEvent(int $discordId, int $eventId): array
     {
         return $this->db->query(
             sprintf("SELECT
@@ -71,14 +98,14 @@ class EventBet extends Repository
         );
     }
 
-    public function alreadyBetted(int $discordId, int $eventId) : int
+    public function alreadyBetted(int $discordId, int $eventId): int
     {
         $user = $this->userRepository->getByDiscordId($discordId);
 
         return count($this->getOpenBetsByDiscordIdAndEvent($user[0]['id'], $eventId)) > 0;
     }
 
-    public function getBetsByEventId(int $eventId) : array
+    public function getBetsByEventId(int $eventId): array
     {
         return $this->db->query(
             "SELECT

@@ -92,7 +92,7 @@ class ListCommand extends Command
             ->addEmbed($messageEmbed)
             ->addComponent($eventActionRow);
 
-        $interaction->respondWithMessage($message, false);
+        $interaction->respondWithMessage($message, true);
     }
 
     public function buildEmbedMessage($events, $currentPage, $totalEvents): Embed

@@ -34,8 +34,6 @@ class FinishCommand extends Command
         $eventId = $interaction->data->options['encerrar']->options['id']->value;
         $choiceKey = $interaction->data->options['encerrar']->options['opcao']->value;
         $event = $this->eventRepository->getEventById($eventId);
-        $choice = $this->eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $choiceKey);
-        $bets = $this->eventRepository->payoutEvent($eventId, $choiceKey);
 
         if (empty($event)) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento não existe!'), true);
@@ -46,6 +44,25 @@ class FinishCommand extends Command
             $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento precisa estar fechado para ser finalizado!'), true);
             return;
         }
+
+        if ($choiceKey === 'Empate') {
+            if (!$this->eventRepository->drawEvent($eventId)) {
+                $interaction->respondWithMessage($this->messageComposer->embed(
+                    'Erro',
+                    'Erro ao encerrar evento'
+                ), true);
+                return;
+            }
+
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento encerrado',
+                'Empate!'
+            ), false);
+            return;
+        }
+
+        $choice = $this->eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $choiceKey);
+        $bets = $this->eventRepository->payoutEvent($eventId, $choiceKey);
 
         if (count($bets) === 0) {
             $this->eventRepository->finishEvent($eventId);

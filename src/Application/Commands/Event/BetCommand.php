@@ -116,12 +116,12 @@ class BetCommand extends Command
                 $this->messageComposer->embed(
                     title: 'Aposta',
                     message: sprintf(
-                        "Você apostou **%s** chorume coins na **opção %s**.\n\nBoa sorte manolo!",
+                        "Valor **%s** coins\nOpção: **%s**\n\n",
                         $coins,
                         $choiceKey
                     ),
                     color: '#F5D920',
-                    image: $this->config['images']['place_bet']
+                    thumbnail: $this->config['images']['place_bet']
                 ),
                 true
             );

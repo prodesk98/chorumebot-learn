@@ -85,7 +85,7 @@ class CoinsCommand extends Command
 
                 if ($this->userRepository->canReceivedDailyCoins($interaction->member->user->id) && !empty($user)) {
                     $currentCoins += $dailyCoins;
-                    $this->userRepository->giveDailyCoins($interaction->member->user->id, $dailyCoins);
+                    $this->userRepository->giveCoins($interaction->member->user->id, $dailyCoins, 'Daily');
 
                     $message .= "**+%s diárias**\n";
                     $message = sprintf($message, $dailyCoins);

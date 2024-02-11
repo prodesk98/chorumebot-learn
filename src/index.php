@@ -113,7 +113,7 @@ $rouletteRepository = new Roulette($db);
 $rouletteBetRepository = new RouletteBet($db);
 $talkRepository = new Talk($db);
 
-$discord->on('init', function (Discord $discord) use ($talkRepository, $redis) {
+$discord->on('init', function (Discord $discord) use ($userRepository, $redis) {
     // Initialize application commands
     $initializeCommandsFiles = glob(__DIR__ . '/Application/Initialize/*Command.php');
 
@@ -123,6 +123,57 @@ $discord->on('init', function (Discord $discord) use ($talkRepository, $redis) {
         $command = new Command($discord, $initializeCommand);
         $discord->application->commands->save($command);
     }
+
+    $presenceChannels = explode(',', getenv('PRESENCE_EXTRA_COINS_CHANNELS'));
+    $loop = $discord->getLoop();
+    $loop->addPeriodicTimer($_ENV['PRESENCE_EXTRA_COINS_WIN_TIME'], function () use ($discord, $presenceChannels, $redis, $userRepository) {
+        foreach ($presenceChannels as $channelId) {
+            $channel = $discord->getChannel($channelId);
+
+            if (!$channel->isVoiceBased()) {
+                continue;
+            }
+
+            $presenceList = json_decode($redis->get('presence:' . $channelId) ?? '[]');
+            $presenceNewList = [];
+            $membersList = $channel->members->toArray();
+
+            foreach ($membersList as $member) {
+                if ($member['user']->bot) {
+                    continue;
+                }
+
+                $found = array_search($member['user']->id, array_column($presenceList, 'id'));
+
+                if (!$found) {
+                    $presenceNewList[] = [
+                        'id' => $member['user']->id,
+                        'username' => $member['user']->username,
+                        'global_name' => $member['user']->global_name,
+                        'presence' => time(),
+                        'accumulated' => 0,
+                    ];
+                } else {
+                    $currentPresence = $presenceList[$found]->presence;
+                    $presenceDiff = time() - $currentPresence;
+
+                    if ($presenceDiff >= $_ENV['PRESENCE_EXTRA_COINS_WIN_TIME']) {
+                        $presenceList[$found]->presence = time();
+
+                        if (!$member->self_deaf) {
+                            $presenceList[$found]->accumulated += $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'];
+                            $presenceNewList[] = $presenceList[$found];
+                            $userRepository->giveCoins($member['user']->id, $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'], 'Presence', json_encode($presenceList[$found]));
+                        }
+                    } else {
+                        $presenceNewList[] = $presenceList[$found];
+                    }
+                }
+            }
+
+            $redis->set('presence:' . $channelId, json_encode($presenceNewList));
+        }
+    });
 
     $botStartedAt = date('Y-m-d H:i:s');
 

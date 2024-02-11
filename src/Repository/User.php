@@ -9,7 +9,7 @@ class User extends Repository
         return $this->db->query("SELECT * FROM users");
     }
 
-    public function getByDiscordId(int $discordId) : array
+    public function getByDiscordId(int $discordId): array
     {
         return $this->db->query(
             "SELECT * FROM users WHERE discord_user_id = :discord_user_id",
@@ -37,7 +37,7 @@ class User extends Repository
         return empty($result);
     }
 
-    public function giveInitialCoins(int $discordId, $discordUsername) : bool
+    public function giveInitialCoins(int $discordId, $discordUsername): bool
     {
         $createUser = $this->db->query(
             'INSERT INTO users (discord_user_id, discord_username, received_initial_coins) VALUES (:discord_user_id, :discord_username, :received_initial_coins)',
@@ -60,21 +60,26 @@ class User extends Repository
         return $giveCoins;
     }
 
-    public function giveDailyCoins(int $discordId, float $amount) : bool
+    public function giveCoins(int $discordId, float $amount, string $type, string $description = null): bool
     {
         $user = $this->getByDiscordId($discordId);
 
+        if (empty($user)) {
+            return false;
+        }
+
         return $this->db->query(
-            'INSERT INTO users_coins_history (`user_id`, `amount`, `type`) VALUES (:user_id, :amount, :type)',
+            'INSERT INTO users_coins_history (`user_id`, `amount`, `type`, `description`) VALUES (:user_id, :amount, :type, :description)',
             [
                 'user_id' => $user[0]['id'],
                 'amount' => $amount,
-                'type' => 'Daily'
+                'type' => $type,
+                'description' => $description
             ]
         );
     }
 
-    public function canReceivedDailyCoins(int $discordId) : bool
+    public function canReceivedDailyCoins(int $discordId): bool
     {
         $result = $this->db->query(
             "SELECT
@@ -94,7 +99,7 @@ class User extends Repository
         return empty($result);
     }
 
-    public function getCurrentCoins(int $discordId) : array
+    public function getCurrentCoins(int $discordId): array
     {
         return $this->db->query(
             "SELECT
@@ -109,7 +114,7 @@ class User extends Repository
         );
     }
 
-    public function hasAvailableCoins(int $discordId, int $amount) : bool
+    public function hasAvailableCoins(int $discordId, int $amount): bool
     {
         $result = $this->db->query(
             "SELECT
@@ -127,7 +132,7 @@ class User extends Repository
         return $result[0]['total'] >= $amount;
     }
 
-    public function userExistByDiscordId(int $discordId) : bool
+    public function userExistByDiscordId(int $discordId): bool
     {
         $result = $this->db->query(
             "SELECT * FROM users WHERE discord_user_id = :discord_user_id",

@@ -126,7 +126,7 @@ $discord->on('init', function (Discord $discord) use ($userRepository, $redis) {
 
     $presenceChannels = explode(',', getenv('PRESENCE_EXTRA_COINS_CHANNELS'));
     $loop = $discord->getLoop();
-    $loop->addPeriodicTimer($_ENV['PRESENCE_EXTRA_COINS_WIN_TIME'], function () use ($discord, $presenceChannels, $redis, $userRepository) {
+    $loop->addPeriodicTimer($_ENV['PRESENCE_EXTRA_COINS_CHECK_TIME'], function () use ($discord, $presenceChannels, $redis, $userRepository) {
         foreach ($presenceChannels as $channelId) {
             $channel = $discord->getChannel($channelId);
 

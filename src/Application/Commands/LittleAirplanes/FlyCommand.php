@@ -140,20 +140,12 @@ class FlyCommand extends Command
                     if ($voice) {
                         $this->discord->getLogger()->debug('Voice client already exists, playing Little Airplanes audio...');
 
-                        $voice
-                            ->playFile($audio);
-                            // ->done(function () use ($voice) {
-                            //     $voice->close();
-                            // });
+                        $voice->playFile($audio);
                     } else {
                         $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
                             $this->discord->getLogger()->debug('Playing Little Airplanes audio...');
 
-                            $voice
-                                ->playFile($audio);
-                                // ->done(function () use ($voice) {
-                                //     $voice->close();
-                                // });
+                            $voice->playFile($audio);
                         });
                     }
                 }
@@ -163,6 +155,10 @@ class FlyCommand extends Command
                     $airplanes = [];
 
                     foreach ($members as $member) {
+                        $isDeaf = $this->discord->getChannel($interaction->channel_id)->members[$member]->self_deaf;
+
+                        if ($isDeaf) continue;
+
                         if (mt_rand(0, 99) < $this->extraValueProbability * 100) {
                             if (!$this->userRepository->userExistByDiscordId($member)) continue;
 

@@ -222,7 +222,7 @@ class Event extends Repository
         return $this->db->query(
             'UPDATE events SET status = :status, winner_choice_id = :winner_choice_id WHERE id = :event_id',
             [
-                'status' => self::DRAW,
+                'status' => self::PAID,
                 'winner_choice_id' => $choiceId,
                 'event_id' => $eventId,
             ]

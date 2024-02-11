@@ -57,15 +57,15 @@ class FinishCommand extends Command
         if ($choiceKey === 'Empate') {
             if (!$this->eventRepository->drawEvent($eventId)) {
                 $interaction->respondWithMessage($this->messageComposer->embed(
-                    'Erro',
+                    'Evento',
                     'Erro ao encerrar evento'
                 ), true);
                 return;
             }
 
             $interaction->respondWithMessage($this->messageComposer->embed(
-                'Evento encerrado',
-                'Empate!'
+                'Evento',
+                sprintf('Evento: #%s %s\nResultado: Empate!\n\nApostas devolvidas', $eventId, $event[0]['name'])
             ), false);
             return;
         }
@@ -76,7 +76,7 @@ class FinishCommand extends Command
         if (count($bets) === 0) {
             $this->eventRepository->finishEvent($eventId);
             $interaction->respondWithMessage($this->messageComposer->embed(
-                'Evento encerrado',
+                'Evento',
                 'Não houveram apostas neste evento!'
             ), false);
             return;
@@ -89,10 +89,9 @@ class FinishCommand extends Command
         );
 
         $winnersImage = $this->config['images']['winners'][array_rand($this->config['images']['winners'])];
-
         $embed = new Embed($this->discord);
         $embed
-            ->setTitle(sprintf('EVENTO #%s ENCERRADO', $eventId))
+            ->setTitle('Evento')
             ->setColor('#F5D920')
             ->setDescription($eventsDescription)
             ->setImage($winnersImage);

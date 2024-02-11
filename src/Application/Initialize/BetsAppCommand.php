@@ -4,7 +4,7 @@ use Discord\Parts\Interactions\Command\Option;
 
 return [
     'name' => 'apostar',
-    'description' => 'Gerencia apostas de eventos',
+    'description' => 'Apostar nos eventos abertos',
     'options' => [
         [
             'type' => Option::INTEGER,

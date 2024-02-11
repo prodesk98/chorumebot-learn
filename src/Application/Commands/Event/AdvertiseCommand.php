@@ -42,7 +42,7 @@ class AdvertiseCommand extends Command
          $audio = __DIR__ . '/../../../Audio/rumble.mp3';
          $voice = $this->discord->getVoiceClient($channel->guild_id);
 
-         if ($channel->isVoiceBased()) {
+         if ($channel->isVoiceBased() && $bannerKey === 'UFC') {
              if ($voice) {
                  $this->discord->getLogger()->debug('Voice client already exists, playing Rumble audio...');
 

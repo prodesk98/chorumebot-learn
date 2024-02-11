@@ -5,6 +5,7 @@ namespace Chorume\Application\Commands\Roulette;
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
+use Discord\Voice\VoiceClient;
 use Chorume\Application\Commands\Command;
 use Chorume\Application\Commands\Roulette\RouletteBuilder;
 use Chorume\Repository\Roulette;
@@ -59,6 +60,25 @@ class CreateCommand extends Command
         if ($value < 1) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent("Só é possível criar roletas a partir de 1 coin!"), true);
             return;
+        }
+
+        // Little Airplanes Spinning Sound
+        $channel = $this->discord->getChannel($interaction->channel_id);
+        $audio = __DIR__ . '/../../../Audio/roulette_create_' . rand(1, 2) . '.mp3';
+        $voice = $this->discord->getVoiceClient($channel->guild_id);
+
+        if ($channel->isVoiceBased()) {
+            if ($voice) {
+                $this->discord->getLogger()->debug('Voice client already exists, playing Roulette Create audio...');
+
+                $voice->playFile($audio);
+            } else {
+                $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+                    $this->discord->getLogger()->debug('Playing Roulette Create audio...');
+
+                    $voice->playFile($audio);
+                });
+            }
         }
 
         $this->rouletteBuilder->build($interaction, $rouletteId);

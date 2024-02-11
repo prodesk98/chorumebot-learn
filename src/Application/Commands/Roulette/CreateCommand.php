@@ -64,7 +64,7 @@ class CreateCommand extends Command
 
         // Little Airplanes Spinning Sound
         $channel = $this->discord->getChannel($interaction->channel_id);
-        $audio = __DIR__ . '/../../../Audio/roulette_create_' . rand(1, 2) . '.mp3';
+        $audio = __DIR__ . '/../../../Audio/roulette_create_' . rand(1, 5) . '.mp3';
         $voice = $this->discord->getVoiceClient($channel->guild_id);
 
         if ($channel->isVoiceBased()) {

@@ -27,7 +27,10 @@ class FinishCommand extends Command
     public function handle(Interaction $interaction): void
     {
         if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento',
+                'Você não tem permissão para usar este comando!'
+            ), true);
             return;
         }
 
@@ -36,12 +39,18 @@ class FinishCommand extends Command
         $event = $this->eventRepository->getEventById($eventId);
 
         if (empty($event)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento não existe!'), true);
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento',
+                'Evento não existe!'
+            ), true);
             return;
         }
 
         if ($event[0]['status'] !== $this->eventRepository::CLOSED) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento precisa estar fechado para ser finalizado!'), true);
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento',
+                'Evento precisa estar fechado para ser finalizado!'
+            ), true);
             return;
         }
 

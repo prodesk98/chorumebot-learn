@@ -23,6 +23,7 @@ class BetCommand extends Command
         private Event $eventRepository,
         private EventBet $eventBetsRepository
     ) {
+        $this->messageComposer = new MessageComposer($discord);
     }
 
     public function handle(Interaction $interaction): void

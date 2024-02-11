@@ -3,7 +3,6 @@
 namespace Chorume\Application\Commands\Event;
 
 use Discord\Discord;
-use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
 use Chorume\Application\Commands\Command;
 use Chorume\Repository\Event;

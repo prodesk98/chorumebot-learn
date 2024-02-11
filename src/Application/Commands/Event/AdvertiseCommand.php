@@ -9,15 +9,19 @@ use Discord\Parts\Embed\Embed;
 use Chorume\Application\Commands\Command;
 use Chorume\Repository\Event;
 use Chorume\Repository\EventChoice;
+use Chorume\Application\Discord\MessageComposer;
 
 class AdvertiseCommand extends Command
 {
+    private MessageComposer $messageComposer;
+
     public function __construct(
         private Discord $discord,
         private $config,
         private Event $eventRepository,
         private EventChoice $eventChoiceRepository
     ) {
+        $this->messageComposer = new MessageComposer($discord);
     }
 
     public function handle(Interaction $interaction): void

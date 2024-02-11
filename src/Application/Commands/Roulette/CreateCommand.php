@@ -62,7 +62,7 @@ class CreateCommand extends Command
             return;
         }
 
-        // Little Airplanes Spinning Sound
+        // Create roulette Sound
         $channel = $this->discord->getChannel($interaction->channel_id);
         $audio = __DIR__ . '/../../../Audio/roulette_create_' . rand(1, 5) . '.mp3';
         $voice = $this->discord->getVoiceClient($channel->guild_id);

@@ -5,7 +5,7 @@ namespace Chorume\Application\Commands\Roulette;
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
 use Discord\Builders\Components\ActionRow;
-use Discord\Builders\Components\Button;
+use Discord\Builders\Components\Button; 
 use Discord\Parts\Interactions\Interaction;
 use Discord\Voice\VoiceClient;
 use Chorume\Application\Commands\Command;
@@ -123,19 +123,11 @@ class FinishCommand extends Command
         if ($channel->isVoiceBased()) {
             if ($voice) {
                 $this->discord->getLogger()->info('Voice client already exists, playing roulette spin audio...');
-                $voice
-                    ->playFile($audio);
-                // ->done(function () use ($voice) {
-                //     $voice->close();
-                // });
+                $voice->playFile($audio);
             } else {
                 $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio, $interaction) {
                     $this->discord->getLogger()->info('Playing Little Airplanes audio...');
-                    $voice
-                        ->playFile($audio);
-                    // ->done(function () use ($voice) {
-                    //     $voice->close();
-                    // });
+                    $voice->playFile($audio);
                 });
             }
         }
@@ -153,6 +145,25 @@ class FinishCommand extends Command
             if ($winnerNumber == 0) {
                 $winnerResult = Roulette::GREEN;
                 $choice = "🟩 G[$winnerNumber]";
+
+                // Brasil Sound
+                $channel = $this->discord->getChannel($interaction->channel_id);
+                $audio = __DIR__ . '/../../../Audio/brasil.mp3';
+                $voice = $this->discord->getVoiceClient($channel->guild_id);
+
+                if ($channel->isVoiceBased()) {
+                    if ($voice) {
+                        $this->discord->getLogger()->debug('Voice client already exists, playing Roulette Number Zero audio...');
+
+                        $voice->playFile($audio);
+                    } else {
+                        $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+                            $this->discord->getLogger()->debug('Playing Roulette Number Zero audio...');
+
+                            $voice->playFile($audio);
+                        });
+                    }
+                }
             } elseif ($winnerNumber % 2 == 0) {
                 $winnerResult = Roulette::BLACK;
                 $choice = "⬛ BL[$winnerNumber]";

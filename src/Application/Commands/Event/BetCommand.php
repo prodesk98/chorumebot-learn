@@ -116,7 +116,7 @@ class BetCommand extends Command
                 $this->messageComposer->embed(
                     title: 'Aposta',
                     message: sprintf(
-                        "Valor **%s** coins\nOpção: **%s**\n\n",
+                        "Valor: **%s** coins\nOpção: **%s**\n\n",
                         $coins,
                         $choiceKey
                     ),

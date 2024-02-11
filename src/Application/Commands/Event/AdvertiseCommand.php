@@ -6,6 +6,7 @@ use Discord\Discord;
 use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Parts\Embed\Embed;
+use Discord\Voice\VoiceClient;
 use Chorume\Application\Commands\Command;
 use Chorume\Repository\Event;
 use Chorume\Repository\EventChoice;
@@ -35,6 +36,25 @@ class AdvertiseCommand extends Command
             $interaction->respondWithMessage(MessageBuilder::new()->setContent('Esse evento não existe!'), true);
             return;
         }
+
+         // Rumble Sound
+         $channel = $this->discord->getChannel($interaction->channel_id);
+         $audio = __DIR__ . '/../../../Audio/rumble.mp3';
+         $voice = $this->discord->getVoiceClient($channel->guild_id);
+
+         if ($channel->isVoiceBased()) {
+             if ($voice) {
+                 $this->discord->getLogger()->debug('Voice client already exists, playing Rumble audio...');
+
+                 $voice->playFile($audio);
+             } else {
+                 $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+                     $this->discord->getLogger()->debug('Playing Rumble audio...');
+
+                     $voice->playFile($audio);
+                 });
+             }
+         }
 
         $eventOdds = $this->eventRepository->calculateOdds($eventId);
         $eventsDescription = sprintf(

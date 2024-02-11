@@ -5,7 +5,6 @@ namespace Chorume\Application\Commands\LittleAirplanes;
 use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Voice\VoiceClient;
-use Discord\Parts\Embed\Embed;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Builders\MessageBuilder;
 use Chorume\Application\Commands\Command;
@@ -135,7 +134,6 @@ class FlyCommand extends Command
                 // Little Airplanes Spinning Sound
                 $channel = $this->discord->getChannel($interaction->channel_id);
                 $audio = __DIR__ . '/../../../Audio/avioeszinhos.mp3';
-
                 $voice = $this->discord->getVoiceClient($channel->guild_id);
 
                 if ($channel->isVoiceBased()) {

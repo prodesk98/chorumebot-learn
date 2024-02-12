@@ -19,8 +19,6 @@ use Predis\Client as RedisClient;
 
 class FinishCommand extends Command
 {
-    private CreateCommand $createCommand;
-
     public function __construct(
         private Discord $discord,
         private $config,
@@ -133,7 +131,7 @@ class FinishCommand extends Command
         }
 
         $loop = $this->discord->getLoop();
-        $loop->addTimer(8, function () use ($interaction, $roulette) {
+        $loop->addTimer(6, function () use ($interaction, $roulette) {
             $rouletteId = $roulette[0]['id'];
             $followUpMessageId = $this->redis->get("roulette:{$rouletteId}:lastfollowup");
             // $winnerNumber = rand(0, 14);

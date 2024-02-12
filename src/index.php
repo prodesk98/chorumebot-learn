@@ -93,7 +93,7 @@ $discord = new Discord([
     'token' => getenv('TOKEN'),
     'logger' => $logger,
     'intents' =>
-        Intents::getDefaultIntents() |
+    Intents::getDefaultIntents() |
         Intents::GUILD_MEMBERS |
         Intents::GUILD_PRESENCES |
         Intents::GUILD_MESSAGES |
@@ -124,56 +124,71 @@ $discord->on('init', function (Discord $discord) use ($userRepository, $redis) {
         $discord->application->commands->save($command);
     }
 
-    $presenceChannels = explode(',', getenv('PRESENCE_EXTRA_COINS_CHANNELS'));
-    $loop = $discord->getLoop();
-    $loop->addPeriodicTimer($_ENV['PRESENCE_EXTRA_COINS_CHECK_TIME'], function () use ($discord, $presenceChannels, $redis, $userRepository) {
-        foreach ($presenceChannels as $channelId) {
-            $channel = $discord->getChannel($channelId);
+    // Presence in beta testing
+    // Members are not getting updated when they leave the voice channel
+    if ($_ENV['PRESENCE_EXTRA_COINS_ENABLE'] === 1) {
+        $presenceChannels = explode(',', getenv('PRESENCE_EXTRA_COINS_CHANNELS'));
+        $loop = $discord->getLoop();
+        $loop->addPeriodicTimer($_ENV['PRESENCE_EXTRA_COINS_CHECK_TIME'], function () use ($discord, $presenceChannels, $redis, $userRepository) {
+            foreach ($presenceChannels as $channelId) {
+                $channel = $discord->getChannel($channelId);
 
-            if (!$channel->isVoiceBased()) {
-                continue;
-            }
-
-            $presenceList = json_decode($redis->get('presence:' . $channelId) ?? '[]');
-            $presenceNewList = [];
-            $membersList = $channel->members->toArray();
-
-            foreach ($membersList as $member) {
-                if ($member['user']->bot) {
+                if (!$channel->isVoiceBased()) {
                     continue;
                 }
 
-                $found = array_search($member['user']->id, array_column($presenceList, 'id'));
+                $presenceList = json_decode($redis->get('presence:' . $channelId) ?? '[]');
+                $presenceNewList = [];
+                $membersList = $channel->members->toArray();
 
-                if (!$found) {
-                    $presenceNewList[] = [
-                        'id' => $member['user']->id,
-                        'username' => $member['user']->username,
-                        'global_name' => $member['user']->global_name,
-                        'presence' => time(),
-                        'accumulated' => 0,
-                    ];
-                } else {
-                    $currentPresence = $presenceList[$found]->presence;
-                    $presenceDiff = time() - $currentPresence;
+                foreach ($membersList as $member) {
+                    echo $member['user']->global_name . PHP_EOL;
 
-                    if ($presenceDiff >= $_ENV['PRESENCE_EXTRA_COINS_WIN_TIME']) {
-                        $presenceList[$found]->presence = time();
+                    if ($member['user']->bot) {
+                        continue;
+                    }
 
+                    $found = array_search($member['user']->id, array_column($presenceList, 'id'));
+
+                    if ($found === false) {
                         if (!$member->self_deaf) {
-                            $presenceList[$found]->accumulated += $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'];
-                            $presenceNewList[] = $presenceList[$found];
-                            $userRepository->giveCoins($member['user']->id, $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'], 'Presence', json_encode($presenceList[$found]));
+                            continue;
                         }
+
+                        $discord->getLogger()->debug('User new: ' . $member['user']->global_name);
+                        $presenceNewList[] = [
+                            'id' => $member['user']->id,
+                            'username' => $member['user']->username,
+                            'global_name' => $member['user']->global_name,
+                            'presence' => time(),
+                            'accumulated' => 0,
+                        ];
                     } else {
-                        $presenceNewList[] = $presenceList[$found];
+                        $discord->getLogger()->debug('User exists: ' . $member['user']->global_name);
+                        $currentPresence = $presenceList[$found]->presence;
+                        $presenceDiff = time() - $currentPresence;
+
+                        if ($presenceDiff >= $_ENV['PRESENCE_EXTRA_COINS_WIN_TIME']) {
+                            $presenceList[$found]->presence = time();
+
+                            $discord->getLogger()->debug('User ' . $member['user']->global_name . ' presence diff: ' . $presenceDiff);
+
+                            if (!$member->self_deaf) {
+                                $discord->getLogger()->debug('User received extra coins: ' . $member['user']->global_name);
+                                $presenceList[$found]->accumulated += $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'];
+                                $presenceNewList[] = $presenceList[$found];
+                                $userRepository->giveCoins($member['user']->id, $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'], 'Presence', json_encode($presenceList[$found]));
+                            }
+                        } else {
+                            $presenceNewList[] = $presenceList[$found];
+                        }
                     }
                 }
-            }
 
-            $redis->set('presence:' . $channelId, json_encode($presenceNewList));
-        }
-    });
+                $redis->set('presence:' . $channelId, json_encode($presenceNewList));
+            }
+        });
+    }
 
     $botStartedAt = date('Y-m-d H:i:s');
 

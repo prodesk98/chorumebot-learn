@@ -48,9 +48,10 @@ class CreateCommand extends Command
         $this->createRoulette($interaction, $eventName, $value);
     }
 
-    public function createRoulette(Interaction $interaction, string $eventName, float $value): void
+    public function createRoulette(Interaction $interaction, string $eventName, int $value): void
     {
-        $rouletteId = $this->rouletteRepository->createEvent(strtoupper($eventName), $value);
+        $discordId = $interaction->member->user->id;
+        $rouletteId = $this->rouletteRepository->createEvent(strtoupper($eventName), $value, $discordId);
 
         if (!$rouletteId) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent("Não foi possível criar a roleta!"), true);

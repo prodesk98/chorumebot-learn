@@ -32,11 +32,12 @@ class CreateCommand extends Command
             return;
         }
 
+        $discordId = $interaction->member->user->id;
         $eventName = $interaction->data->options['criar']->options['nome']->value;
         $optionA = $interaction->data->options['criar']->options['a']->value;
         $optionB = $interaction->data->options['criar']->options['b']->value;
 
-        if ($this->eventRepository->create(strtoupper($eventName), $optionA, $optionB)) {
+        if ($this->eventRepository->create(strtoupper($eventName), $optionA, $optionB, $discordId)) {
             $interaction->respondWithMessage($this->messageComposer->embed(
                 'Evento',
                 'Evento criado com sucesso!'

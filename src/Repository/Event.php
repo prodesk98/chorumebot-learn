@@ -4,6 +4,7 @@ namespace Chorume\Repository;
 
 use Chorume\Repository\EventBet;
 use Chorume\Repository\EventChoice;
+use Chorume\Repository\User;
 use Chorume\Repository\UserCoinHistory;
 
 class Event extends Repository
@@ -36,11 +37,13 @@ class Event extends Repository
         $db,
         protected EventBet|null $eventBetRepository = null,
         protected EventChoice|null $eventChoiceRepository = null,
-        protected UserCoinHistory|null $userCoinHistoryRepository = null
+        protected UserCoinHistory|null $userCoinHistoryRepository = null,
+        protected User|null $userRepository = null
     ) {
         $this->eventBetRepository = $eventBetRepository ?? new EventBet($db);
         $this->eventChoiceRepository = $eventChoiceRepository ?? new EventChoice($db);
         $this->userCoinHistoryRepository = $userCoinHistoryRepository ?? new UserCoinHistory($db);
+        $this->userRepository = $userRepository ?? new User($db);
         $this->eventExtraLuckyChance = getenv('EVENT_EXTRA_LUCKY_CHANCE') * 100;
 
         parent::__construct($db);
@@ -61,13 +64,17 @@ class Event extends Repository
         );
     }
 
-    public function create(string $eventName, string $optionA, string $optionB): bool
+    public function create(string $eventName, string $optionA, string $optionB, int $discordId): bool
     {
         $this->db->beginTransaction();
 
+        $user = $this->userRepository->getByDiscordId($discordId);
+        $userId = $user[0]['id'];
+
         $createEvent = $this->db->query(
-            'INSERT INTO events (name, status) VALUES (:name, :status)',
+            'INSERT INTO events (created_by, name, status) VALUES (:created_by, :name, :status)',
             [
+                'created_by' => $userId,
                 'name' => $eventName,
                 'status' => self::OPEN,
             ]
@@ -333,7 +340,7 @@ class Event extends Repository
             $this->userCoinHistoryRepository->create(
                 $bet['user_id'],
                 $betPayoutFinal,
-                'Event',
+                'EventBet',
                 $eventId,
                 json_encode([
                     'betted' => $bet['amount'],

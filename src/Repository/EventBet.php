@@ -32,9 +32,9 @@ class EventBet extends Repository
         try {
             $eventRepository = new Event($this->db);
             $user = $this->userRepository->getByDiscordId($discordId);
+            $userId = $user[0]['id'];
             $choiceId = $this->eventChoiceRepository->getByEventIdAndChoice($eventId, $choiceKey);
             $odds = $eventRepository->calculateOdds($eventId);
-            $userId = $user[0]['id'];
 
             $this->db->beginTransaction();
 

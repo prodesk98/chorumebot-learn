@@ -65,7 +65,7 @@ class FinishCommand extends Command
 
             $interaction->respondWithMessage($this->messageComposer->embed(
                 'Evento',
-                sprintf('Evento: #%s %s\nResultado: Empate!\n\nApostas devolvidas', $eventId, $event[0]['name'])
+                sprintf("Evento: #%s %s\nResultado: Empate!\n\nApostas devolvidas", $eventId, $event[0]['name'])
             ), false);
             return;
         }

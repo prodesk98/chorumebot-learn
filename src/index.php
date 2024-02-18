@@ -11,6 +11,7 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Handler\RotatingFileHandler;
 use Discord\Discord;
 use Discord\Parts\Interactions\Command\Command;
+use Discord\Parts\User\Member;
 use Discord\WebSockets\Intents;
 use Discord\WebSockets\Event as DiscordEvent;
 use Chorume\Database\Db;
@@ -22,7 +23,6 @@ use Chorume\Repository\Talk;
 use Chorume\Repository\UserCoinHistory;
 use Chorume\Repository\Roulette;
 use Chorume\Repository\RouletteBet;
-use Chorume\Repository\Quiz;
 use Chorume\Application\Commands\Code\CodeCommand;
 use Chorume\Application\Commands\Event\AdvertiseCommand;
 use Chorume\Application\Commands\Event\BetCommand;
@@ -35,9 +35,6 @@ use Chorume\Application\Commands\Generic\TopForbesCommand;
 use Chorume\Application\Commands\Generic\TransferCommand;
 use Chorume\Application\Commands\LittleAirplanes\FlyCommand;
 use Chorume\Application\Commands\Master\AskCommand;
-use Chorume\Application\Commands\MillionShow\CreateQuizCommand;
-//use Chorume\Application\Commands\MillionShow\CloseMillionShowCommand;
-use Chorume\Application\Commands\Learn\LearnCommand;
 use Chorume\Application\Commands\Asking\AskingCommand;
 use Chorume\Application\Commands\Picasso\PaintCommand;
 use Chorume\Application\Commands\Roulette\CloseCommand as RouletteCloseCommand;
@@ -104,7 +101,6 @@ $discord = new Discord([
 ]);
 
 $userRepository = new User($db);
-$quizRepository = new Quiz($db);
 $userCoinHistoryRepository = new UserCoinHistory($db);
 $eventRepository = new Event($db);
 $eventChoiceRepository = new EventChoice($db);
@@ -124,71 +120,102 @@ $discord->on('init', function (Discord $discord) use ($userRepository, $redis) {
         $discord->application->commands->save($command);
     }
 
+    // DRINK_WATER_REMEMBER_ENABLE=1
+    // DRINK_WATER_INTERVAL=3600
+
+    // update users_coins_history set type = 'RouletteBet' where type = 'BetRoulette'
+    // update users_coins_history set type = 'EventBet' where type = 'Event'
+
+    // $guild = $discord->guilds->first();
+    // echo "asdf";
+    // $guild->members->fetch($_ENV['BOT_ID'])->then(function (Member $member) {
+    //     var_dump($member->channels);
+    // })->done();
+
+    // Little Airplanes Sound
+    // $channel = $discord->getChannel($interaction->channel_id);
+    // $audio = __DIR__ . '/../../../Audio/agua.mp3';
+    // $voice = $discord->getVoiceClient($channel->guild_id);
+
+    // if ($channel->isVoiceBased()) {
+    //     if ($voice) {
+    //         $discord->getLogger()->debug('Voice client already exists, playing Little Airplanes audio...');
+
+    //         $voice->playFile($audio);
+    //     } else {
+    //         $discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+    //             $discord->getLogger()->debug('Playing Little Airplanes audio...');
+
+    //             $voice->playFile($audio);
+    //         });
+    //     }
+    // }
+
     // Presence in beta testing
     // Members are not getting updated when they leave the voice channel
-    if ($_ENV['PRESENCE_EXTRA_COINS_ENABLE'] === 1) {
-        $presenceChannels = explode(',', getenv('PRESENCE_EXTRA_COINS_CHANNELS'));
-        $loop = $discord->getLoop();
-        $loop->addPeriodicTimer($_ENV['PRESENCE_EXTRA_COINS_CHECK_TIME'], function () use ($discord, $presenceChannels, $redis, $userRepository) {
-            foreach ($presenceChannels as $channelId) {
-                $channel = $discord->getChannel($channelId);
+    // if ($_ENV['PRESENCE_EXTRA_COINS_ENABLE'] === 1) {
+    //     $presenceChannels = explode(',', getenv('PRESENCE_EXTRA_COINS_CHANNELS'));
+    //     $loop = $discord->getLoop();
+    //     $loop->addPeriodicTimer($_ENV['PRESENCE_EXTRA_COINS_CHECK_TIME'], function () use ($discord, $presenceChannels, $redis, $userRepository) {
+    //         foreach ($presenceChannels as $channelId) {
+    //             $channel = $discord->getChannel($channelId);
 
-                if (!$channel->isVoiceBased()) {
-                    continue;
-                }
+    //             if (!$channel->isVoiceBased()) {
+    //                 continue;
+    //             }
 
-                $presenceList = json_decode($redis->get('presence:' . $channelId) ?? '[]');
-                $presenceNewList = [];
-                $membersList = $channel->members->toArray();
+    //             $presenceList = json_decode($redis->get('presence:' . $channelId) ?? '[]');
+    //             $presenceNewList = [];
+    //             $membersList = $channel->members->toArray();
 
-                foreach ($membersList as $member) {
-                    echo $member['user']->global_name . PHP_EOL;
+    //             foreach ($membersList as $member) {
+    //                 echo $member['user']->global_name . PHP_EOL;
 
-                    if ($member['user']->bot) {
-                        continue;
-                    }
+    //                 if ($member['user']->bot) {
+    //                     continue;
+    //                 }
 
-                    $found = array_search($member['user']->id, array_column($presenceList, 'id'));
+    //                 $found = array_search($member['user']->id, array_column($presenceList, 'id'));
 
-                    if ($found === false) {
-                        if (!$member->self_deaf) {
-                            continue;
-                        }
+    //                 if ($found === false) {
+    //                     if (!$member->self_deaf) {
+    //                         continue;
+    //                     }
 
-                        $discord->getLogger()->debug('User new: ' . $member['user']->global_name);
-                        $presenceNewList[] = [
-                            'id' => $member['user']->id,
-                            'username' => $member['user']->username,
-                            'global_name' => $member['user']->global_name,
-                            'presence' => time(),
-                            'accumulated' => 0,
-                        ];
-                    } else {
-                        $discord->getLogger()->debug('User exists: ' . $member['user']->global_name);
-                        $currentPresence = $presenceList[$found]->presence;
-                        $presenceDiff = time() - $currentPresence;
+    //                     $discord->getLogger()->debug('User new: ' . $member['user']->global_name);
+    //                     $presenceNewList[] = [
+    //                         'id' => $member['user']->id,
+    //                         'username' => $member['user']->username,
+    //                         'global_name' => $member['user']->global_name,
+    //                         'presence' => time(),
+    //                         'accumulated' => 0,
+    //                     ];
+    //                 } else {
+    //                     $discord->getLogger()->debug('User exists: ' . $member['user']->global_name);
+    //                     $currentPresence = $presenceList[$found]->presence;
+    //                     $presenceDiff = time() - $currentPresence;
 
-                        if ($presenceDiff >= $_ENV['PRESENCE_EXTRA_COINS_WIN_TIME']) {
-                            $presenceList[$found]->presence = time();
+    //                     if ($presenceDiff >= $_ENV['PRESENCE_EXTRA_COINS_WIN_TIME']) {
+    //                         $presenceList[$found]->presence = time();
 
-                            $discord->getLogger()->debug('User ' . $member['user']->global_name . ' presence diff: ' . $presenceDiff);
+    //                         $discord->getLogger()->debug('User ' . $member['user']->global_name . ' presence diff: ' . $presenceDiff);
 
-                            if (!$member->self_deaf) {
-                                $discord->getLogger()->debug('User received extra coins: ' . $member['user']->global_name);
-                                $presenceList[$found]->accumulated += $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'];
-                                $presenceNewList[] = $presenceList[$found];
-                                $userRepository->giveCoins($member['user']->id, $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'], 'Presence', json_encode($presenceList[$found]));
-                            }
-                        } else {
-                            $presenceNewList[] = $presenceList[$found];
-                        }
-                    }
-                }
+    //                         if (!$member->self_deaf) {
+    //                             $discord->getLogger()->debug('User received extra coins: ' . $member['user']->global_name);
+    //                             $presenceList[$found]->accumulated += $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'];
+    //                             $presenceNewList[] = $presenceList[$found];
+    //                             $userRepository->giveCoins($member['user']->id, $_ENV['PRESENCE_EXTRA_COINS_AMOUNT'], 'Presence', json_encode($presenceList[$found]));
+    //                         }
+    //                     } else {
+    //                         $presenceNewList[] = $presenceList[$found];
+    //                     }
+    //                 }
+    //             }
 
-                $redis->set('presence:' . $channelId, json_encode($presenceNewList));
-            }
-        });
-    }
+    //             $redis->set('presence:' . $channelId, json_encode($presenceNewList));
+    //         }
+    //     });
+    // }
 
     $botStartedAt = date('Y-m-d H:i:s');
 
@@ -206,13 +233,11 @@ $discord->listenCommand('test', new TestCommand($discord, $config, $redis));
 $discord->listenCommand('codigo', new CodeCommand($discord, $config, $redis));
 $discord->listenCommand('coins', new CoinsCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
 $discord->listenCommand('mestre', new AskCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
-$discord->listenCommand('ensinar', new LearnCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
 $discord->listenCommand('perguntar', new AskingCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
 $discord->listenCommand('picasso', new PaintCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
 $discord->listenCommand('avioeszinhos', new FlyCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
 $discord->listenCommand('transferir', new TransferCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
 $discord->listenCommand(['top', 'forbes'], new TopForbesCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository));
-$discord->listenCommand(['quiz', 'criar'], new CreateQuizCommand($discord, $config, $redis, $userRepository, $userCoinHistoryRepository, $quizRepository));
 $discord->listenCommand(['evento', 'anunciar'], new AdvertiseCommand($discord, $config, $eventRepository, $eventChoiceRepository));
 $discord->listenCommand('apostar', new BetCommand($discord, $config, $userRepository, $eventRepository, $eventBetsRepository));
 $discord->listenCommand(['evento', 'criar'], new CreateCommand($discord, $config, $eventRepository));

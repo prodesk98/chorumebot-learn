@@ -5,7 +5,6 @@ namespace Chorume\Application\Commands\LittleAirplanes;
 use Predis\Client as RedisClient;
 use Discord\Discord;
 use Discord\Voice\VoiceClient;
-use Discord\Parts\Embed\Embed;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Builders\MessageBuilder;
 use Chorume\Application\Commands\Command;
@@ -22,7 +21,7 @@ class FlyCommand extends Command
     private int $cooldownTimer;
     private int $cooldownLimit;
     private float $extraValueProbability;
-    private float $extraValue200Probability;
+    private float $boostedValueProbability;
     private float $minValue;
     private float $maxValue;
     private float $boostedValue;
@@ -39,7 +38,7 @@ class FlyCommand extends Command
         $this->cooldownTimer = getenv('LITTLE_AIRPLANES_COOLDOWN_TIMER');
         $this->cooldownLimit = getenv('LITTLE_AIRPLANES_COOLDOWN_LIMIT');
         $this->extraValueProbability = getenv('LITTLE_AIRPLANES_PROBABILITY');
-        $this->extraValue200Probability = getenv('LITTLE_AIRPLANES_PROBABILITY_BOOSTED');
+        $this->boostedValueProbability = getenv('LITTLE_AIRPLANES_PROBABILITY_BOOSTED');
         $this->minValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_MIN');
         $this->maxValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_MAX');
         $this->boostedValue = getenv('LITTLE_AIRPLANES_PROBABILITY_VALUE_BOOSTED');
@@ -132,30 +131,21 @@ class FlyCommand extends Command
                     image: $this->config['images']['airplanes']
                 ));
 
-                // Little Airplanes Spinning Sound
+                // Little Airplanes Sound
                 $channel = $this->discord->getChannel($interaction->channel_id);
                 $audio = __DIR__ . '/../../../Audio/avioeszinhos.mp3';
-
                 $voice = $this->discord->getVoiceClient($channel->guild_id);
 
                 if ($channel->isVoiceBased()) {
                     if ($voice) {
                         $this->discord->getLogger()->debug('Voice client already exists, playing Little Airplanes audio...');
 
-                        $voice
-                            ->playFile($audio);
-                            // ->done(function () use ($voice) {
-                            //     $voice->close();
-                            // });
+                        $voice->playFile($audio);
                     } else {
                         $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
                             $this->discord->getLogger()->debug('Playing Little Airplanes audio...');
 
-                            $voice
-                                ->playFile($audio);
-                                // ->done(function () use ($voice) {
-                                //     $voice->close();
-                                // });
+                            $voice->playFile($audio);
                         });
                     }
                 }
@@ -165,10 +155,14 @@ class FlyCommand extends Command
                     $airplanes = [];
 
                     foreach ($members as $member) {
+                        $isDeaf = $this->discord->getChannel($interaction->channel_id)->members[$member]->self_deaf;
+
+                        if ($isDeaf) continue;
+
                         if (mt_rand(0, 99) < $this->extraValueProbability * 100) {
                             if (!$this->userRepository->userExistByDiscordId($member)) continue;
 
-                            $extraValue = mt_rand(0, 99) < $this->extraValue200Probability * 100
+                            $extraValue = mt_rand(0, 99) < $this->boostedValueProbability * 100
                                 ? $this->boostedValue
                                 : mt_rand($this->minValue, $this->maxValue);
 

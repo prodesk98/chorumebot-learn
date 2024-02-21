@@ -6,18 +6,23 @@ use Discord\Discord;
 use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
 use Discord\Parts\Embed\Embed;
+use Discord\Voice\VoiceClient;
 use Chorume\Application\Commands\Command;
 use Chorume\Repository\Event;
 use Chorume\Repository\EventChoice;
+use Chorume\Application\Discord\MessageComposer;
 
 class AdvertiseCommand extends Command
 {
+    private MessageComposer $messageComposer;
+
     public function __construct(
         private Discord $discord,
         private $config,
         private Event $eventRepository,
         private EventChoice $eventChoiceRepository
     ) {
+        $this->messageComposer = new MessageComposer($discord);
     }
 
     public function handle(Interaction $interaction): void
@@ -32,12 +37,31 @@ class AdvertiseCommand extends Command
             return;
         }
 
+         // Rumble Sound
+         $channel = $this->discord->getChannel($interaction->channel_id);
+         $audio = __DIR__ . '/../../../Audio/rumble.mp3';
+         $voice = $this->discord->getVoiceClient($channel->guild_id);
+
+         if ($channel->isVoiceBased() && $bannerKey === 'UFC') {
+             if ($voice) {
+                 $this->discord->getLogger()->debug('Voice client already exists, playing Rumble audio...');
+
+                 $voice->playFile($audio);
+             } else {
+                 $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+                     $this->discord->getLogger()->debug('Playing Rumble audio...');
+
+                     $voice->playFile($audio);
+                 });
+             }
+         }
+
         $eventOdds = $this->eventRepository->calculateOdds($eventId);
         $eventsDescription = sprintf(
             "**Status do Evento:** %s \n **A**: %s \n **B**: %s \n \n",
             $this->eventRepository::LABEL[$event[0]['event_status']],
-            sprintf('%s (x%s)', $event[0]['choices'][0]['choice_description'], number_format($eventOdds['oddsA'], 2)),
-            sprintf('%s (x%s)', $event[0]['choices'][1]['choice_description'], number_format($eventOdds['oddsB'], 2))
+            sprintf('%s (x%s)', $event[0]['choices'][0]['choice_description'], number_format($eventOdds['odds_a'], 2)),
+            sprintf('%s (x%s)', $event[0]['choices'][1]['choice_description'], number_format($eventOdds['odds_b'], 2))
         );
 
         $embed = new Embed($this->discord);

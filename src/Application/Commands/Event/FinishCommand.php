@@ -27,30 +27,56 @@ class FinishCommand extends Command
     public function handle(Interaction $interaction): void
     {
         if (!find_role_array($this->config['admin_role'], 'name', $interaction->member->roles)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Você não tem permissão para usar este comando!'), true);
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento',
+                'Você não tem permissão para usar este comando!'
+            ), true);
             return;
         }
 
         $eventId = $interaction->data->options['encerrar']->options['id']->value;
         $choiceKey = $interaction->data->options['encerrar']->options['opcao']->value;
         $event = $this->eventRepository->getEventById($eventId);
-        $choice = $this->eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $choiceKey);
-        $bets = $this->eventRepository->payoutEvent($eventId, $choiceKey);
 
         if (empty($event)) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento não existe!'), true);
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento',
+                'Evento não existe!'
+            ), true);
             return;
         }
 
         if ($event[0]['status'] !== $this->eventRepository::CLOSED) {
-            $interaction->respondWithMessage(MessageBuilder::new()->setContent('Evento precisa estar fechado para ser finalizado!'), true);
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento',
+                'Evento precisa estar fechado para ser finalizado!'
+            ), true);
             return;
         }
+
+        if ($choiceKey === 'Empate') {
+            if (!$this->eventRepository->drawEvent($eventId)) {
+                $interaction->respondWithMessage($this->messageComposer->embed(
+                    'Evento',
+                    'Erro ao encerrar evento'
+                ), true);
+                return;
+            }
+
+            $interaction->respondWithMessage($this->messageComposer->embed(
+                'Evento',
+                sprintf("Evento: #%s %s\nResultado: Empate!\n\nApostas devolvidas", $eventId, $event[0]['name'])
+            ), false);
+            return;
+        }
+
+        $choice = $this->eventChoiceRepository->getChoiceByEventIdAndKey($eventId, $choiceKey);
+        $bets = $this->eventRepository->payoutEvent($eventId, $choiceKey);
 
         if (count($bets) === 0) {
             $this->eventRepository->finishEvent($eventId);
             $interaction->respondWithMessage($this->messageComposer->embed(
-                'Evento encerrado',
+                'Evento',
                 'Não houveram apostas neste evento!'
             ), false);
             return;
@@ -63,10 +89,9 @@ class FinishCommand extends Command
         );
 
         $winnersImage = $this->config['images']['winners'][array_rand($this->config['images']['winners'])];
-
         $embed = new Embed($this->discord);
         $embed
-            ->setTitle(sprintf('EVENTO #%s ENCERRADO', $eventId))
+            ->setTitle('Evento')
             ->setColor('#F5D920')
             ->setDescription($eventsDescription)
             ->setImage($winnersImage);

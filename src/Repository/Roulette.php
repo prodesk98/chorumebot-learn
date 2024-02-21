@@ -3,6 +3,7 @@
 namespace Chorume\Repository;
 
 use Chorume\Repository\RouletteBet;
+use Chorume\Repository\User;
 use Chorume\Repository\UserCoinHistory;
 
 class Roulette extends Repository
@@ -38,24 +39,30 @@ class Roulette extends Repository
     ];
 
     private RouletteBet $rouletteBetRepository;
+    private User $userRepository;
     private UserCoinHistory $userCoinHistoryRepository;
 
     public function __construct($db)
     {
         $this->rouletteBetRepository = new RouletteBet($db);
+        $this->userRepository = new User($db);
         $this->userCoinHistoryRepository = new UserCoinHistory($db);
 
         parent::__construct($db);
     }
 
-    public function createEvent(string $eventName, $value) : int|bool
+    public function createEvent(string $eventName, int $value, int $discordId) : int|bool
     {
+        $user = $this->userRepository->getByDiscordId($discordId);
+        $userId = $user[0]['id'];
+
         $createEvent = $this->db->query(
-            'INSERT INTO roulette (status, description, amount) VALUES (:status, :description, :amount)',
+            'INSERT INTO roulette (created_by, status, description, amount) VALUES (:created_by, :status, :description, :amount)',
             [
-                "status" => self::OPEN,
-                "description" => $eventName,
-                "amount" => $value,
+                'created_by' => $userId,
+                'status' => self::OPEN,
+                'description' => $eventName,
+                'amount' => $value,
             ]
         );
 
@@ -180,7 +187,7 @@ class Roulette extends Repository
             }
 
             $betPayout = $bet['amount'] * $odd;
-            $this->userCoinHistoryRepository->create($bet['user_id'], $betPayout, 'Roulette', $rouletteId);
+            $this->userCoinHistoryRepository->create($bet['user_id'], $betPayout, 'RouletteBet', $rouletteId);
 
             $winners[] = [
                 'discord_user_id' => $bet['discord_user_id'],

@@ -18,7 +18,7 @@ return [
                     'required' => true,
                 ],
                 [
-                    'type' => Option::NUMBER,
+                    'type' => Option::INTEGER,
                     'name' => 'valor',
                     'description' => 'Quantidade de coins para apostar na roleta',
                     'required' => true,

@@ -5,6 +5,7 @@ namespace Chorume\Application\Commands\Roulette;
 use Discord\Discord;
 use Discord\Builders\MessageBuilder;
 use Discord\Parts\Interactions\Interaction;
+use Discord\Voice\VoiceClient;
 use Chorume\Application\Commands\Command;
 use Chorume\Application\Commands\Roulette\RouletteBuilder;
 use Chorume\Repository\Roulette;
@@ -47,9 +48,10 @@ class CreateCommand extends Command
         $this->createRoulette($interaction, $eventName, $value);
     }
 
-    public function createRoulette(Interaction $interaction, string $eventName, float $value): void
+    public function createRoulette(Interaction $interaction, string $eventName, int $value): void
     {
-        $rouletteId = $this->rouletteRepository->createEvent(strtoupper($eventName), $value);
+        $discordId = $interaction->member->user->id;
+        $rouletteId = $this->rouletteRepository->createEvent(strtoupper($eventName), $value, $discordId);
 
         if (!$rouletteId) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent("Não foi possível criar a roleta!"), true);
@@ -59,6 +61,25 @@ class CreateCommand extends Command
         if ($value < 1) {
             $interaction->respondWithMessage(MessageBuilder::new()->setContent("Só é possível criar roletas a partir de 1 coin!"), true);
             return;
+        }
+
+        // Create roulette Sound
+        $channel = $this->discord->getChannel($interaction->channel_id);
+        $audio = __DIR__ . '/../../../Audio/roulette_create_' . rand(1, 5) . '.mp3';
+        $voice = $this->discord->getVoiceClient($channel->guild_id);
+
+        if ($channel->isVoiceBased()) {
+            if ($voice) {
+                $this->discord->getLogger()->debug('Voice client already exists, playing Roulette Create audio...');
+
+                $voice->playFile($audio);
+            } else {
+                $this->discord->joinVoiceChannel($channel)->done(function (VoiceClient $voice) use ($audio) {
+                    $this->discord->getLogger()->debug('Playing Roulette Create audio...');
+
+                    $voice->playFile($audio);
+                });
+            }
         }
 
         $this->rouletteBuilder->build($interaction, $rouletteId);
